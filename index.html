@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en" class="bg-black">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Final Archive</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      /* Reset to prevent 'white line' artifacts */
+      *, *::before, *::after {
+        border-width: 0;
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      
+      /* Custom utilities for the specific 'etched' and 'cinematic' look */
+      body {
+        margin: 0;
+        padding: 0;
+        background-color: #000;
+        color: #fff;
+        overflow: hidden; /* Prevent scrolling */
+        font-family: 'Times New Roman', Times, serif; /* Classical feel */
+        -webkit-font-smoothing: antialiased;
+      }
+      
+      /* STRICT IMAGE RESET: Kills all borders/outlines/broken icons */
+      img {
+        border: 0 !important;
+        outline: none !important;
+        box-shadow: none !important;
+        display: block;
+        /* Hides alt text and broken image borders */
+        font-size: 0;
+        color: transparent;
+      }
+      
+      /* Hide scrollbar */
+      ::-webkit-scrollbar {
+        display: none;
+      }
+
+      .etched-text {
+        opacity: 0.3;
+        mix-blend-mode: screen;
+        filter: contrast(120%) brightness(80%);
+      }
+      
+      /* Smooth fade for the admin panel */
+      .fade-enter { opacity: 0; }
+      .fade-enter-active { opacity: 1; transition: opacity 300ms; }
+      .fade-exit { opacity: 1; }
+      .fade-exit-active { opacity: 0; transition: opacity 300ms; }
+    </style>
+  <script type="importmap">
+{
+  "imports": {
+    "react": "https://esm.sh/react@^19.2.4",
+    "react-dom/": "https://esm.sh/react-dom@^19.2.4/",
+    "react/": "https://esm.sh/react@^19.2.4/",
+    "react-router-dom": "https://esm.sh/react-router-dom@^7.13.0",
+    "gsap": "https://esm.sh/gsap@^3.14.2"
+  }
+}
+</script>
+<link rel="stylesheet" href="/index.css">
+</head>
+  <body>
+    <div id="root"></div>
+  <script type="module" src="/index.tsx"></script>
+</body>
+</html>

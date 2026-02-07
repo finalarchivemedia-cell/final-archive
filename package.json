@@ -3,6 +3,9 @@
   "version": "1.0.0",
   "description": "Backend for Final Archive",
   "main": "dist-server/server.js",
+  "engines": {
+    "node": ">=18 <22" 
+  },
   "scripts": {
     "dev": "nodemon --exec ts-node src/server.ts",
     "dev:backend": "nodemon --exec ts-node src/server.ts",

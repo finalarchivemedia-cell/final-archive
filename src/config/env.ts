@@ -5,6 +5,8 @@ dotenv.config();
 
 const baseSchema = z.object({
     DATABASE_URL: z.string(),
+    // Optional: direct/unpooled DB URL (used by Prisma via directUrl)
+    DATABASE_URL_UNPOOLED: z.string().optional(),
     PORT: z.string().default('3000').transform((val) => parseInt(val, 10)),
     ADMIN_PASSWORD: z.string().min(1),
     JWT_SECRET: z.string().min(1),

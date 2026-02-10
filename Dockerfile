@@ -1,7 +1,7 @@
-# Backend-only container for Fly.io / Render / etc.
-# Builds TypeScript server into dist-server/ and runs it on port 3000.
+# Backend-only container for Railway/Fly/Render.
+# Uses Bullseye to keep OpenSSL 1.1 compatibility for Prisma engines.
 
-FROM node:20-slim AS builder
+FROM node:20-bullseye AS builder
 WORKDIR /app
 
 COPY package.json package-lock.json ./
@@ -14,9 +14,12 @@ COPY tsconfig.json ./
 # Generate Prisma client + compile backend
 RUN npx prisma generate && npm run build:backend
 
-FROM node:20-slim AS runner
+FROM node:20-bullseye AS runner
 WORKDIR /app
 ENV NODE_ENV=production
+
+# Ensure OpenSSL runtime is present for Prisma query engine
+RUN apt-get update -y && apt-get install -y openssl ca-certificates && rm -rf /var/lib/apt/lists/*
 
 COPY --from=builder /app/package.json /app/package-lock.json ./
 COPY --from=builder /app/node_modules ./node_modules

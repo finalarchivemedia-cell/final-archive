@@ -1,7 +1,7 @@
 # Backend-only container for Railway/Fly/Render.
-# Uses Bullseye to keep OpenSSL 1.1 compatibility for Prisma engines.
+# Uses Bookworm/OpenSSL 3 to match Prisma debian-openssl-3.0.x engine target.
 
-FROM node:20-bullseye AS builder
+FROM node:20-bookworm AS builder
 WORKDIR /app
 
 COPY package.json package-lock.json ./
@@ -14,7 +14,7 @@ COPY tsconfig.json ./
 # Generate Prisma client + compile backend
 RUN npx prisma generate && npm run build:backend
 
-FROM node:20-bullseye AS runner
+FROM node:20-bookworm AS runner
 WORKDIR /app
 ENV NODE_ENV=production
 

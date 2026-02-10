@@ -56,8 +56,9 @@ export const webhookRoutes: FastifyPluginAsyncZod = async (app) => {
 
                     if (!isCreate) return;
 
-                    if (!R2Service.isImage(key)) {
-                        console.log(`Skipping non-image file: ${key}`);
+                    const mediaType = R2Service.getMediaType(key);
+                    if (!mediaType) {
+                        console.log(`Skipping unsupported file: ${key}`);
                         return;
                     }
 
@@ -79,9 +80,10 @@ export const webhookRoutes: FastifyPluginAsyncZod = async (app) => {
                     await IdGenerator.createImageRecord({
                         originalKey: key,
                         url: url,
+                        mediaType,
                     });
 
-                    console.log(`Successfully registered image from webhook: ${key}`);
+                    console.log(`Successfully registered media from webhook: ${key} (${mediaType})`);
                 };
 
                 // Case 1: Simple { key: "..." }

@@ -11,6 +11,7 @@ export const publicRoutes: FastifyPluginAsyncZod = async (app) => {
                 200: z.array(z.object({
                     id: z.string(),
                     url: z.string(),
+                    mediaType: z.enum(['IMAGE', 'VIDEO']),
                     createdAt: z.string().datetime(),
                 })),
             },
@@ -23,6 +24,7 @@ export const publicRoutes: FastifyPluginAsyncZod = async (app) => {
             select: {
                 id: true,
                 url: true,
+                mediaType: true,
                 createdAt: true,
             },
             orderBy: { createdAt: 'desc' },
@@ -40,6 +42,7 @@ export const publicRoutes: FastifyPluginAsyncZod = async (app) => {
                 200: z.object({
                     id: z.string(),
                     url: z.string(),
+                    mediaType: z.enum(['IMAGE', 'VIDEO']),
                     createdAt: z.string().datetime(),
                 }),
             },
@@ -62,6 +65,7 @@ export const publicRoutes: FastifyPluginAsyncZod = async (app) => {
             select: {
                 id: true,
                 url: true,
+                mediaType: true,
                 createdAt: true
             }
         });
@@ -83,6 +87,7 @@ export const publicRoutes: FastifyPluginAsyncZod = async (app) => {
                 200: z.object({
                     id: z.string(),
                     url: z.string(),
+                    mediaType: z.enum(['IMAGE', 'VIDEO']),
                     createdAt: z.string().datetime()
                 })
             }
@@ -96,6 +101,7 @@ export const publicRoutes: FastifyPluginAsyncZod = async (app) => {
             select: {
                 id: true,
                 url: true,
+                mediaType: true,
                 createdAt: true,
                 isActive: true,
             }
@@ -114,6 +120,7 @@ export const publicRoutes: FastifyPluginAsyncZod = async (app) => {
         return {
             id: image.id,
             url: image.url,
+            mediaType: image.mediaType as any,
             createdAt: image.createdAt.toISOString()
         };
     });

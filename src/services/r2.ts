@@ -45,9 +45,20 @@ export class R2Service {
         return allObjects;
     }
 
-    static isImage(key: string): boolean {
-        const validExtensions = ['.jpg', '.jpeg', '.png', '.webp', '.gif', '.avif'];
+    static getMediaType(key: string): 'IMAGE' | 'VIDEO' | null {
         const lowerKey = key.toLowerCase();
-        return validExtensions.some(ext => lowerKey.endsWith(ext));
+        const imageExt = ['.jpg', '.jpeg', '.png', '.webp', '.gif', '.avif'];
+        const videoExt = ['.mp4', '.webm', '.mov'];
+        if (imageExt.some(ext => lowerKey.endsWith(ext))) return 'IMAGE';
+        if (videoExt.some(ext => lowerKey.endsWith(ext))) return 'VIDEO';
+        return null;
+    }
+
+    static isImage(key: string): boolean {
+        return this.getMediaType(key) === 'IMAGE';
+    }
+
+    static isSupportedMedia(key: string): boolean {
+        return this.getMediaType(key) !== null;
     }
 }

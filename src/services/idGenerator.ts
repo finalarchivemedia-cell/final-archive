@@ -12,6 +12,7 @@ export class IdGenerator {
     static async createImageRecord(data: {
         originalKey: string;
         url: string;
+        mediaType?: 'IMAGE' | 'VIDEO';
         width?: number;
         height?: number;
         sizeBytes?: number;
@@ -27,6 +28,7 @@ export class IdGenerator {
                     data: {
                         id,
                         ...data,
+                        mediaType: (data.mediaType as any) ?? 'IMAGE',
                     },
                 });
             } catch (error) {

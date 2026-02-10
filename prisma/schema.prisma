@@ -9,10 +9,16 @@ datasource db {
   directUrl = env("DATABASE_URL_UNPOOLED")
 }
 
+enum MediaType {
+  IMAGE
+  VIDEO
+}
+
 model Image {
   id          String   @id
   originalKey String   @unique
   url         String
+  mediaType   MediaType @default(IMAGE)
   isActive    Boolean  @default(true)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt

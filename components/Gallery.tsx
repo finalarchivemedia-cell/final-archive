@@ -28,8 +28,8 @@ export const Gallery: React.FC<GalleryProps> = ({
   active 
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
-  const imageRefA = useRef<HTMLImageElement>(null);
-  const imageRefB = useRef<HTMLImageElement>(null);
+  const layerRefA = useRef<HTMLElement | null>(null);
+  const layerRefB = useRef<HTMLElement | null>(null);
 
   const [activeLayer, setActiveLayer] = useState<'A' | 'B'>('A');
   
@@ -57,8 +57,8 @@ export const Gallery: React.FC<GalleryProps> = ({
     // Calculate max scale based on crop setting
     const maxScale = 1 / Math.max(0.1, settings.crop);
     
-    const currentEl = activeLayer === 'A' ? imageRefA.current : imageRefB.current;
-    const nextEl = activeLayer === 'A' ? imageRefB.current : imageRefA.current;
+    const currentEl = activeLayer === 'A' ? layerRefA.current : layerRefB.current;
+    const nextEl = activeLayer === 'A' ? layerRefB.current : layerRefA.current;
     
     if (!currentEl || !nextEl) return;
 
@@ -126,6 +126,18 @@ export const Gallery: React.FC<GalleryProps> = ({
   // Determine URLs for rendering
   const urlA = activeLayer === 'A' ? currentImg?.url : nextImg?.url;
   const urlB = activeLayer === 'B' ? currentImg?.url : nextImg?.url;
+  const typeA = activeLayer === 'A' ? currentImg?.mediaType : nextImg?.mediaType;
+  const typeB = activeLayer === 'B' ? currentImg?.mediaType : nextImg?.mediaType;
+
+  const baseMediaStyle: React.CSSProperties = {
+    border: 'none',
+    outline: 'none',
+    boxShadow: 'none',
+    margin: 0,
+    padding: 0,
+    display: 'block',
+    opacity: 0, // Controlled by GSAP
+  };
 
   return (
     <div 
@@ -142,42 +154,56 @@ export const Gallery: React.FC<GalleryProps> = ({
     >
       {/* Layer A - Only render if URL exists */}
       {urlA && (
-        <img
-          ref={imageRefA}
-          src={urlA}
-          className="absolute inset-0 w-full h-full object-cover will-change-transform"
-          alt=""
-          draggable={false}
-          style={{ 
-            border: 'none', 
-            outline: 'none', 
-            boxShadow: 'none',
-            margin: 0,
-            padding: 0,
-            display: 'block',
-            opacity: 0, // Controlled by GSAP
-          }}
-        />
+        typeA === 'VIDEO' ? (
+          <video
+            ref={(el) => { layerRefA.current = el; }}
+            src={urlA}
+            className="absolute inset-0 w-full h-full object-cover will-change-transform"
+            muted
+            playsInline
+            loop
+            autoPlay
+            preload="metadata"
+            style={baseMediaStyle}
+          />
+        ) : (
+          <img
+            ref={(el) => { layerRefA.current = el; }}
+            src={urlA}
+            className="absolute inset-0 w-full h-full object-cover will-change-transform"
+            alt=""
+            draggable={false}
+            style={baseMediaStyle}
+            decoding="async"
+          />
+        )
       )}
       
       {/* Layer B - Only render if URL exists */}
       {urlB && (
-        <img
-          ref={imageRefB}
-          src={urlB}
-          className="absolute inset-0 w-full h-full object-cover will-change-transform"
-          alt=""
-          draggable={false}
-          style={{ 
-            border: 'none', 
-            outline: 'none', 
-            boxShadow: 'none',
-            margin: 0,
-            padding: 0,
-            display: 'block',
-            opacity: 0, // Controlled by GSAP
-          }}
-        />
+        typeB === 'VIDEO' ? (
+          <video
+            ref={(el) => { layerRefB.current = el; }}
+            src={urlB}
+            className="absolute inset-0 w-full h-full object-cover will-change-transform"
+            muted
+            playsInline
+            loop
+            autoPlay
+            preload="metadata"
+            style={baseMediaStyle}
+          />
+        ) : (
+          <img
+            ref={(el) => { layerRefB.current = el; }}
+            src={urlB}
+            className="absolute inset-0 w-full h-full object-cover will-change-transform"
+            alt=""
+            draggable={false}
+            style={baseMediaStyle}
+            decoding="async"
+          />
+        )
       )}
     </div>
   );

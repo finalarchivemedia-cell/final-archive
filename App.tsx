@@ -5,8 +5,8 @@ import { Gallery } from './components/Gallery';
 import { ContactModal } from './components/ContactModal';
 import { AppSettings, DEFAULT_SETTINGS, ImageRecord } from './types';
 import { fetchImageList, fetchImageById } from './services/api';
-import { preloadImage } from './services/preload';
-import { ID_REGEX } from './constants';
+import { preloadMedia } from './services/preload';
+import { ID_REGEX, MUSIC_PATH } from './constants';
 
 // Lazy load admin to avoid bundle bloat
 const AdminPanel = React.lazy(() => import('./components/AdminPanel'));
@@ -61,8 +61,8 @@ const GalleryRouteHandler: React.FC<{
       // This ensures that when Intro finishes, Step 7 is instant (from cache)
       try {
         await Promise.all([
-          preloadImage(startRecord.url),
-          preloadImage(nextRecord.url)
+          preloadMedia(startRecord.url),
+          preloadMedia(nextRecord.url)
         ]);
       } catch (e) {
         console.warn('Preload warning', e);
@@ -114,6 +114,7 @@ export default function App() {
   const [images, setImages] = useState<ImageRecord[]>([]);
   const [contactOpen, setContactOpen] = useState(false);
   const location = useLocation();
+  const audioRef = React.useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
     // Sync public settings from backend
@@ -131,6 +132,34 @@ export default function App() {
     fetchImageList().then(data => setImages(data));
   }, []);
 
+  // Background music:
+  // Browsers block autoplay with sound, so we start on first user gesture.
+  // Requirement: keep Step 1-6 silent/black; we enable after Step 8 gate (hoverEnabled).
+  useEffect(() => {
+    if (!hoverEnabled) return;
+    const el = audioRef.current;
+    if (!el) return;
+
+    let started = false;
+    const start = async () => {
+      if (started) return;
+      started = true;
+      try {
+        el.volume = 0.25;
+        await el.play();
+      } catch {
+        // ignore (no file / policy)
+      }
+    };
+
+    window.addEventListener('pointerdown', start, { once: true });
+    window.addEventListener('keydown', start, { once: true });
+    return () => {
+      window.removeEventListener('pointerdown', start);
+      window.removeEventListener('keydown', start);
+    };
+  }, [hoverEnabled]);
+
   const isAdmin = location.pathname === '/admin';
 
   // Check for ?admin=1 in URL (only check on mount/location change)
@@ -138,6 +167,8 @@ export default function App() {
 
   return (
     <main className="relative w-screen h-screen bg-black overflow-hidden selection:bg-white selection:text-black">
+      {/* Optional background music file at /public/ambient.mp3 */}
+      <audio ref={audioRef} src={MUSIC_PATH} preload="metadata" loop />
 
       {/* Intro & Logo Layer - Persistent (except Admin) */}
       {!isAdmin && (

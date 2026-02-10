@@ -28,7 +28,8 @@ export const runSync = async () => {
 
             if (env.R2_PREFIX && !obj.Key.startsWith(env.R2_PREFIX)) continue;
 
-            if (!R2Service.isImage(obj.Key)) continue;
+            const mediaType = R2Service.getMediaType(obj.Key);
+            if (!mediaType) continue;
 
             if (!existingKeys.has(obj.Key)) {
                 // We trust env.CDN_BASE_URL is present because of refine logic + ENABLE_R2_SYNC check
@@ -36,6 +37,7 @@ export const runSync = async () => {
                 await IdGenerator.createImageRecord({
                     originalKey: obj.Key,
                     url: url,
+                    mediaType,
                     sizeBytes: obj.Size,
                 });
                 newCount++;

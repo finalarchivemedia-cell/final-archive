@@ -6,6 +6,7 @@ export interface AppSettings {
 export interface ImageRecord {
   id: string;
   url: string;
+  mediaType: 'IMAGE' | 'VIDEO';
 }
 
 export const DEFAULT_SETTINGS: AppSettings = {

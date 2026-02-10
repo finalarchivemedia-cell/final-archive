@@ -104,6 +104,23 @@ Private.
 - **Image Storage**: Cloudflare R2 + (optional) Cloudflare CDN via custom domain.
 - **Contact Email**: Resend (deliverability + simple API).
 
+## Performance Notes (realistic)
+The hard performance targets (TTFB 0.1s, mobile 1s, desktop 2s) are highly dependent on:
+- media sizes (JPEG/MP4 must be optimized)
+- CDN caching (R2/CDN + Pages)
+- backend cold starts (if any) and region selection
+
+To hit these targets in practice:
+- keep images small (prefer WebP/AVIF, < 500KB when possible)
+- keep videos short and small (prefer H.264 MP4, < 2–5MB for “short clips”)
+- serve media via CDN (set `CDN_BASE_URL` to your CDN domain)
+
+## Background Music (optional)
+Browsers generally block autoplay with sound. This project starts background audio on the **first user interaction** after Step 8.
+
+- Put your track at `public/ambient.mp3`
+- The app will load it via `MUSIC_PATH` (`constants.ts`)
+
 ### SPA Routing (required for `finalarchivemedia.com/12345`)
 Because the app uses `BrowserRouter`, your host must rewrite unknown paths to `index.html`.
 - Cloudflare Pages: add a `_redirects` file with `/* /index.html 200`
@@ -120,3 +137,5 @@ If you specifically want **iCloud → automatic publish**, the clean approach is
   - iCloud folder → local folder
   - `rclone sync` local folder → `s3:r2-bucket/prefix`
 
+An example script is included:
+- `scripts/icloud_to_r2_rclone.sh`

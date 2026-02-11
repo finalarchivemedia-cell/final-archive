@@ -4,4 +4,17 @@ dist-server
 .git
 .env
 .env.*
+*.png
+*.jpg
+*.jpeg
+*.gif
+*.svg
+*.mp4
+*.webm
+*.mov
+public
+*.md
+Screenshot*
+*.log
+.DS_Store
 

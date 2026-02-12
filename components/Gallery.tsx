@@ -167,12 +167,12 @@ export const Gallery: React.FC<GalleryProps> = ({
             style={baseMediaStyle}
           />
         ) : (
-          <img
+        <img
             ref={(el) => { layerRefA.current = el; }}
-            src={urlA}
-            className="absolute inset-0 w-full h-full object-cover will-change-transform"
-            alt=""
-            draggable={false}
+          src={urlA}
+          className="absolute inset-0 w-full h-full object-cover will-change-transform"
+          alt=""
+          draggable={false}
             style={baseMediaStyle}
             decoding="async"
           />
@@ -194,12 +194,12 @@ export const Gallery: React.FC<GalleryProps> = ({
             style={baseMediaStyle}
           />
         ) : (
-          <img
+        <img
             ref={(el) => { layerRefB.current = el; }}
-            src={urlB}
-            className="absolute inset-0 w-full h-full object-cover will-change-transform"
-            alt=""
-            draggable={false}
+          src={urlB}
+          className="absolute inset-0 w-full h-full object-cover will-change-transform"
+          alt=""
+          draggable={false}
             style={baseMediaStyle}
             decoding="async"
           />

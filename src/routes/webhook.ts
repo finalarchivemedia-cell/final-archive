@@ -38,7 +38,7 @@ export const webhookRoutes: FastifyPluginAsyncZod = async (app) => {
                         return decodeURIComponent(rawKey.replace(/\+/g, ' '));
                     } catch {
                         return rawKey;
-                    }
+                }
                 };
 
                 const processKey = async (rawKey: string, eventName?: string) => {
@@ -47,39 +47,39 @@ export const webhookRoutes: FastifyPluginAsyncZod = async (app) => {
                     const isCreate = !eventName || eventName.includes('ObjectCreated');
 
                     if (isRemoved) {
-                        await prisma.image.updateMany({
-                            where: { originalKey: key },
-                            data: { isActive: false }
-                        });
-                        return;
-                    }
+                    await prisma.image.updateMany({
+                        where: { originalKey: key },
+                        data: { isActive: false }
+                    });
+                    return;
+                }
 
-                    if (!isCreate) return;
+                if (!isCreate) return;
 
                     const mediaType = R2Service.getMediaType(key);
                     if (!mediaType) {
                         console.log(`Skipping unsupported file: ${key}`);
-                        return;
+                    return;
+                }
+
+                const existing = await prisma.image.findUnique({
+                    where: { originalKey: key }
+                });
+
+                if (existing) {
+                    if (!existing.isActive) {
+                        await prisma.image.update({
+                            where: { id: existing.id },
+                            data: { isActive: true }
+                        });
                     }
+                    return;
+                }
 
-                    const existing = await prisma.image.findUnique({
-                        where: { originalKey: key }
-                    });
-
-                    if (existing) {
-                        if (!existing.isActive) {
-                            await prisma.image.update({
-                                where: { id: existing.id },
-                                data: { isActive: true }
-                            });
-                        }
-                        return;
-                    }
-
-                    const url = `${env.CDN_BASE_URL}/${key}`;
-                    await IdGenerator.createImageRecord({
-                        originalKey: key,
-                        url: url,
+                const url = `${env.CDN_BASE_URL}/${key}`;
+                await IdGenerator.createImageRecord({
+                    originalKey: key,
+                    url: url,
                         mediaType,
                     });
 

@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.finalarchive.icloudsync</string>
+    
+    <key>ProgramArguments</key>
+    <array>
+        <string>/bin/bash</string>
+        <string>/Users/mac/Documents/SQUARE SPACE /final-archive/scripts/sync_icloud_to_r2.sh</string>
+    </array>
+    
+    <key>StartInterval</key>
+    <integer>300</integer>
+    <!-- Run every 5 minutes (300 seconds) -->
+    
+    <key>RunAtLoad</key>
+    <true/>
+    <!-- Run immediately when loaded -->
+    
+    <key>StandardOutPath</key>
+    <string>/tmp/finalarchive_sync.log</string>
+    
+    <key>StandardErrorPath</key>
+    <string>/tmp/finalarchive_sync_error.log</string>
+    
+    <key>WorkingDirectory</key>
+    <string>/Users/mac/Documents/SQUARE SPACE /final-archive</string>
+</dict>
+</plist>

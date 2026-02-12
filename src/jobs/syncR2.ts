@@ -16,13 +16,26 @@ export const runSync = async () => {
     try {
         const objects = await r2.listAllObjects(env.R2_PREFIX);
 
+        // Get all existing images from database
         const existingImages = await prisma.image.findMany({
-            select: { originalKey: true }
+            select: { originalKey: true, isActive: true }
         });
         const existingKeys = new Set(existingImages.map(i => i.originalKey));
+        
+        // Get all keys currently in R2
+        const r2Keys = new Set<string>();
+        for (const obj of objects) {
+            if (!obj.Key) continue;
+            if (env.R2_PREFIX && !obj.Key.startsWith(env.R2_PREFIX)) continue;
+            const mediaType = R2Service.getMediaType(obj.Key);
+            if (!mediaType) continue;
+            r2Keys.add(obj.Key);
+        }
 
         let newCount = 0;
+        let deactivatedCount = 0;
 
+        // Add new images from R2
         for (const obj of objects) {
             if (!obj.Key) continue;
 
@@ -41,10 +54,30 @@ export const runSync = async () => {
                     sizeBytes: obj.Size,
                 });
                 newCount++;
+            } else {
+                // Reactivate if it was previously deactivated but now exists in R2
+                const existing = existingImages.find(img => img.originalKey === obj.Key);
+                if (existing && !existing.isActive) {
+                    await prisma.image.updateMany({
+                        where: { originalKey: obj.Key },
+                        data: { isActive: true }
+                    });
+                }
             }
         }
 
-        console.log(`Sync complete. Registered ${newCount} new images.`);
+        // Deactivate images that no longer exist in R2
+        for (const img of existingImages) {
+            if (!r2Keys.has(img.originalKey) && img.isActive) {
+                await prisma.image.updateMany({
+                    where: { originalKey: img.originalKey },
+                    data: { isActive: false }
+                });
+                deactivatedCount++;
+            }
+        }
+
+        console.log(`Sync complete. Registered ${newCount} new images. Deactivated ${deactivatedCount} missing images.`);
 
     } catch (err) {
         console.error('Error during R2 Sync:', err);

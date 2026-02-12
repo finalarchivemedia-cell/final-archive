@@ -129,7 +129,15 @@ export default function App() {
 
     // Performance Requirement:
     // Fetch immediately on mount. Do NOT wait for idle callback.
-    fetchImageList().then(data => setImages(data));
+    fetchImageList()
+      .then(data => {
+        console.log('[App] Images loaded:', data.length);
+        setImages(data);
+      })
+      .catch(err => {
+        console.error('[App] Failed to load images:', err);
+        setImages([]);
+      });
   }, []);
 
   // Background music:

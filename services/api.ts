@@ -1,17 +1,41 @@
 import { AppSettings, ImageRecord } from '../types';
 
-const API_ORIGIN = (import.meta as any).env?.VITE_API_BASE_URL || '';
+// Get API base URL from environment or use relative path as fallback
+const getApiOrigin = () => {
+  const envUrl = (import.meta as any).env?.VITE_API_BASE_URL;
+  if (envUrl) return envUrl;
+  
+  // Fallback: Try to detect if we're in production
+  // If on finalarchivemedia.com, use Railway backend
+  if (typeof window !== 'undefined') {
+    const hostname = window.location.hostname;
+    if (hostname === 'finalarchivemedia.com' || hostname === 'www.finalarchivemedia.com') {
+      return 'https://final-archive-production.up.railway.app';
+    }
+  }
+  
+  return ''; // Relative path for local dev
+};
+
+const API_ORIGIN = getApiOrigin();
 const API_BASE = `${API_ORIGIN}/api`;
 
 // --- Public Endpoints ---
 
 export const fetchImageList = async (): Promise<ImageRecord[]> => {
   try {
-    const res = await fetch(`${API_BASE}/images`);
-    if (!res.ok) throw new Error('Failed to fetch images');
-    return await res.json();
+    const url = `${API_BASE}/images`;
+    console.log('[API] Fetching images from:', url);
+    const res = await fetch(url);
+    if (!res.ok) {
+      console.error('[API] Failed to fetch images:', res.status, res.statusText);
+      throw new Error(`Failed to fetch images: ${res.status} ${res.statusText}`);
+    }
+    const data = await res.json();
+    console.log('[API] Fetched images:', data.length);
+    return data;
   } catch (err) {
-    console.error(err);
+    console.error('[API] Error fetching images:', err);
     return [];
   }
 };

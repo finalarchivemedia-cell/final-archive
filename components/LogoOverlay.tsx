@@ -19,20 +19,30 @@ export const LogoOverlay: React.FC<LogoOverlayProps> = ({ onIntroComplete, hover
   useEffect(() => {
     if (logoLoaded) return; // Prevent duplicate loading
     
+    // Try loading logo.png first
     const img = new Image();
+    img.crossOrigin = 'anonymous';
     img.src = '/logo.png';
+    
     img.onload = () => {
-      if (!logoLoaded) {
-        setLogoLoaded(true);
-        setLogoSrc('/logo.png');
-      }
+      setLogoLoaded(true);
+      setLogoSrc('/logo.png');
     };
+    
     img.onerror = () => {
-      if (!logoLoaded) {
-        // Fallback to LOGO_PATH constant
-        setLogoSrc(LOGO_PATH);
+      // Fallback to LOGO_PATH constant
+      const fallbackImg = new Image();
+      fallbackImg.crossOrigin = 'anonymous';
+      fallbackImg.src = LOGO_PATH;
+      fallbackImg.onload = () => {
         setLogoLoaded(true);
-      }
+        setLogoSrc(LOGO_PATH);
+      };
+      fallbackImg.onerror = () => {
+        // If both fail, still set loaded to allow timeline to start
+        setLogoLoaded(true);
+        setLogoSrc(LOGO_PATH);
+      };
     };
   }, [logoLoaded]);
 
@@ -113,69 +123,79 @@ export const LogoOverlay: React.FC<LogoOverlayProps> = ({ onIntroComplete, hover
         style={{
           aspectRatio: 'auto',
           minHeight: '180px',
-          maxHeight: '300px'
+          maxHeight: '300px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center'
         }}
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
       >
         {/* Single logo image container - prevents duplicate rendering */}
-        {logoLoaded && (
-          <>
-            {/* Top Part: "Final Archive" */}
-            <img 
-              ref={titleRef}
-              src={logoSrc || LOGO_PATH} 
-              alt="Final Archive"
-              className="absolute inset-0 w-full h-full object-contain border-none outline-none ring-0 shadow-none pointer-events-none"
-              style={{ 
-                // Show top 60% - better clipping for mobile
-                clipPath: 'polygon(0% 0%, 100% 0%, 100% 60%, 0% 60%)',
-                WebkitClipPath: 'polygon(0% 0%, 100% 0%, 100% 60%, 0% 60%)',
-                objectPosition: 'center top',
-                border: 'none',
-                outline: 'none',
-                maxWidth: '100%',
-                maxHeight: '100%',
-                width: '100%',
-                height: '100%'
-              }}
-              onError={() => {
-                if (logoSrc !== LOGO_PATH) {
-                  setLogoSrc(LOGO_PATH);
-                }
-              }}
-              draggable={false}
-            />
+        {/* Always render images, visibility controlled by GSAP */}
+        {/* Top Part: "Final Archive" */}
+        <img 
+          ref={titleRef}
+          src={logoSrc || LOGO_PATH} 
+          alt=""
+          className="absolute inset-0 w-full h-full object-contain border-none outline-none ring-0 shadow-none pointer-events-none"
+          style={{ 
+            // Show top 60% - better clipping for both mobile and web
+            clipPath: 'polygon(0% 0%, 100% 0%, 100% 60%, 0% 60%)',
+            WebkitClipPath: 'polygon(0% 0%, 100% 0%, 100% 60%, 0% 60%)',
+            objectPosition: 'center top',
+            border: 'none',
+            outline: 'none',
+            maxWidth: '100%',
+            maxHeight: '100%',
+            width: '100%',
+            height: '100%',
+            display: 'block'
+          }}
+          onLoad={() => {
+            if (!logoLoaded) setLogoLoaded(true);
+          }}
+          onError={() => {
+            if (logoSrc !== LOGO_PATH) {
+              setLogoSrc(LOGO_PATH);
+            }
+            if (!logoLoaded) setLogoLoaded(true);
+          }}
+          draggable={false}
+        />
 
-            {/* Bottom Part: "For All Eternity" */}
-            <img 
-              ref={taglineRef}
-              src={logoSrc || LOGO_PATH} 
-              alt="For All Eternity"
-              className="absolute inset-0 w-full h-full object-contain mix-blend-screen border-none outline-none ring-0 shadow-none pointer-events-none"
-              style={{ 
-                // Show bottom 40% - better clipping for mobile
-                clipPath: 'polygon(0% 60%, 100% 60%, 100% 100%, 0% 100%)',
-                WebkitClipPath: 'polygon(0% 60%, 100% 60%, 100% 100%, 0% 100%)',
-                objectPosition: 'center bottom',
-                // Etched Look Filter (always applied, opacity controls visibility)
-                filter: 'contrast(1.2) sepia(0.2)',
-                border: 'none',
-                outline: 'none',
-                maxWidth: '100%',
-                maxHeight: '100%',
-                width: '100%',
-                height: '100%'
-              }}
-              onError={() => {
-                if (logoSrc !== LOGO_PATH) {
-                  setLogoSrc(LOGO_PATH);
-                }
-              }}
-              draggable={false}
-            />
-          </>
-        )}
+        {/* Bottom Part: "For All Eternity" */}
+        <img 
+          ref={taglineRef}
+          src={logoSrc || LOGO_PATH} 
+          alt=""
+          className="absolute inset-0 w-full h-full object-contain mix-blend-screen border-none outline-none ring-0 shadow-none pointer-events-none"
+          style={{ 
+            // Show bottom 40% - better clipping for both mobile and web
+            clipPath: 'polygon(0% 60%, 100% 60%, 100% 100%, 0% 100%)',
+            WebkitClipPath: 'polygon(0% 60%, 100% 60%, 100% 100%, 0% 100%)',
+            objectPosition: 'center bottom',
+            // Etched Look Filter (always applied, opacity controls visibility)
+            filter: 'contrast(1.2) sepia(0.2)',
+            border: 'none',
+            outline: 'none',
+            maxWidth: '100%',
+            maxHeight: '100%',
+            width: '100%',
+            height: '100%',
+            display: 'block'
+          }}
+          onLoad={() => {
+            if (!logoLoaded) setLogoLoaded(true);
+          }}
+          onError={() => {
+            if (logoSrc !== LOGO_PATH) {
+              setLogoSrc(LOGO_PATH);
+            }
+            if (!logoLoaded) setLogoLoaded(true);
+          }}
+          draggable={false}
+        />
       </div>
     </div>
   );

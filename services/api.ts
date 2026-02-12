@@ -116,6 +116,34 @@ export const updateAdminSettings = async (settings: { displayDurationSec: number
   }
 };
 
+export const refreshAdminSync = async (): Promise<boolean> => {
+  try {
+    const res = await fetch(`${API_BASE}/admin/refresh`, {
+      method: 'POST',
+      headers: getAuthHeaders()
+    });
+    if (res.status === 401) throw new Error('Unauthorized');
+    return res.ok;
+  } catch (e: any) {
+    if (e.message === 'Unauthorized') throw e;
+    return false;
+  }
+};
+
+export const deactivateAdminImage = async (id: string): Promise<boolean> => {
+  try {
+    const res = await fetch(`${API_BASE}/admin/images/${id}/deactivate`, {
+      method: 'POST',
+      headers: getAuthHeaders()
+    });
+    if (res.status === 401) throw new Error('Unauthorized');
+    return res.ok;
+  } catch (e: any) {
+    if (e.message === 'Unauthorized') throw e;
+    return false;
+  }
+};
+
 // --- Contact ---
 export const sendContact = async (data: { email: string; message: string }): Promise<boolean> => {
   try {

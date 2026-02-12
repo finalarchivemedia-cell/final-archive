@@ -637,6 +637,303 @@ Ye sab requirements client ne specify ki thi:
 
 ---
 
+## 🎛️ Admin Panel se Content Update Kaise Karein
+
+### Admin Panel Access Karne ka Tarika
+
+#### Step 1: Admin Panel Open Karo
+
+**Local Development:**
+```
+http://localhost:5173/admin
+```
+
+**Production (Live Website):**
+```
+https://finalarchivemedia.com/admin
+```
+
+**Ya URL me `?admin=1` add karo:**
+```
+https://finalarchivemedia.com/?admin=1
+```
+Phir footer me "Admin" link dikhega.
+
+#### Step 2: Login Karo
+
+1. Admin panel open hote hi **password screen** dikhega
+2. Apna **admin password** enter karo (`.env` file me `ADMIN_PASSWORD` me jo value hai)
+3. **"Login"** button click karo
+4. Agar password sahi hai, to settings screen dikhega ✅
+
+**Note:** Password `.env` file me set kiya hota hai. Agar password change karna hai, to `.env` file me `ADMIN_PASSWORD` update karo.
+
+---
+
+### Admin Panel se Kya Kya Update Kar Sakte Hain
+
+#### 1. **Display Duration (Image Kitne Time Tak Dikhegi)**
+
+**Kya hai:**
+- Har image kitne seconds tak screen par dikhegi
+- Range: **1 second** se **10 seconds** tak
+
+**Kaise Update Karein:**
+1. Admin panel me login karo
+2. **"Display Duration"** slider ko left/right move karo
+3. Value real-time me update hoti rahegi (dikhega: "6s", "3s", etc.)
+4. **"SAVE CHANGES"** button click karo
+5. Button **"SAVED"** ho jayega (green color me)
+6. Changes immediately website par apply ho jayenge! ✅
+
+**Example:**
+- **3 seconds** = Fast slideshow (images quickly change)
+- **6 seconds** = Normal speed (default)
+- **10 seconds** = Slow slideshow (images longer dikhengi)
+
+#### 2. **Crop / Zoom (Image ka Zoom Level)**
+
+**Kya hai:**
+- Images ka zoom/crop level control karta hai
+- Range: **25%** se **100%** tak
+- Higher value = More zoom (image ka center part dikhega)
+- Lower value = Less zoom (full image dikhega)
+
+**Kaise Update Karein:**
+1. Admin panel me login karo
+2. **"Crop / Zoom"** slider ko left/right move karo
+3. Value real-time me update hoti rahegi (dikhega: "60%", "80%", etc.)
+4. **"SAVE CHANGES"** button click karo
+5. Changes immediately website par apply ho jayenge! ✅
+
+**Example:**
+- **25%** = Full image dikhega (no zoom)
+- **60%** = Medium zoom (default)
+- **100%** = Maximum zoom (image ka center part hi dikhega)
+
+#### 3. **Manual Sync (R2 se Images Manually Sync Karo)**
+
+**Kya hai:**
+- Agar aapne R2 bucket me images upload kiye hain lekin website par nahi dikh rahe
+- To manually sync trigger kar sakte hain
+- Backend automatically R2 bucket scan karega aur nayi images add karega
+
+**Kaise Use Karein (API se):**
+
+**Terminal me:**
+```bash
+# Pehle login karo aur token le lo
+curl -X POST http://localhost:3000/api/admin/login \
+  -H "Content-Type: application/json" \
+  -d '{"password":"your-admin-password"}'
+
+# Response me token milega, use karo:
+curl -X POST http://localhost:3000/api/admin/refresh \
+  -H "Authorization: Bearer YOUR_TOKEN_HERE"
+```
+
+**Expected Response:**
+```json
+{
+  "ok": true,
+  "message": "Sync started (background)"
+}
+```
+
+**Note:** Currently UI me manual sync button nahi hai, lekin API se kar sakte hain. Agar UI me button chahiye, to feature add kar sakte hain.
+
+#### 4. **Image Deactivate (Image Hide Karo)**
+
+**Kya hai:**
+- Kisi specific image ko website se hide kar sakte hain
+- Image database me rahegi, lekin website par nahi dikhegi
+- Soft delete hai (permanent delete nahi)
+
+**Kaise Use Karein (API se):**
+
+**Terminal me:**
+```bash
+# Pehle login karo aur token le lo
+curl -X POST http://localhost:3000/api/admin/login \
+  -H "Content-Type: application/json" \
+  -d '{"password":"your-admin-password"}'
+
+# Image deactivate karo (image ID se)
+curl -X POST http://localhost:3000/api/admin/images/12345/deactivate \
+  -H "Authorization: Bearer YOUR_TOKEN_HERE"
+```
+
+**Expected Response:**
+```json
+{
+  "ok": true
+}
+```
+
+**Note:** Ab UI me image list aur deactivate button available hai.
+
+---
+
+### Admin Panel Features Detail
+
+#### ✅ Currently Available (UI me):
+
+1. **Display Duration Slider**
+   - Range: 1-10 seconds
+   - Real-time preview
+   - Save button se apply hota hai
+
+2. **Crop/Zoom Slider**
+   - Range: 25-100%
+   - Real-time preview
+   - Save button se apply hota hai
+
+3. **Save Changes Button**
+   - Settings save karta hai
+   - Success message dikhata hai
+   - Changes immediately apply hote hain
+
+4. **Manual Sync Button**
+   - R2 se fresh sync trigger karta hai
+   - Button press karte hi background sync start ho jata hai
+
+5. **Image List View**
+   - Active images list dikhta hai
+   - Thumbnail + ID + media type
+
+6. **Image Deactivate Button**
+   - Image ko website se hide karta hai
+   - Confirmation prompt aata hai
+
+7. **Logout Button**
+   - Top right corner me
+   - Session end karta hai
+
+#### ⚠️ Currently Not Available (API se kar sakte hain):
+
+1. **Image Activate (Undo Deactivate)** - Currently UI/API me activate endpoint nahi hai
+
+---
+
+### Admin Panel Use Karne ka Complete Example
+
+#### Scenario: Display Duration Badhana Hai
+
+1. **Browser open karo:**
+   ```
+   https://finalarchivemedia.com/admin
+   ```
+
+2. **Password enter karo:**
+   - Admin password type karo
+   - "Login" click karo
+
+3. **Settings adjust karo:**
+   - "Display Duration" slider ko **8 seconds** par set karo
+   - "Crop / Zoom" slider ko **70%** par set karo
+
+4. **Save karo:**
+   - "SAVE CHANGES" button click karo
+   - Button **"SAVED"** (green) ho jayega
+   - Changes immediately website par apply ho jayenge
+
+5. **Verify karo:**
+   - Main website par jao
+   - Images ab 8 seconds tak dikhengi
+   - Zoom level 70% hoga
+
+---
+
+### Admin Panel Troubleshooting
+
+#### Problem: "Invalid password" Error
+
+**Solution:**
+- `.env` file me `ADMIN_PASSWORD` check karo
+- Password exactly same hona chahiye (case-sensitive)
+- Agar password change kiya hai, to server restart karo
+
+#### Problem: Login ke baad settings nahi dikh rahe
+
+**Solution:**
+- Browser console check karo (F12)
+- Network tab me API calls check karo
+- Backend server running hai ya nahi verify karo
+
+#### Problem: Changes save nahi ho rahe
+
+**Solution:**
+- "SAVE CHANGES" button click kiya hai ya nahi check karo
+- Backend server logs check karo
+- Database connection verify karo
+
+#### Problem: Changes apply nahi ho rahe website par
+
+**Solution:**
+- Browser cache clear karo (Ctrl+Shift+R / Cmd+Shift+R)
+- Settings API check karo: `curl http://localhost:3000/api/settings`
+- Backend server restart karo
+
+---
+
+### Advanced: API se Direct Update (Terminal se)
+
+Agar aap terminal se directly update karna chahte hain:
+
+#### Step 1: Login aur Token Le Lo
+
+```bash
+TOKEN=$(curl -s -X POST http://localhost:3000/api/admin/login \
+  -H "Content-Type: application/json" \
+  -d '{"password":"your-password"}' | jq -r '.token')
+
+echo "Token: $TOKEN"
+```
+
+#### Step 2: Settings Update Karo
+
+```bash
+curl -X PUT http://localhost:3000/api/admin/settings \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "displayDurationSec": 8,
+    "cropPercent": 70
+  }'
+```
+
+#### Step 3: Manual Sync Trigger Karo
+
+```bash
+curl -X POST http://localhost:3000/api/admin/refresh \
+  -H "Authorization: Bearer $TOKEN"
+```
+
+#### Step 4: Image Deactivate Karo
+
+```bash
+curl -X POST http://localhost:3000/api/admin/images/12345/deactivate \
+  -H "Authorization: Bearer $TOKEN"
+```
+
+---
+
+### Summary: Admin Panel se Kya Kya Ho Sakta Hai
+
+| Feature | UI me Available? | API se Available? | Kaise Use Karein |
+|---------|------------------|-------------------|------------------|
+| Display Duration | ✅ Yes | ✅ Yes | Slider se adjust karo |
+| Crop/Zoom | ✅ Yes | ✅ Yes | Slider se adjust karo |
+| Save Settings | ✅ Yes | ✅ Yes | "SAVE CHANGES" button |
+| Manual Sync | ❌ No | ✅ Yes | API call se |
+| Image List | ❌ No | ✅ Yes | `/api/images` se |
+| Image Deactivate | ❌ No | ✅ Yes | API call se |
+| Logout | ✅ Yes | ✅ Yes | "Logout" button |
+
+**Note:** Agar UI me missing features chahiye (Manual Sync, Image Management), to development team se request kar sakte hain.
+
+---
+
 ## 📞 Support & Troubleshooting
 
 ### Logs Check Karne ke liye:

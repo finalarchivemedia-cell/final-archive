@@ -39,6 +39,18 @@
         /* Hides alt text and broken image borders */
         font-size: 0;
         color: transparent;
+        /* Prevent image scaling issues on mobile */
+        -webkit-user-drag: none;
+        user-select: none;
+        -webkit-user-select: none;
+      }
+      
+      /* Mobile-specific fixes */
+      @media (max-width: 640px) {
+        img {
+          max-width: 100% !important;
+          height: auto !important;
+        }
       }
       
       /* Hide scrollbar */

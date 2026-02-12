@@ -15,20 +15,26 @@ export const LogoOverlay: React.FC<LogoOverlayProps> = ({ onIntroComplete, hover
   const [logoSrc, setLogoSrc] = useState<string>('/logo.png');
   const [logoLoaded, setLogoLoaded] = useState(false);
 
-  // Preload logo image
+  // Preload logo image (only once)
   useEffect(() => {
+    if (logoLoaded) return; // Prevent duplicate loading
+    
     const img = new Image();
     img.src = '/logo.png';
     img.onload = () => {
-      setLogoLoaded(true);
-      setLogoSrc('/logo.png');
+      if (!logoLoaded) {
+        setLogoLoaded(true);
+        setLogoSrc('/logo.png');
+      }
     };
     img.onerror = () => {
-      // Fallback to LOGO_PATH constant
-      setLogoSrc(LOGO_PATH);
-      setLogoLoaded(true);
+      if (!logoLoaded) {
+        // Fallback to LOGO_PATH constant
+        setLogoSrc(LOGO_PATH);
+        setLogoLoaded(true);
+      }
     };
-  }, []);
+  }, [logoLoaded]);
 
   useEffect(() => {
     if (!logoLoaded) return; // Wait for logo to load
@@ -103,55 +109,73 @@ export const LogoOverlay: React.FC<LogoOverlayProps> = ({ onIntroComplete, hover
       style={{ pointerEvents: hoverEnabled ? 'auto' : 'none' }}
     >
       <div 
-        className="relative w-[90vw] sm:w-[80vw] max-w-[600px] h-[200px] sm:h-[300px] border-none outline-none"
+        className="relative w-[85vw] sm:w-[80vw] max-w-[600px] h-[180px] sm:h-[300px] border-none outline-none overflow-hidden"
+        style={{
+          aspectRatio: 'auto',
+          minHeight: '180px',
+          maxHeight: '300px'
+        }}
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
       >
-        {/* Top Part: "Final Archive" */}
-        <img 
-          ref={titleRef}
-          src={logoSrc || LOGO_PATH} 
-          alt="Final Archive"
-          className="absolute inset-0 w-full h-full object-contain border-none outline-none ring-0 shadow-none"
-          style={{ 
-            // Show top 60%
-            clipPath: 'inset(0 0 40% 0)',
-            objectPosition: 'center top',
-            border: 'none',
-            outline: 'none',
-            visibility: logoLoaded ? 'visible' : 'hidden'
-          }}
-          onLoad={() => setLogoLoaded(true)}
-          onError={() => {
-            setLogoSrc(LOGO_PATH);
-            setLogoLoaded(true);
-          }}
-          draggable={false}
-        />
+        {/* Single logo image container - prevents duplicate rendering */}
+        {logoLoaded && (
+          <>
+            {/* Top Part: "Final Archive" */}
+            <img 
+              ref={titleRef}
+              src={logoSrc || LOGO_PATH} 
+              alt="Final Archive"
+              className="absolute inset-0 w-full h-full object-contain border-none outline-none ring-0 shadow-none pointer-events-none"
+              style={{ 
+                // Show top 60% - better clipping for mobile
+                clipPath: 'polygon(0% 0%, 100% 0%, 100% 60%, 0% 60%)',
+                WebkitClipPath: 'polygon(0% 0%, 100% 0%, 100% 60%, 0% 60%)',
+                objectPosition: 'center top',
+                border: 'none',
+                outline: 'none',
+                maxWidth: '100%',
+                maxHeight: '100%',
+                width: '100%',
+                height: '100%'
+              }}
+              onError={() => {
+                if (logoSrc !== LOGO_PATH) {
+                  setLogoSrc(LOGO_PATH);
+                }
+              }}
+              draggable={false}
+            />
 
-        {/* Bottom Part: "For All Eternity" */}
-        <img 
-          ref={taglineRef}
-          src={logoSrc || LOGO_PATH} 
-          alt="For All Eternity"
-          className="absolute inset-0 w-full h-full object-contain mix-blend-screen border-none outline-none ring-0 shadow-none"
-          style={{ 
-            // Show bottom 40%
-            clipPath: 'inset(60% 0 0 0)',
-            objectPosition: 'center bottom',
-            // Etched Look Filter (always applied, opacity controls visibility)
-            filter: 'contrast(1.2) sepia(0.2)',
-            border: 'none',
-            outline: 'none',
-            visibility: logoLoaded ? 'visible' : 'hidden'
-          }}
-          onLoad={() => setLogoLoaded(true)}
-          onError={() => {
-            setLogoSrc(LOGO_PATH);
-            setLogoLoaded(true);
-          }}
-          draggable={false}
-        />
+            {/* Bottom Part: "For All Eternity" */}
+            <img 
+              ref={taglineRef}
+              src={logoSrc || LOGO_PATH} 
+              alt="For All Eternity"
+              className="absolute inset-0 w-full h-full object-contain mix-blend-screen border-none outline-none ring-0 shadow-none pointer-events-none"
+              style={{ 
+                // Show bottom 40% - better clipping for mobile
+                clipPath: 'polygon(0% 60%, 100% 60%, 100% 100%, 0% 100%)',
+                WebkitClipPath: 'polygon(0% 60%, 100% 60%, 100% 100%, 0% 100%)',
+                objectPosition: 'center bottom',
+                // Etched Look Filter (always applied, opacity controls visibility)
+                filter: 'contrast(1.2) sepia(0.2)',
+                border: 'none',
+                outline: 'none',
+                maxWidth: '100%',
+                maxHeight: '100%',
+                width: '100%',
+                height: '100%'
+              }}
+              onError={() => {
+                if (logoSrc !== LOGO_PATH) {
+                  setLogoSrc(LOGO_PATH);
+                }
+              }}
+              draggable={false}
+            />
+          </>
+        )}
       </div>
     </div>
   );

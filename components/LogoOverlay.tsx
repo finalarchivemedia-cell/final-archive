@@ -51,6 +51,15 @@ export const LogoOverlay: React.FC<LogoOverlayProps> = ({ onIntroComplete, hover
   useEffect(() => {
     if (!logoLoaded) return; // Wait for logo to load
     
+    // CRITICAL: Ensure tagline is completely hidden before timeline starts
+    if (taglineRef.current) {
+      gsap.set(taglineRef.current, { 
+        autoAlpha: 0,
+        opacity: 0,
+        visibility: 'hidden'
+      });
+    }
+    
     // Master Timeline - Strict Sequencing
     const tl = gsap.timeline({
       onComplete: () => {
@@ -59,14 +68,19 @@ export const LogoOverlay: React.FC<LogoOverlayProps> = ({ onIntroComplete, hover
     });
     tlRef.current = tl;
 
-    // Initial State: All hidden
-    gsap.set([titleRef.current, taglineRef.current], { autoAlpha: 0 });
+    // Initial State: All hidden (ensure both are set)
+    gsap.set([titleRef.current, taglineRef.current], { 
+      autoAlpha: 0,
+      opacity: 0,
+      visibility: 'hidden'
+    });
     
     // Step 1: Black screen hold 1s (Delay start of next tween)
     
     // Step 2: "Final Archive" fades in over 1s
     tl.to(titleRef.current, { 
       autoAlpha: 1, 
+      opacity: 1,
       duration: 1, 
       ease: "power1.inOut" 
     }, "+=1.0"); // The +=1.0 is the Step 1 delay
@@ -75,15 +89,23 @@ export const LogoOverlay: React.FC<LogoOverlayProps> = ({ onIntroComplete, hover
     tl.to({}, { duration: 3 });
 
     // Step 4: "For All Eternity" fades in over 1s (to full visibility initially)
+    // CRITICAL: Make visible first, then fade in
+    tl.set(taglineRef.current, { 
+      visibility: 'visible',
+      opacity: 0,
+      autoAlpha: 0
+    });
     tl.to(taglineRef.current, { 
-      autoAlpha: 1, 
+      autoAlpha: 1,
+      opacity: 1,
       duration: 1, 
       ease: "power1.inOut" 
     });
 
     // Step 5: "Final Archive" fades out over 2s
     tl.to(titleRef.current, { 
-      autoAlpha: 0, 
+      autoAlpha: 0,
+      opacity: 0,
       duration: 2, 
       ease: "power1.inOut" 
     });
@@ -92,6 +114,7 @@ export const LogoOverlay: React.FC<LogoOverlayProps> = ({ onIntroComplete, hover
     // "Tagline fades but stays..."
     tl.to(taglineRef.current, { 
       autoAlpha: 0.3, // Etched opacity
+      opacity: 0.3,
       duration: 1, 
       ease: "power1.inOut" 
     });
@@ -118,18 +141,20 @@ export const LogoOverlay: React.FC<LogoOverlayProps> = ({ onIntroComplete, hover
       ref={containerRef}
       className="fixed inset-0 z-50 flex items-center justify-center border-none outline-none"
       // Strictly gate pointer events: NONE until Step 8 is complete (hoverEnabled = true)
-      style={{ pointerEvents: hoverEnabled ? 'auto' : 'none' }}
+      style={{ 
+        pointerEvents: hoverEnabled ? 'auto' : 'none',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        width: '100%',
+        height: '100%',
+        margin: 0,
+        padding: 0
+      }}
     >
       <div 
-        className="relative w-[85vw] sm:w-[80vw] max-w-[600px] border-none outline-none overflow-hidden logo-container"
+        className="relative border-none outline-none overflow-hidden logo-container"
         style={{
-          aspectRatio: '2 / 1', // Maintain logo aspect ratio
-          minHeight: '180px',
-          maxHeight: '300px',
-          height: 'auto',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
           position: 'relative'
         }}
         onMouseEnter={handleMouseEnter}
@@ -142,12 +167,12 @@ export const LogoOverlay: React.FC<LogoOverlayProps> = ({ onIntroComplete, hover
           ref={titleRef}
           src={logoSrc || LOGO_PATH} 
           alt=""
-          className="absolute inset-0 w-full h-full object-contain border-none outline-none ring-0 shadow-none pointer-events-none"
+          className="absolute border-none outline-none ring-0 shadow-none pointer-events-none"
           style={{ 
             // Show top 60% - better clipping for both mobile and web
             clipPath: 'polygon(0% 0%, 100% 0%, 100% 60%, 0% 60%)',
             WebkitClipPath: 'polygon(0% 0%, 100% 0%, 100% 60%, 0% 60%)',
-            objectPosition: 'center top',
+            objectPosition: 'center center',
             objectFit: 'contain',
             border: 'none',
             outline: 'none',
@@ -156,6 +181,11 @@ export const LogoOverlay: React.FC<LogoOverlayProps> = ({ onIntroComplete, hover
             width: '100%',
             height: '100%',
             display: 'block',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            margin: 'auto',
             visibility: logoLoaded ? 'visible' : 'hidden'
           }}
           onLoad={() => {
@@ -177,15 +207,16 @@ export const LogoOverlay: React.FC<LogoOverlayProps> = ({ onIntroComplete, hover
           ref={taglineRef}
           src={logoSrc || LOGO_PATH} 
           alt=""
-          className="absolute inset-0 w-full h-full object-contain mix-blend-screen border-none outline-none ring-0 shadow-none pointer-events-none"
+          className="absolute border-none outline-none ring-0 shadow-none pointer-events-none"
           style={{ 
             // Show bottom 40% - better clipping for both mobile and web
             clipPath: 'polygon(0% 60%, 100% 60%, 100% 100%, 0% 100%)',
             WebkitClipPath: 'polygon(0% 60%, 100% 60%, 100% 100%, 0% 100%)',
-            objectPosition: 'center bottom',
+            objectPosition: 'center center',
             objectFit: 'contain',
             // Etched Look Filter (always applied, opacity controls visibility)
             filter: 'contrast(1.2) sepia(0.2)',
+            mixBlendMode: 'screen',
             border: 'none',
             outline: 'none',
             maxWidth: '100%',
@@ -193,7 +224,15 @@ export const LogoOverlay: React.FC<LogoOverlayProps> = ({ onIntroComplete, hover
             width: '100%',
             height: '100%',
             display: 'block',
-            visibility: logoLoaded ? 'visible' : 'hidden'
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            margin: 'auto',
+            // CRITICAL: Initially completely hidden until Step 4
+            opacity: 0,
+            visibility: 'hidden',
+            pointerEvents: 'none'
           }}
           onLoad={() => {
             console.log('[LogoOverlay] Tagline image loaded');

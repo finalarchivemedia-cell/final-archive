@@ -21,24 +21,26 @@ export const LogoOverlay: React.FC<LogoOverlayProps> = ({ onIntroComplete, hover
     
     // Try loading logo.png first
     const img = new Image();
-    img.crossOrigin = 'anonymous';
     img.src = '/logo.png';
     
     img.onload = () => {
+      console.log('[LogoOverlay] Logo loaded successfully: /logo.png');
       setLogoLoaded(true);
       setLogoSrc('/logo.png');
     };
     
     img.onerror = () => {
+      console.warn('[LogoOverlay] Failed to load /logo.png, trying fallback');
       // Fallback to LOGO_PATH constant
       const fallbackImg = new Image();
-      fallbackImg.crossOrigin = 'anonymous';
       fallbackImg.src = LOGO_PATH;
       fallbackImg.onload = () => {
+        console.log('[LogoOverlay] Logo loaded from fallback:', LOGO_PATH);
         setLogoLoaded(true);
         setLogoSrc(LOGO_PATH);
       };
       fallbackImg.onerror = () => {
+        console.error('[LogoOverlay] Failed to load logo from both sources');
         // If both fail, still set loaded to allow timeline to start
         setLogoLoaded(true);
         setLogoSrc(LOGO_PATH);
@@ -119,14 +121,16 @@ export const LogoOverlay: React.FC<LogoOverlayProps> = ({ onIntroComplete, hover
       style={{ pointerEvents: hoverEnabled ? 'auto' : 'none' }}
     >
       <div 
-        className="relative w-[85vw] sm:w-[80vw] max-w-[600px] h-[180px] sm:h-[300px] border-none outline-none overflow-hidden"
+        className="relative w-[85vw] sm:w-[80vw] max-w-[600px] border-none outline-none overflow-hidden logo-container"
         style={{
-          aspectRatio: 'auto',
+          aspectRatio: '2 / 1', // Maintain logo aspect ratio
           minHeight: '180px',
           maxHeight: '300px',
+          height: 'auto',
           display: 'flex',
           alignItems: 'center',
-          justifyContent: 'center'
+          justifyContent: 'center',
+          position: 'relative'
         }}
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
@@ -144,18 +148,22 @@ export const LogoOverlay: React.FC<LogoOverlayProps> = ({ onIntroComplete, hover
             clipPath: 'polygon(0% 0%, 100% 0%, 100% 60%, 0% 60%)',
             WebkitClipPath: 'polygon(0% 0%, 100% 0%, 100% 60%, 0% 60%)',
             objectPosition: 'center top',
+            objectFit: 'contain',
             border: 'none',
             outline: 'none',
             maxWidth: '100%',
             maxHeight: '100%',
             width: '100%',
             height: '100%',
-            display: 'block'
+            display: 'block',
+            visibility: logoLoaded ? 'visible' : 'hidden'
           }}
           onLoad={() => {
+            console.log('[LogoOverlay] Title image loaded');
             if (!logoLoaded) setLogoLoaded(true);
           }}
-          onError={() => {
+          onError={(e) => {
+            console.error('[LogoOverlay] Title image error:', e);
             if (logoSrc !== LOGO_PATH) {
               setLogoSrc(LOGO_PATH);
             }
@@ -175,6 +183,7 @@ export const LogoOverlay: React.FC<LogoOverlayProps> = ({ onIntroComplete, hover
             clipPath: 'polygon(0% 60%, 100% 60%, 100% 100%, 0% 100%)',
             WebkitClipPath: 'polygon(0% 60%, 100% 60%, 100% 100%, 0% 100%)',
             objectPosition: 'center bottom',
+            objectFit: 'contain',
             // Etched Look Filter (always applied, opacity controls visibility)
             filter: 'contrast(1.2) sepia(0.2)',
             border: 'none',
@@ -183,12 +192,15 @@ export const LogoOverlay: React.FC<LogoOverlayProps> = ({ onIntroComplete, hover
             maxHeight: '100%',
             width: '100%',
             height: '100%',
-            display: 'block'
+            display: 'block',
+            visibility: logoLoaded ? 'visible' : 'hidden'
           }}
           onLoad={() => {
+            console.log('[LogoOverlay] Tagline image loaded');
             if (!logoLoaded) setLogoLoaded(true);
           }}
-          onError={() => {
+          onError={(e) => {
+            console.error('[LogoOverlay] Tagline image error:', e);
             if (logoSrc !== LOGO_PATH) {
               setLogoSrc(LOGO_PATH);
             }

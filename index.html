@@ -59,6 +59,28 @@
         visibility: visible !important;
       }
       
+      /* Ensure logo container maintains aspect ratio */
+      .logo-container {
+        position: relative;
+        width: 85vw;
+        max-width: 600px;
+        aspect-ratio: 2 / 1;
+        min-height: 180px;
+        max-height: 300px;
+      }
+      
+      @media (min-width: 640px) {
+        .logo-container {
+          width: 80vw;
+        }
+      }
+      
+      /* Fix clipPath for better browser support */
+      img[style*="clip-path"] {
+        -webkit-clip-path: inherit;
+        clip-path: inherit;
+      }
+      
       /* Hide scrollbar */
       ::-webkit-scrollbar {
         display: none;

@@ -20,6 +20,7 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onUpdate }) => {
 
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
   const [syncStatus, setSyncStatus] = useState<'idle' | 'syncing' | 'done' | 'error'>('idle');
+  const [syncMessage, setSyncMessage] = useState('');
   const [images, setImages] = useState<AdminImageRecord[]>([]);
   const [imagesLoading, setImagesLoading] = useState(false);
   const [imagesError, setImagesError] = useState('');
@@ -53,7 +54,11 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onUpdate }) => {
     try {
       const data = await fetchAdminImages();
       setImages(data);
-    } catch {
+    } catch (e: any) {
+      if (e.message === 'Unauthorized') {
+        logout();
+        return;
+      }
       setImagesError('Failed to load images');
     } finally {
       setImagesLoading(false);
@@ -103,17 +108,25 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onUpdate }) => {
 
   const handleSyncNow = async () => {
     setSyncStatus('syncing');
+    setSyncMessage('');
     try {
-      const success = await refreshAdminSync();
-      if (success) {
+      const result = await refreshAdminSync();
+      if (result.ok) {
         setSyncStatus('done');
-        setTimeout(() => setSyncStatus('idle'), 2000);
+        setSyncMessage(`Sync complete: +${result.newCount ?? 0} new, -${result.deactivatedCount ?? 0} deactivated, +${result.reactivatedCount ?? 0} reactivated`);
+        setTimeout(() => setSyncStatus('idle'), 2500);
         setTimeout(() => loadImages(), 1500);
       } else {
         setSyncStatus('error');
+        setSyncMessage(result.reason || 'Sync failed');
       }
-    } catch {
-      logout();
+    } catch (e: any) {
+      if (e.message === 'Unauthorized') {
+        logout();
+        return;
+      }
+      setSyncStatus('error');
+      setSyncMessage('Sync failed');
     }
   };
 
@@ -236,7 +249,8 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onUpdate }) => {
                 </button>
               </div>
 
-              <div className="flex gap-4">
+              <div className="flex flex-col gap-3">
+                <div className="flex items-center gap-4">
                 <button
                   onClick={handleSyncNow}
                   className={`px-4 py-2 text-xs font-bold tracking-widest uppercase transition-all duration-300 border ${
@@ -248,6 +262,13 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onUpdate }) => {
                 >
                   {syncStatus === 'syncing' ? 'SYNCING...' : syncStatus === 'done' ? 'SYNC STARTED' : 'SYNC NOW'}
                 </button>
+                  {syncStatus === 'error' && (
+                    <span className="text-[10px] text-red-400 tracking-widest uppercase">{syncMessage || 'SYNC FAILED'}</span>
+                  )}
+                </div>
+                {syncMessage && syncStatus !== 'error' && (
+                  <div className="text-[10px] text-neutral-400 tracking-widest uppercase">{syncMessage}</div>
+                )}
               </div>
 
               <div className="mt-6">

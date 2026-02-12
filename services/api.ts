@@ -130,17 +130,18 @@ export const updateAdminSettings = async (settings: { displayDurationSec: number
   }
 };
 
-export const refreshAdminSync = async (): Promise<boolean> => {
+export const refreshAdminSync = async (): Promise<{ ok: boolean; newCount?: number; deactivatedCount?: number; reactivatedCount?: number; reason?: string; skipped?: boolean }> => {
   try {
     const res = await fetch(`${API_BASE}/admin/refresh`, {
       method: 'POST',
       headers: getAuthHeaders()
     });
     if (res.status === 401) throw new Error('Unauthorized');
-    return res.ok;
+    const data = await res.json().catch(() => ({}));
+    return res.ok ? { ok: true, ...data } : { ok: false, ...data };
   } catch (e: any) {
     if (e.message === 'Unauthorized') throw e;
-    return false;
+    return { ok: false, reason: 'Sync failed' };
   }
 };
 

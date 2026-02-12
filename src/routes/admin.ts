@@ -8,7 +8,7 @@ import { runSync } from '../jobs/syncR2';
 
 // Manual sync function logic (reused for job)
 export const syncR2Logic = async () => {
-    runSync().catch(console.error);
+    return await runSync();
 };
 
 export const adminRoutes: FastifyPluginAsyncZod = async (app) => {
@@ -118,10 +118,11 @@ export const adminRoutes: FastifyPluginAsyncZod = async (app) => {
 
     // POST /api/admin/refresh
     app.post('/refresh', async (req, reply) => {
-        // Trigger sync logic
-        syncR2Logic();
-
-        return { ok: true, message: "Sync started (background)" };
+        const result = await syncR2Logic();
+        if (result.skipped) {
+            return reply.code(400).send(result);
+        }
+        return result;
     });
 
     // POST /api/admin/images/:id/deactivate

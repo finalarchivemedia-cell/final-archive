@@ -4,10 +4,26 @@ import { prisma } from '../utils/prisma';
 import { IdGenerator } from '../services/idGenerator';
 import { env } from '../config/env';
 
-export const runSync = async () => {
+export interface SyncResult {
+    ok: boolean;
+    skipped?: boolean;
+    reason?: string;
+    newCount: number;
+    deactivatedCount: number;
+    reactivatedCount: number;
+}
+
+export const runSync = async (): Promise<SyncResult> => {
     if (!env.ENABLE_R2_SYNC) {
         console.log('Skipping R2 Sync (DISABLED)');
-        return;
+        return {
+            ok: false,
+            skipped: true,
+            reason: 'R2 sync disabled',
+            newCount: 0,
+            deactivatedCount: 0,
+            reactivatedCount: 0,
+        };
     }
 
     console.log('Starting R2 Sync...');
@@ -34,6 +50,7 @@ export const runSync = async () => {
 
         let newCount = 0;
         let deactivatedCount = 0;
+        let reactivatedCount = 0;
 
         // Add new images from R2
         for (const obj of objects) {
@@ -62,6 +79,7 @@ export const runSync = async () => {
                         where: { originalKey: obj.Key },
                         data: { isActive: true }
                     });
+                    reactivatedCount++;
                 }
             }
         }
@@ -77,10 +95,23 @@ export const runSync = async () => {
             }
         }
 
-        console.log(`Sync complete. Registered ${newCount} new images. Deactivated ${deactivatedCount} missing images.`);
+        console.log(`Sync complete. Registered ${newCount} new images. Deactivated ${deactivatedCount} missing images. Reactivated ${reactivatedCount} images.`);
+        return {
+            ok: true,
+            newCount,
+            deactivatedCount,
+            reactivatedCount,
+        };
 
     } catch (err) {
         console.error('Error during R2 Sync:', err);
+        return {
+            ok: false,
+            reason: 'Error during R2 Sync',
+            newCount: 0,
+            deactivatedCount: 0,
+            reactivatedCount: 0,
+        };
     }
 };
 
@@ -90,6 +121,6 @@ export const startScheduler = () => {
     }
     // Run every minute
     cron.schedule('* * * * *', () => {
-        runSync();
+        void runSync();
     });
 };

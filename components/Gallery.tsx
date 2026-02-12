@@ -49,7 +49,7 @@ export const Gallery: React.FC<GalleryProps> = ({
 
   // 2. Main Animation Loop
   useEffect(() => {
-    if (!active || !currentImg || !nextImg || images.length === 0) return;
+    if (!active || !currentImg || !nextImg) return;
 
     if (timelineRef.current) timelineRef.current.kill();
 
@@ -159,12 +159,17 @@ export const Gallery: React.FC<GalleryProps> = ({
             ref={(el) => { layerRefA.current = el; }}
             src={urlA}
             className="absolute inset-0 w-full h-full object-cover will-change-transform"
+            style={{
+              ...baseMediaStyle,
+              objectPosition: 'center center',
+              minWidth: '100%',
+              minHeight: '100%',
+            }}
             muted
             playsInline
             loop
             autoPlay
             preload="metadata"
-            style={baseMediaStyle}
           />
         ) : (
         <img
@@ -173,7 +178,12 @@ export const Gallery: React.FC<GalleryProps> = ({
           className="absolute inset-0 w-full h-full object-cover will-change-transform"
           alt=""
           draggable={false}
-            style={baseMediaStyle}
+            style={{
+              ...baseMediaStyle,
+              objectPosition: 'center center',
+              minWidth: '100%',
+              minHeight: '100%',
+            }}
             decoding="async"
           />
         )
@@ -186,12 +196,17 @@ export const Gallery: React.FC<GalleryProps> = ({
             ref={(el) => { layerRefB.current = el; }}
             src={urlB}
             className="absolute inset-0 w-full h-full object-cover will-change-transform"
+            style={{
+              ...baseMediaStyle,
+              objectPosition: 'center center',
+              minWidth: '100%',
+              minHeight: '100%',
+            }}
             muted
             playsInline
             loop
             autoPlay
             preload="metadata"
-            style={baseMediaStyle}
           />
         ) : (
         <img
@@ -200,7 +215,12 @@ export const Gallery: React.FC<GalleryProps> = ({
           className="absolute inset-0 w-full h-full object-cover will-change-transform"
           alt=""
           draggable={false}
-            style={baseMediaStyle}
+            style={{
+              ...baseMediaStyle,
+              objectPosition: 'center center',
+              minWidth: '100%',
+              minHeight: '100%',
+            }}
             decoding="async"
           />
         )

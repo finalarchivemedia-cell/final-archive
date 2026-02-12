@@ -13,8 +13,26 @@ export const LogoOverlay: React.FC<LogoOverlayProps> = ({ onIntroComplete, hover
   const taglineRef = useRef<HTMLImageElement>(null);
   const tlRef = useRef<gsap.core.Timeline | null>(null);
   const [logoSrc, setLogoSrc] = useState<string>('/logo.png');
+  const [logoLoaded, setLogoLoaded] = useState(false);
+
+  // Preload logo image
+  useEffect(() => {
+    const img = new Image();
+    img.src = '/logo.png';
+    img.onload = () => {
+      setLogoLoaded(true);
+      setLogoSrc('/logo.png');
+    };
+    img.onerror = () => {
+      // Fallback to LOGO_PATH constant
+      setLogoSrc(LOGO_PATH);
+      setLogoLoaded(true);
+    };
+  }, []);
 
   useEffect(() => {
+    if (!logoLoaded) return; // Wait for logo to load
+    
     // Master Timeline - Strict Sequencing
     const tl = gsap.timeline({
       onComplete: () => {
@@ -64,7 +82,7 @@ export const LogoOverlay: React.FC<LogoOverlayProps> = ({ onIntroComplete, hover
       tl.kill();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); // Run once on mount
+  }, [logoLoaded]); // Run when logo is loaded
 
   // Hover Interaction (Gated by hoverEnabled - Step 8)
   const handleMouseEnter = () => {
@@ -85,7 +103,7 @@ export const LogoOverlay: React.FC<LogoOverlayProps> = ({ onIntroComplete, hover
       style={{ pointerEvents: hoverEnabled ? 'auto' : 'none' }}
     >
       <div 
-        className="relative w-[80vw] max-w-[600px] h-[300px] border-none outline-none"
+        className="relative w-[90vw] sm:w-[80vw] max-w-[600px] h-[200px] sm:h-[300px] border-none outline-none"
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
       >
@@ -98,11 +116,16 @@ export const LogoOverlay: React.FC<LogoOverlayProps> = ({ onIntroComplete, hover
           style={{ 
             // Show top 60%
             clipPath: 'inset(0 0 40% 0)',
-            objectPosition: 'center',
+            objectPosition: 'center top',
             border: 'none',
-            outline: 'none'
+            outline: 'none',
+            visibility: logoLoaded ? 'visible' : 'hidden'
           }}
-          onError={() => setLogoSrc(LOGO_PATH)}
+          onLoad={() => setLogoLoaded(true)}
+          onError={() => {
+            setLogoSrc(LOGO_PATH);
+            setLogoLoaded(true);
+          }}
           draggable={false}
         />
 
@@ -115,13 +138,18 @@ export const LogoOverlay: React.FC<LogoOverlayProps> = ({ onIntroComplete, hover
           style={{ 
             // Show bottom 40%
             clipPath: 'inset(60% 0 0 0)',
-            objectPosition: 'center',
+            objectPosition: 'center bottom',
             // Etched Look Filter (always applied, opacity controls visibility)
             filter: 'contrast(1.2) sepia(0.2)',
             border: 'none',
-            outline: 'none'
+            outline: 'none',
+            visibility: logoLoaded ? 'visible' : 'hidden'
           }}
-          onError={() => setLogoSrc(LOGO_PATH)}
+          onLoad={() => setLogoLoaded(true)}
+          onError={() => {
+            setLogoSrc(LOGO_PATH);
+            setLogoLoaded(true);
+          }}
           draggable={false}
         />
       </div>

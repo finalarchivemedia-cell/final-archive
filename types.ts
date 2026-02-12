@@ -9,6 +9,12 @@ export interface ImageRecord {
   mediaType: 'IMAGE' | 'VIDEO';
 }
 
+export interface AdminImageRecord extends ImageRecord {
+  isActive: boolean;
+  createdAt: string;
+  originalKey: string;
+}
+
 export const DEFAULT_SETTINGS: AppSettings = {
   duration: 4,
   crop: 0.6,

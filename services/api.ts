@@ -1,4 +1,4 @@
-import { AppSettings, ImageRecord } from '../types';
+import { AppSettings, ImageRecord, AdminImageRecord } from '../types';
 
 // Get API base URL from environment or use relative path as fallback
 const getApiOrigin = () => {
@@ -101,6 +101,20 @@ export const fetchAdminSettings = async (): Promise<{ displayDurationSec: number
   }
 };
 
+export const fetchAdminImages = async (): Promise<AdminImageRecord[]> => {
+  try {
+    const res = await fetch(`${API_BASE}/admin/images`, {
+      headers: getAuthHeaders()
+    });
+    if (res.status === 401) throw new Error('Unauthorized');
+    if (!res.ok) return [];
+    return await res.json();
+  } catch (e: any) {
+    if (e.message === 'Unauthorized') throw e;
+    return [];
+  }
+};
+
 export const updateAdminSettings = async (settings: { displayDurationSec: number; cropPercent: number }): Promise<boolean> => {
   try {
     const res = await fetch(`${API_BASE}/admin/settings`, {
@@ -133,6 +147,20 @@ export const refreshAdminSync = async (): Promise<boolean> => {
 export const deactivateAdminImage = async (id: string): Promise<boolean> => {
   try {
     const res = await fetch(`${API_BASE}/admin/images/${id}/deactivate`, {
+      method: 'POST',
+      headers: getAuthHeaders()
+    });
+    if (res.status === 401) throw new Error('Unauthorized');
+    return res.ok;
+  } catch (e: any) {
+    if (e.message === 'Unauthorized') throw e;
+    return false;
+  }
+};
+
+export const activateAdminImage = async (id: string): Promise<boolean> => {
+  try {
+    const res = await fetch(`${API_BASE}/admin/images/${id}/activate`, {
       method: 'POST',
       headers: getAuthHeaders()
     });

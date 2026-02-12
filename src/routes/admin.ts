@@ -70,6 +70,26 @@ export const adminRoutes: FastifyPluginAsyncZod = async (app) => {
         };
     });
 
+    // GET /api/admin/images
+    app.get('/images', async (req, reply) => {
+        const images = await prisma.image.findMany({
+            select: {
+                id: true,
+                url: true,
+                mediaType: true,
+                createdAt: true,
+                isActive: true,
+                originalKey: true,
+            },
+            orderBy: { createdAt: 'desc' },
+        });
+
+        return images.map((img) => ({
+            ...img,
+            createdAt: img.createdAt.toISOString(),
+        }));
+    });
+
     // PUT /api/admin/settings
     app.put('/settings', {
         schema: {
@@ -118,6 +138,27 @@ export const adminRoutes: FastifyPluginAsyncZod = async (app) => {
             await prisma.image.update({
                 where: { id },
                 data: { isActive: false }
+            });
+            return { ok: true };
+        } catch (e) {
+            return reply.code(404).send();
+        }
+    });
+
+    // POST /api/admin/images/:id/activate
+    app.post('/images/:id/activate', {
+        schema: {
+            params: z.object({
+                id: z.string()
+            })
+        }
+    }, async (req, reply) => {
+        const { id } = req.params;
+
+        try {
+            await prisma.image.update({
+                where: { id },
+                data: { isActive: true }
             });
             return { ok: true };
         } catch (e) {

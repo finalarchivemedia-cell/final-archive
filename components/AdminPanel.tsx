@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { fetchImageList, loginAdmin, fetchAdminSettings, updateAdminSettings, refreshAdminSync, deactivateAdminImage } from '../services/api';
-import { AppSettings, ImageRecord } from '../types';
+import { loginAdmin, fetchAdminSettings, updateAdminSettings, refreshAdminSync, deactivateAdminImage, fetchAdminImages, activateAdminImage } from '../services/api';
+import { AppSettings, AdminImageRecord } from '../types';
 
 interface AdminPanelProps {
   onUpdate: (settings: AppSettings) => void;
@@ -20,7 +20,7 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onUpdate }) => {
 
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
   const [syncStatus, setSyncStatus] = useState<'idle' | 'syncing' | 'done' | 'error'>('idle');
-  const [images, setImages] = useState<ImageRecord[]>([]);
+  const [images, setImages] = useState<AdminImageRecord[]>([]);
   const [imagesLoading, setImagesLoading] = useState(false);
   const [imagesError, setImagesError] = useState('');
 
@@ -51,7 +51,7 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onUpdate }) => {
     setImagesError('');
     setImagesLoading(true);
     try {
-      const data = await fetchImageList();
+      const data = await fetchAdminImages();
       setImages(data);
     } catch {
       setImagesError('Failed to load images');
@@ -117,15 +117,18 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onUpdate }) => {
     }
   };
 
-  const handleDeactivate = async (id: string) => {
-    const confirmed = window.confirm(`Deactivate image ${id}? This will hide it from the website.`);
+  const handleToggleActive = async (image: AdminImageRecord) => {
+    const actionLabel = image.isActive ? 'Deactivate' : 'Activate';
+    const confirmed = window.confirm(`${actionLabel} image ${image.id}?`);
     if (!confirmed) return;
     try {
-      const success = await deactivateAdminImage(id);
+      const success = image.isActive
+        ? await deactivateAdminImage(image.id)
+        : await activateAdminImage(image.id);
       if (success) {
-        setImages(prev => prev.filter(img => img.id !== id));
+        setImages(prev => prev.map(img => img.id === image.id ? { ...img, isActive: !img.isActive } : img));
       } else {
-        alert('Failed to deactivate image.');
+        alert(`Failed to ${actionLabel.toLowerCase()} image.`);
       }
     } catch {
       logout();
@@ -249,7 +252,7 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onUpdate }) => {
 
               <div className="mt-6">
                 <div className="text-xs tracking-widest uppercase text-neutral-400 mb-3">
-                  Active Images ({images.length})
+                  Images ({images.filter(img => img.isActive).length} active / {images.length} total)
                 </div>
 
                 {imagesLoading && (
@@ -277,6 +280,9 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onUpdate }) => {
                             <div className="flex-1 min-w-0">
                               <div className="text-xs tracking-widest">{img.id}</div>
                               <div className="text-[10px] text-neutral-500 tracking-widest uppercase">{img.mediaType}</div>
+                              <div className={`text-[10px] tracking-widest uppercase ${img.isActive ? 'text-green-400' : 'text-red-400'}`}>
+                                {img.isActive ? 'Active' : 'Inactive'}
+                              </div>
                             </div>
                             <div className="flex items-center gap-2">
                               <a
@@ -288,11 +294,13 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onUpdate }) => {
                                 Open
                               </a>
                               <button
-                                onClick={() => handleDeactivate(img.id)}
-                                className="text-[10px] text-red-400 hover:text-red-300 transition-colors tracking-widest uppercase"
+                                onClick={() => handleToggleActive(img)}
+                                className={`text-[10px] transition-colors tracking-widest uppercase ${
+                                  img.isActive ? 'text-red-400 hover:text-red-300' : 'text-green-400 hover:text-green-300'
+                                }`}
                                 type="button"
                               >
-                                Deactivate
+                                {img.isActive ? 'Deactivate' : 'Activate'}
                               </button>
                             </div>
                           </div>

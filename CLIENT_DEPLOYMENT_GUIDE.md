@@ -561,6 +561,10 @@ Ye sab requirements client ne specify ki thi:
    - ✅ Smooth transitions
    - ✅ Contact form
    - ✅ Mobile-friendly design
+   - ✅ Strict intro sequence (8s total, no overlap)
+   - ✅ Hover enable only after first image cycle
+   - ✅ Direct 5-digit route lock (single image mode)
+   - ✅ Video handling (metadata preload + muted autoplay)
 
 ---
 
@@ -585,6 +589,11 @@ Ye sab requirements client ne specify ki thi:
    - ✅ Contact modal
    - ✅ Responsive design (mobile + web)
    - ✅ SPA routing (React Router)
+   - ✅ Strict intro timeline (no overlap, 8s total)
+   - ✅ Hover gating after first cycle
+   - ✅ Alternating zoom motion
+   - ✅ Single-ID route lock (/12345)
+   - ✅ Video safe preload (metadata only)
 
 ### 3. **Logo Animation Fixes**
    - ✅ Logo alignment fixed (mobile + web)

@@ -82,7 +82,7 @@ export const LogoOverlay: React.FC<LogoOverlayProps> = ({ onIntroComplete, hover
       autoAlpha: 1, 
       opacity: 1,
       duration: 1, 
-      ease: "power1.inOut" 
+      ease: "sine.inOut" 
     }, "+=1.0"); // The +=1.0 is the Step 1 delay
 
     // Step 3: Hold "Final Archive" for 3s
@@ -99,7 +99,7 @@ export const LogoOverlay: React.FC<LogoOverlayProps> = ({ onIntroComplete, hover
       autoAlpha: 1,
       opacity: 1,
       duration: 1, 
-      ease: "power1.inOut" 
+      ease: "sine.inOut" 
     });
 
     // Step 5: "Final Archive" fades out over 2s
@@ -107,16 +107,13 @@ export const LogoOverlay: React.FC<LogoOverlayProps> = ({ onIntroComplete, hover
       autoAlpha: 0,
       opacity: 0,
       duration: 2, 
-      ease: "power1.inOut" 
+      ease: "sine.inOut" 
     });
 
-    // Step 6: Tagline fades to permanent faint (etched) state over 1s
-    // "Tagline fades but stays..."
-    tl.to(taglineRef.current, { 
+    // Step 6: Tagline remains faint permanently (no extra time)
+    tl.set(taglineRef.current, { 
       autoAlpha: 0.3, // Etched opacity
-      opacity: 0.3,
-      duration: 1, 
-      ease: "power1.inOut" 
+      opacity: 0.3
     });
 
     return () => {
@@ -128,12 +125,12 @@ export const LogoOverlay: React.FC<LogoOverlayProps> = ({ onIntroComplete, hover
   // Hover Interaction (Gated by hoverEnabled - Step 8)
   const handleMouseEnter = () => {
     if (!hoverEnabled) return;
-    gsap.to(taglineRef.current, { autoAlpha: 1, duration: 0.5, ease: "power2.out" });
+    gsap.to(taglineRef.current, { autoAlpha: 1, duration: 0.5, ease: "sine.out" });
   };
 
   const handleMouseLeave = () => {
     // Return to "etched" state
-    gsap.to(taglineRef.current, { autoAlpha: 0.3, duration: 0.5, ease: "power2.in" });
+    gsap.to(taglineRef.current, { autoAlpha: 0.3, duration: 0.5, ease: "sine.in" });
   };
 
   return (

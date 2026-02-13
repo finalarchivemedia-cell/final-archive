@@ -40,6 +40,16 @@ const GalleryRouteHandler: React.FC<{
 
     let isCancelled = false;
 
+    const addPreloadLink = (url: string) => {
+      if (typeof document === 'undefined') return;
+      if (document.querySelector(`link[rel="preload"][href="${url}"]`)) return;
+      const link = document.createElement('link');
+      link.rel = 'preload';
+      link.as = 'image';
+      link.href = url;
+      document.head.appendChild(link);
+    };
+
     const prepareAssets = async () => {
       let startRecord: ImageRecord | null = null;
 
@@ -54,8 +64,14 @@ const GalleryRouteHandler: React.FC<{
         startRecord = pickRandom(images);
       }
 
-      // 2. Resolve Next Image
-      const nextRecord = pickRandom(images, startRecord.id);
+      // 2. Resolve Next Image (only when not locked to a single ID)
+      const nextRecord = id && ID_REGEX.test(id)
+        ? startRecord
+        : pickRandom(images, startRecord.id);
+
+      if (startRecord.mediaType === 'IMAGE') {
+        addPreloadLink(startRecord.url);
+      }
 
       // 3. Preload BOTH images into browser cache
       // This ensures that when Intro finishes, Step 7 is instant (from cache)
@@ -95,14 +111,17 @@ const GalleryRouteHandler: React.FC<{
     return null;
   }
 
+  const singleMode = Boolean(id && ID_REGEX.test(id));
+
   return (
     <Gallery
       settings={settings}
-      images={images}
+      images={singleMode ? [readyData.start] : images}
       startRecord={readyData.start}
       nextRecord={readyData.next}
       active={introComplete}
       onFirstCycleComplete={onFirstCycleComplete}
+      singleMode={singleMode}
     />
   );
 };
@@ -111,6 +130,7 @@ export default function App() {
   const [settings, setSettings] = useState<AppSettings>(DEFAULT_SETTINGS);
   const [introComplete, setIntroComplete] = useState(false);
   const [hoverEnabled, setHoverEnabled] = useState(false);
+  const [firstCycleComplete, setFirstCycleComplete] = useState(false);
   const [images, setImages] = useState<ImageRecord[]>([]);
   const [contactOpen, setContactOpen] = useState(false);
   const location = useLocation();
@@ -139,6 +159,12 @@ export default function App() {
         setImages([]);
       });
   }, []);
+
+  useEffect(() => {
+    if (introComplete && firstCycleComplete) {
+      setHoverEnabled(true);
+    }
+  }, [introComplete, firstCycleComplete]);
 
   // Background music:
   // Browsers block autoplay with sound, so we start on first user gesture.
@@ -193,7 +219,7 @@ export default function App() {
             settings={settings}
             introComplete={introComplete}
             images={images}
-            onFirstCycleComplete={() => setHoverEnabled(true)}
+            onFirstCycleComplete={() => setFirstCycleComplete(true)}
           />
         } />
         <Route path="/:id" element={
@@ -201,7 +227,7 @@ export default function App() {
             settings={settings}
             introComplete={introComplete}
             images={images}
-            onFirstCycleComplete={() => setHoverEnabled(true)}
+            onFirstCycleComplete={() => setFirstCycleComplete(true)}
           />
         } />
 

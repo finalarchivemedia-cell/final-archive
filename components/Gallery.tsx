@@ -9,6 +9,7 @@ interface GalleryProps {
   nextRecord: ImageRecord; 
   onFirstCycleComplete: () => void;
   active: boolean; 
+  singleMode?: boolean;
 }
 
 // Helper to get random image excluding current
@@ -39,6 +40,7 @@ export const Gallery: React.FC<GalleryProps> = ({
   
   // Logic Refs
   const cycleCount = useRef(0);
+  const zoomInRef = useRef(true);
   const timelineRef = useRef<gsap.core.Timeline | null>(null);
 
   // 1. Initialization
@@ -49,24 +51,24 @@ export const Gallery: React.FC<GalleryProps> = ({
 
   // 2. Main Animation Loop
   useEffect(() => {
-    if (!active || !currentImg || !nextImg) return;
+    if (!active || !currentImg || (!nextImg && !singleMode)) return;
 
     if (timelineRef.current) timelineRef.current.kill();
 
     const duration = settings.duration;
-    // Calculate max scale based on crop setting
-    const maxScale = 1 / Math.max(0.1, settings.crop);
+    // Calculate max scale based on crop setting (ensure minimum 1.25)
+    const maxScale = Math.max(1.25, 1 / Math.max(0.1, settings.crop));
     
     const currentEl = activeLayer === 'A' ? layerRefA.current : layerRefB.current;
     const nextEl = activeLayer === 'A' ? layerRefB.current : layerRefA.current;
     
-    if (!currentEl || !nextEl) return;
+    if (!currentEl || (!nextEl && !singleMode)) return;
 
     // Reset Z-Index and Visibility
     gsap.set(currentEl, { zIndex: 10, autoAlpha: 1 });
-    gsap.set(nextEl, { zIndex: 5, autoAlpha: 0 }); 
-
-    const isZoomOut = cycleCount.current % 2 === 0;
+    if (!singleMode && nextEl) {
+      gsap.set(nextEl, { zIndex: 5, autoAlpha: 0 }); 
+    }
 
     const tl = gsap.timeline({
       onComplete: () => {
@@ -74,54 +76,59 @@ export const Gallery: React.FC<GalleryProps> = ({
         if (cycleCount.current === 1) {
           onFirstCycleComplete();
         }
-        
-        const nextLoopRecord = getRandomImage(images, nextImg.id);
-        setActiveLayer(prev => prev === 'A' ? 'B' : 'A');
-        setCurrentImg(nextImg); 
-        if (nextLoopRecord) setNextImg(nextLoopRecord); 
+
+        if (!singleMode && nextImg) {
+          const nextLoopRecord = getRandomImage(images, nextImg.id);
+          setActiveLayer(prev => prev === 'A' ? 'B' : 'A');
+          setCurrentImg(nextImg); 
+          if (nextLoopRecord) setNextImg(nextLoopRecord); 
+        }
+        zoomInRef.current = !zoomInRef.current;
       }
     });
     timelineRef.current = tl;
 
     const moveDuration = duration + 2.0;
 
-    if (isZoomOut) {
+    if (zoomInRef.current) {
       tl.fromTo(currentEl, 
         { scale: maxScale }, 
-        { scale: 1, duration: moveDuration, ease: "sine.out" },
+        { scale: 1, duration: moveDuration, ease: "sine.inOut" },
         0
       );
     } else {
       tl.fromTo(currentEl, 
         { scale: 1 }, 
-        { scale: maxScale, duration: moveDuration, ease: "sine.in" },
+        { scale: maxScale, duration: moveDuration, ease: "sine.inOut" },
         0
       );
     }
 
-    // Crossfade
-    tl.to(currentEl, {
-      autoAlpha: 0,
-      duration: 2.0,
-      ease: "power1.inOut"
-    }, duration);
+    if (!singleMode && nextEl) {
+      // Crossfade
+      tl.to(currentEl, {
+        autoAlpha: 0,
+        duration: 2.0,
+        ease: "sine.inOut"
+      }, duration);
 
-    tl.to(nextEl, {
-      autoAlpha: 1,
-      duration: 2.0,
-      ease: "power1.inOut"
-    }, duration);
+      tl.to(nextEl, {
+        autoAlpha: 1,
+        duration: 2.0,
+        ease: "sine.inOut"
+      }, duration);
+    }
 
     // Initial Fade In for first cycle (Step 7)
     if (cycleCount.current === 0) {
       gsap.set(currentEl, { autoAlpha: 0 });
-      gsap.to(currentEl, { autoAlpha: 1, duration: 2.0, ease: "power1.inOut" });
+      gsap.to(currentEl, { autoAlpha: 1, duration: 2.0, ease: "sine.inOut" });
     }
     
     return () => {
       tl.kill();
     };
-  }, [active, activeLayer, currentImg, nextImg, settings, images, onFirstCycleComplete]);
+  }, [active, activeLayer, currentImg, nextImg, settings, images, onFirstCycleComplete, singleMode]);
 
   // Determine URLs for rendering
   const urlA = activeLayer === 'A' ? currentImg?.url : nextImg?.url;
@@ -150,6 +157,7 @@ export const Gallery: React.FC<GalleryProps> = ({
         background: '#000',
         userSelect: 'none',
         WebkitUserSelect: 'none',
+        display: active ? 'block' : 'none'
       }}
     >
       {/* Layer A - Only render if URL exists */}
@@ -170,6 +178,7 @@ export const Gallery: React.FC<GalleryProps> = ({
             loop
             autoPlay
             preload="metadata"
+            poster={typeA === 'VIDEO' ? `${urlA}#t=0.1` : undefined}
           />
         ) : (
         <img
@@ -190,7 +199,7 @@ export const Gallery: React.FC<GalleryProps> = ({
       )}
       
       {/* Layer B - Only render if URL exists */}
-      {urlB && (
+      {!singleMode && urlB && (
         typeB === 'VIDEO' ? (
           <video
             ref={(el) => { layerRefB.current = el; }}
@@ -207,6 +216,7 @@ export const Gallery: React.FC<GalleryProps> = ({
             loop
             autoPlay
             preload="metadata"
+            poster={typeB === 'VIDEO' ? `${urlB}#t=0.1` : undefined}
           />
         ) : (
         <img

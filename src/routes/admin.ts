@@ -65,10 +65,12 @@ export const adminRoutes: FastifyPluginAsyncZod = async (app) => {
     app.get('/settings', async (req, reply) => {
         const durationSetting = await prisma.settings.findUnique({ where: { key: 'displayDurationSec' } });
         const cropSetting = await prisma.settings.findUnique({ where: { key: 'cropPercent' } });
+        const musicSetting = await prisma.settings.findUnique({ where: { key: 'musicUrl' } });
 
         return {
             displayDurationSec: (durationSetting?.value as number) || 6,
-            cropPercent: (cropSetting?.value as number) || 60
+            cropPercent: (cropSetting?.value as number) || 60,
+            musicUrl: (musicSetting?.value as string) || null
         };
     });
 
@@ -125,6 +127,53 @@ export const adminRoutes: FastifyPluginAsyncZod = async (app) => {
             return reply.code(400).send(result);
         }
         return result;
+    });
+
+    // POST /api/admin/music
+    app.post('/music', async (req, reply) => {
+        if (!env.ENABLE_R2_SYNC) {
+            return reply.code(400).send({ ok: false, message: 'R2 sync is disabled' });
+        }
+
+        const r2 = new R2Service();
+        const prefix = env.R2_PREFIX ? env.R2_PREFIX.replace(/\/?$/, '/') : '';
+
+        try {
+            const parts = req.parts();
+            for await (const part of parts) {
+                if (part.type !== 'file') continue;
+                const filename = part.filename || 'music';
+                const lower = filename.toLowerCase();
+                if (!['.mp3', '.m4a', '.wav', '.aac'].some(ext => lower.endsWith(ext))) {
+                    return reply.code(400).send({ ok: false, message: 'Unsupported audio format' });
+                }
+
+                const chunks: Buffer[] = [];
+                for await (const chunk of part.file) {
+                    chunks.push(chunk as Buffer);
+                }
+                const buffer = Buffer.concat(chunks);
+
+                const safeName = filename.replace(/[^a-zA-Z0-9._-]/g, '_');
+                const unique = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+                const key = `${prefix}admin/music/${unique}-${safeName}`;
+
+                await r2.putObject(key, buffer, part.mimetype);
+
+                const url = `${env.CDN_BASE_URL}/${key}`;
+                await prisma.settings.upsert({
+                    where: { key: 'musicUrl' },
+                    update: { value: url },
+                    create: { key: 'musicUrl', value: url }
+                });
+
+                return { ok: true, musicUrl: url };
+            }
+
+            return reply.code(400).send({ ok: false, message: 'No file received' });
+        } catch (err: any) {
+            return reply.code(500).send({ ok: false, message: 'Music upload failed' });
+        }
     });
 
     // POST /api/admin/upload

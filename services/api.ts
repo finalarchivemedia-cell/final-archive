@@ -52,7 +52,7 @@ export const fetchImageById = async (id: string): Promise<ImageRecord | null> =>
   }
 };
 
-export const fetchPublicSettings = async (): Promise<{ displayDurationSec: number; cropPercent: number } | null> => {
+export const fetchPublicSettings = async (): Promise<{ displayDurationSec: number; cropPercent: number; musicUrl?: string | null } | null> => {
   try {
     const res = await fetch(`${API_BASE}/settings`);
     if (!res.ok) return null;
@@ -87,7 +87,7 @@ export const loginAdmin = async (password: string): Promise<{ token: string } | 
   }
 };
 
-export const fetchAdminSettings = async (): Promise<{ displayDurationSec: number; cropPercent: number } | null> => {
+export const fetchAdminSettings = async (): Promise<{ displayDurationSec: number; cropPercent: number; musicUrl?: string | null } | null> => {
   try {
     const res = await fetch(`${API_BASE}/admin/settings`, {
       headers: getAuthHeaders()
@@ -182,6 +182,24 @@ export const uploadAdminFiles = async (files: File[]): Promise<{ ok: boolean; up
       form.append('files', file, file.name);
     });
     const res = await fetch(`${API_BASE}/admin/upload`, {
+      method: 'POST',
+      headers: getAuthHeaders(false),
+      body: form
+    });
+    if (res.status === 401) throw new Error('Unauthorized');
+    const data = await res.json().catch(() => ({}));
+    return res.ok ? { ok: true, ...data } : { ok: false, message: data?.message || 'Upload failed' };
+  } catch (e: any) {
+    if (e.message === 'Unauthorized') throw e;
+    return { ok: false, message: 'Upload failed' };
+  }
+};
+
+export const uploadAdminMusic = async (file: File): Promise<{ ok: boolean; musicUrl?: string; message?: string }> => {
+  try {
+    const form = new FormData();
+    form.append('file', file, file.name);
+    const res = await fetch(`${API_BASE}/admin/music`, {
       method: 'POST',
       headers: getAuthHeaders(false),
       body: form

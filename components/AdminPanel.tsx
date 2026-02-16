@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { loginAdmin, fetchAdminSettings, updateAdminSettings, refreshAdminSync, deactivateAdminImage, fetchAdminImages, activateAdminImage, uploadAdminFiles, deleteAdminImage } from '../services/api';
+import { loginAdmin, fetchAdminSettings, updateAdminSettings, refreshAdminSync, deactivateAdminImage, fetchAdminImages, activateAdminImage, uploadAdminFiles, deleteAdminImage, uploadAdminMusic } from '../services/api';
 import { AppSettings, AdminImageRecord } from '../types';
 
 interface AdminPanelProps {
@@ -23,10 +23,14 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onUpdate }) => {
   const [syncMessage, setSyncMessage] = useState('');
   const [uploadStatus, setUploadStatus] = useState<'idle' | 'uploading' | 'done' | 'error'>('idle');
   const [uploadMessage, setUploadMessage] = useState('');
+  const [musicStatus, setMusicStatus] = useState<'idle' | 'uploading' | 'done' | 'error'>('idle');
+  const [musicMessage, setMusicMessage] = useState('');
+  const [musicUrl, setMusicUrl] = useState<string | null>(null);
   const [images, setImages] = useState<AdminImageRecord[]>([]);
   const [imagesLoading, setImagesLoading] = useState(false);
   const [imagesError, setImagesError] = useState('');
   const uploadInputRef = useRef<HTMLInputElement>(null);
+  const musicInputRef = useRef<HTMLInputElement>(null);
 
   // Check auth and fetch settings
   useEffect(() => {
@@ -42,6 +46,11 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onUpdate }) => {
       const data = await fetchAdminSettings();
       if (data) {
         setSettings(data);
+        if (typeof data.musicUrl === 'string') {
+          setMusicUrl(data.musicUrl);
+        } else {
+          setMusicUrl(null);
+        }
       }
     } catch (e) {
       // If unauthorized, logout
@@ -193,6 +202,34 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onUpdate }) => {
     }
   };
 
+  const handleMusicUpload = async (files: FileList | null) => {
+    if (!files || files.length === 0) return;
+    const file = files[0];
+    setMusicStatus('uploading');
+    setMusicMessage('');
+    try {
+      const result = await uploadAdminMusic(file);
+      if (result.ok) {
+        setMusicStatus('done');
+        setMusicUrl(result.musicUrl || null);
+        setMusicMessage('Music updated');
+        setTimeout(() => setMusicStatus('idle'), 2500);
+      } else {
+        setMusicStatus('error');
+        setMusicMessage(result.message || 'Upload failed');
+      }
+    } catch (e: any) {
+      if (e.message === 'Unauthorized') {
+        logout();
+        return;
+      }
+      setMusicStatus('error');
+      setMusicMessage('Upload failed');
+    } finally {
+      if (musicInputRef.current) musicInputRef.current.value = '';
+    }
+  };
+
   if (!token) {
     return (
       <div className="absolute inset-0 z-[100] flex items-center justify-center bg-black/90 backdrop-blur-sm text-white p-4">
@@ -340,6 +377,35 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onUpdate }) => {
                 </div>
                 {uploadMessage && uploadStatus !== 'error' && (
                   <div className="text-[10px] text-neutral-400 tracking-widest uppercase">{uploadMessage}</div>
+                )}
+                <div className="flex items-center gap-4">
+                  <input
+                    ref={musicInputRef}
+                    type="file"
+                    accept=".mp3,.m4a,.wav,.aac"
+                    className="hidden"
+                    onChange={(e) => handleMusicUpload(e.target.files)}
+                  />
+                  <button
+                    onClick={() => musicInputRef.current?.click()}
+                    className={`px-4 py-2 text-xs font-bold tracking-widest uppercase transition-all duration-300 border ${
+                      musicStatus === 'done'
+                        ? 'bg-green-900 border-green-700 text-green-100'
+                        : 'bg-transparent text-white border-white/30 hover:border-white'
+                    }`}
+                    type="button"
+                  >
+                    {musicStatus === 'uploading' ? 'UPLOADING MUSIC...' : musicStatus === 'done' ? 'MUSIC UPDATED' : 'UPLOAD MUSIC'}
+                  </button>
+                  {musicStatus === 'error' && (
+                    <span className="text-[10px] text-red-400 tracking-widest uppercase">{musicMessage || 'UPLOAD FAILED'}</span>
+                  )}
+                </div>
+                {musicMessage && musicStatus !== 'error' && (
+                  <div className="text-[10px] text-neutral-400 tracking-widest uppercase">
+                    {musicMessage}
+                    {musicUrl ? ` • ${musicUrl}` : ''}
+                  </div>
                 )}
               </div>
 

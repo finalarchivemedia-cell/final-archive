@@ -131,20 +131,23 @@ export const publicRoutes: FastifyPluginAsyncZod = async (app) => {
             response: {
                 200: z.object({
                     displayDurationSec: z.number(),
-                    cropPercent: z.number()
+                    cropPercent: z.number(),
+                    musicUrl: z.string().url().nullable().optional()
                 })
             }
         }
     }, async (req, reply) => {
-        reply.header('Cache-Control', 'public, s-maxage=300');
+        reply.header('Cache-Control', 'public, s-maxage=60');
 
         // Fetch settings or use defaults
         const durationSetting = await prisma.settings.findUnique({ where: { key: 'displayDurationSec' } });
         const cropSetting = await prisma.settings.findUnique({ where: { key: 'cropPercent' } });
+        const musicSetting = await prisma.settings.findUnique({ where: { key: 'musicUrl' } });
 
         return {
             displayDurationSec: (durationSetting?.value as number) || 6,
-            cropPercent: (cropSetting?.value as number) || 60
+            cropPercent: (cropSetting?.value as number) || 60,
+            musicUrl: (musicSetting?.value as string) || null
         };
     });
 };

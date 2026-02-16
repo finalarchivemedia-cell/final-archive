@@ -132,6 +132,7 @@ export default function App() {
   const [hoverEnabled, setHoverEnabled] = useState(false);
   const [firstCycleComplete, setFirstCycleComplete] = useState(false);
   const [images, setImages] = useState<ImageRecord[]>([]);
+  const [musicUrl, setMusicUrl] = useState<string | null>(null);
   const [contactOpen, setContactOpen] = useState(false);
   const location = useLocation();
   const audioRef = React.useRef<HTMLAudioElement | null>(null);
@@ -140,10 +141,15 @@ export default function App() {
     // Sync public settings from backend
     import('./services/api').then(({ fetchPublicSettings }) => {
       fetchPublicSettings().then(s => {
-        if (s) setSettings({
-          duration: s.displayDurationSec,
-          crop: s.cropPercent / 100
-        });
+        if (s) {
+          setSettings({
+            duration: s.displayDurationSec,
+            crop: s.cropPercent / 100
+          });
+          if (typeof s.musicUrl === 'string') {
+            setMusicUrl(s.musicUrl);
+          }
+        }
       });
     });
 
@@ -201,8 +207,8 @@ export default function App() {
 
   return (
     <main className="relative w-screen h-screen bg-black overflow-hidden selection:bg-white selection:text-black">
-      {/* Optional background music file at /public/ambient.mp3 */}
-      <audio ref={audioRef} src={MUSIC_PATH} preload="metadata" loop />
+      {/* Optional background music file at /public/ambient.mp3 or admin-set URL */}
+      <audio ref={audioRef} src={musicUrl || MUSIC_PATH} preload="metadata" loop />
 
       {/* Intro & Logo Layer - Persistent (except Admin) */}
       {!isAdmin && (

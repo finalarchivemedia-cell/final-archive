@@ -12,25 +12,25 @@ export const LogoOverlay: React.FC<LogoOverlayProps> = ({ onIntroComplete, hover
   const titleRef = useRef<HTMLImageElement>(null);
   const taglineRef = useRef<HTMLImageElement>(null);
   const tlRef = useRef<gsap.core.Timeline | null>(null);
-  const [logoSrc, setLogoSrc] = useState<string>('/logo.svg');
+  const [logoSrc, setLogoSrc] = useState<string>('/logo-v2.svg');
   const [logoLoaded, setLogoLoaded] = useState(false);
 
   // Preload logo image (only once)
   useEffect(() => {
     if (logoLoaded) return; // Prevent duplicate loading
     
-    // Try loading logo.svg first
+    // Try loading logo-v2.svg first
     const img = new Image();
-    img.src = '/logo.svg';
+    img.src = '/logo-v2.svg';
     
     img.onload = () => {
-      console.log('[LogoOverlay] Logo loaded successfully: /logo.svg');
+      console.log('[LogoOverlay] Logo loaded successfully: /logo-v2.svg');
       setLogoLoaded(true);
-      setLogoSrc('/logo.svg');
+      setLogoSrc('/logo-v2.svg');
     };
     
     img.onerror = () => {
-      console.warn('[LogoOverlay] Failed to load /logo.svg, trying fallback');
+      console.warn('[LogoOverlay] Failed to load /logo-v2.svg, trying fallback');
       const fallbackImg = new Image();
       fallbackImg.src = LOGO_PATH;
       fallbackImg.onload = () => {

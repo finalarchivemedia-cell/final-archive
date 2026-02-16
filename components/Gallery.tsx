@@ -56,7 +56,7 @@ export const Gallery: React.FC<GalleryProps> = ({
   useEffect(() => {
     const currentReady = activeLayer === 'A' ? layerAReady : layerBReady;
     const nextReady = activeLayer === 'A' ? layerBReady : layerAReady;
-    if (!active || !currentImg || (!nextImg && !singleMode) || !currentReady || (!singleMode && !nextReady)) return;
+    if (!active || !currentImg || (!nextImg && !singleMode) || !currentReady) return;
 
     if (timelineRef.current) timelineRef.current.kill();
 
@@ -77,6 +77,9 @@ export const Gallery: React.FC<GalleryProps> = ({
 
     const tl = gsap.timeline({
       onComplete: () => {
+        if (!singleMode && !nextReady) {
+          return;
+        }
         cycleCount.current += 1;
         if (cycleCount.current === 1) {
           onFirstCycleComplete();
@@ -117,7 +120,7 @@ export const Gallery: React.FC<GalleryProps> = ({
       tl.fromTo(currentEl, { autoAlpha: 0 }, { autoAlpha: 1, duration: 0.4, ease: "sine.inOut" }, 0);
     }
 
-    if (!singleMode && nextEl) {
+    if (!singleMode && nextEl && nextReady) {
       // Crossfade
       tl.to(currentEl, {
         autoAlpha: 0,

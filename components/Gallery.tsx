@@ -95,18 +95,26 @@ export const Gallery: React.FC<GalleryProps> = ({
 
     const moveDuration = duration + 2.0;
 
+    const startScale = zoomInRef.current ? maxScale : 1;
+    const endScale = zoomInRef.current ? 1 : maxScale;
+    gsap.set(currentEl, { scale: startScale, autoAlpha: 1 });
+
     if (zoomInRef.current) {
       tl.fromTo(currentEl, 
-        { scale: maxScale }, 
-        { scale: 1, duration: moveDuration, ease: "sine.inOut" },
+        { scale: startScale }, 
+        { scale: endScale, duration: moveDuration, ease: "sine.inOut" },
         0
       );
     } else {
       tl.fromTo(currentEl, 
-        { scale: 1 }, 
-        { scale: maxScale, duration: moveDuration, ease: "sine.inOut" },
+        { scale: startScale }, 
+        { scale: endScale, duration: moveDuration, ease: "sine.inOut" },
         0
       );
+    }
+
+    if (cycleCount.current === 0) {
+      tl.fromTo(currentEl, { autoAlpha: 0 }, { autoAlpha: 1, duration: 0.4, ease: "sine.inOut" }, 0);
     }
 
     if (!singleMode && nextEl) {
@@ -124,11 +132,7 @@ export const Gallery: React.FC<GalleryProps> = ({
       }, duration);
     }
 
-    // Initial Fade In for first cycle (Step 7)
-    if (cycleCount.current === 0) {
-      gsap.set(currentEl, { autoAlpha: 0 });
-      gsap.to(currentEl, { autoAlpha: 1, duration: 2.0, ease: "sine.inOut" });
-    }
+    // Initial Fade In for first cycle handled in timeline (no delay)
     
     return () => {
       tl.kill();

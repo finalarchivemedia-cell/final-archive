@@ -145,31 +145,33 @@ export const refreshAdminSync = async (): Promise<{ ok: boolean; newCount?: numb
   }
 };
 
-export const deactivateAdminImage = async (id: string): Promise<boolean> => {
+export const deactivateAdminImage = async (id: string): Promise<{ ok: boolean; message?: string }> => {
   try {
     const res = await fetch(`${API_BASE}/admin/images/${id}/deactivate`, {
       method: 'POST',
       headers: getAuthHeaders()
     });
     if (res.status === 401) throw new Error('Unauthorized');
-    return res.ok;
+    const data = await res.json().catch(() => ({}));
+    return res.ok ? { ok: true } : { ok: false, message: data?.message };
   } catch (e: any) {
     if (e.message === 'Unauthorized') throw e;
-    return false;
+    return { ok: false, message: 'Request failed' };
   }
 };
 
-export const activateAdminImage = async (id: string): Promise<boolean> => {
+export const activateAdminImage = async (id: string): Promise<{ ok: boolean; message?: string }> => {
   try {
     const res = await fetch(`${API_BASE}/admin/images/${id}/activate`, {
       method: 'POST',
       headers: getAuthHeaders()
     });
     if (res.status === 401) throw new Error('Unauthorized');
-    return res.ok;
+    const data = await res.json().catch(() => ({}));
+    return res.ok ? { ok: true } : { ok: false, message: data?.message };
   } catch (e: any) {
     if (e.message === 'Unauthorized') throw e;
-    return false;
+    return { ok: false, message: 'Request failed' };
   }
 };
 

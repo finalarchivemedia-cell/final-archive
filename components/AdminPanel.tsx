@@ -135,13 +135,13 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onUpdate }) => {
     const confirmed = window.confirm(`${actionLabel} image ${image.id}?`);
     if (!confirmed) return;
     try {
-      const success = image.isActive
+      const result = image.isActive
         ? await deactivateAdminImage(image.id)
         : await activateAdminImage(image.id);
-      if (success) {
+      if (result.ok) {
         setImages(prev => prev.map(img => img.id === image.id ? { ...img, isActive: !img.isActive } : img));
       } else {
-        alert(`Failed to ${actionLabel.toLowerCase()} image.`);
+        alert(result.message || `Failed to ${actionLabel.toLowerCase()} image.`);
       }
     } catch {
       logout();

@@ -135,15 +135,16 @@ export const adminRoutes: FastifyPluginAsyncZod = async (app) => {
     }, async (req, reply) => {
         const { id } = req.params;
 
-        try {
-            await prisma.image.update({
-                where: { id },
-                data: { isActive: false }
-            });
-            return { ok: true };
-        } catch (e) {
-            return reply.code(404).send();
+        const result = await prisma.image.updateMany({
+            where: { id },
+            data: { isActive: false }
+        });
+
+        if (result.count === 0) {
+            return reply.code(404).send({ ok: false, message: 'Image not found' } as any);
         }
+
+        return { ok: true };
     });
 
     // POST /api/admin/images/:id/activate
@@ -156,15 +157,16 @@ export const adminRoutes: FastifyPluginAsyncZod = async (app) => {
     }, async (req, reply) => {
         const { id } = req.params;
 
-        try {
-            await prisma.image.update({
-                where: { id },
-                data: { isActive: true }
-            });
-            return { ok: true };
-        } catch (e) {
-            return reply.code(404).send();
+        const result = await prisma.image.updateMany({
+            where: { id },
+            data: { isActive: true }
+        });
+
+        if (result.count === 0) {
+            return reply.code(404).send({ ok: false, message: 'Image not found' } as any);
         }
+
+        return { ok: true };
     });
 
 };

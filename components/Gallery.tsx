@@ -32,6 +32,8 @@ export const Gallery: React.FC<GalleryProps> = ({
   const containerRef = useRef<HTMLDivElement>(null);
   const layerRefA = useRef<HTMLElement | null>(null);
   const layerRefB = useRef<HTMLElement | null>(null);
+  const [layerAReady, setLayerAReady] = useState(false);
+  const [layerBReady, setLayerBReady] = useState(false);
 
   const [activeLayer, setActiveLayer] = useState<'A' | 'B'>('A');
   
@@ -52,7 +54,9 @@ export const Gallery: React.FC<GalleryProps> = ({
 
   // 2. Main Animation Loop
   useEffect(() => {
-    if (!active || !currentImg || (!nextImg && !singleMode)) return;
+    const currentReady = activeLayer === 'A' ? layerAReady : layerBReady;
+    const nextReady = activeLayer === 'A' ? layerBReady : layerAReady;
+    if (!active || !currentImg || (!nextImg && !singleMode) || !currentReady || (!singleMode && !nextReady)) return;
 
     if (timelineRef.current) timelineRef.current.kill();
 
@@ -129,13 +133,21 @@ export const Gallery: React.FC<GalleryProps> = ({
     return () => {
       tl.kill();
     };
-  }, [active, activeLayer, currentImg, nextImg, settings, images, onFirstCycleComplete, singleMode]);
+  }, [active, activeLayer, currentImg, nextImg, settings, images, onFirstCycleComplete, singleMode, layerAReady, layerBReady]);
 
   // Determine URLs for rendering
   const urlA = activeLayer === 'A' ? currentImg?.url : nextImg?.url;
   const urlB = activeLayer === 'B' ? currentImg?.url : nextImg?.url;
   const typeA = activeLayer === 'A' ? currentImg?.mediaType : nextImg?.mediaType;
   const typeB = activeLayer === 'B' ? currentImg?.mediaType : nextImg?.mediaType;
+
+  useEffect(() => {
+    setLayerAReady(false);
+  }, [urlA]);
+
+  useEffect(() => {
+    setLayerBReady(false);
+  }, [urlB]);
 
   const baseMediaStyle: React.CSSProperties = {
     border: 'none',
@@ -180,6 +192,7 @@ export const Gallery: React.FC<GalleryProps> = ({
             autoPlay
             preload="metadata"
             poster={typeA === 'VIDEO' ? `${urlA}#t=0.1` : undefined}
+            onLoadedMetadata={() => setLayerAReady(true)}
           />
         ) : (
         <img
@@ -195,6 +208,7 @@ export const Gallery: React.FC<GalleryProps> = ({
               minHeight: '100%',
             }}
             decoding="async"
+            onLoad={() => setLayerAReady(true)}
           />
         )
       )}
@@ -218,6 +232,7 @@ export const Gallery: React.FC<GalleryProps> = ({
             autoPlay
             preload="metadata"
             poster={typeB === 'VIDEO' ? `${urlB}#t=0.1` : undefined}
+            onLoadedMetadata={() => setLayerBReady(true)}
           />
         ) : (
         <img
@@ -233,6 +248,7 @@ export const Gallery: React.FC<GalleryProps> = ({
               minHeight: '100%',
             }}
             decoding="async"
+            onLoad={() => setLayerBReady(true)}
           />
         )
       )}

@@ -215,6 +215,8 @@ export const Gallery: React.FC<GalleryProps> = ({
               minHeight: '100%',
             }}
             decoding="async"
+            loading="eager"
+            fetchPriority="high"
             onLoad={() => setLayerAReady(true)}
           />
         )
@@ -255,6 +257,8 @@ export const Gallery: React.FC<GalleryProps> = ({
               minHeight: '100%',
             }}
             decoding="async"
+            loading="eager"
+            fetchPriority="high"
             onLoad={() => setLayerBReady(true)}
           />
         )

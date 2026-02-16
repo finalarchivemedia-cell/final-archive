@@ -73,16 +73,16 @@ const GalleryRouteHandler: React.FC<{
         addPreloadLink(startRecord.url);
       }
 
-      // 3. Preload first image only (critical path)
-      // Ensure Step 7 can render immediately at 8s
-      try {
-        await preloadMedia(startRecord.url);
-      } catch (e) {
-        console.warn('Preload warning', e);
-      }
-
       if (!isCancelled) {
         setReadyData({ start: startRecord, next: nextRecord });
+      }
+
+      // 3. Preload first image in background (do not block render)
+      // Ensures Step 7 can render immediately when cache is ready
+      try {
+        void preloadMedia(startRecord.url);
+      } catch (e) {
+        console.warn('Preload warning', e);
       }
 
       // 4. Preload next image in background (non-blocking)

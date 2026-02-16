@@ -24,7 +24,12 @@ export const buildApp = () => {
     app.register(cors, {
         origin: env.CORS_ORIGINS?.length
             ? env.CORS_ORIGINS
-            : ['http://localhost:5173', 'http://127.0.0.1:5173'],
+            : [
+                'http://localhost:5173',
+                'http://127.0.0.1:5173',
+                'https://finalarchivemedia.com',
+                'https://www.finalarchivemedia.com'
+            ],
         credentials: true
     });
     app.register(rateLimit, {

@@ -73,19 +73,23 @@ const GalleryRouteHandler: React.FC<{
         addPreloadLink(startRecord.url);
       }
 
-      // 3. Preload BOTH images into browser cache
-      // This ensures that when Intro finishes, Step 7 is instant (from cache)
+      // 3. Preload first image only (critical path)
+      // Ensure Step 7 can render immediately at 8s
       try {
-        await Promise.all([
-          preloadMedia(startRecord.url),
-          preloadMedia(nextRecord.url)
-        ]);
+        await preloadMedia(startRecord.url);
       } catch (e) {
         console.warn('Preload warning', e);
       }
 
       if (!isCancelled) {
         setReadyData({ start: startRecord, next: nextRecord });
+      }
+
+      // 4. Preload next image in background (non-blocking)
+      try {
+        void preloadMedia(nextRecord.url);
+      } catch {
+        // ignore
       }
     };
 

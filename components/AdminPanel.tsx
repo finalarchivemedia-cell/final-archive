@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { loginAdmin, fetchAdminSettings, updateAdminSettings, refreshAdminSync, deactivateAdminImage, fetchAdminImages, activateAdminImage, uploadAdminFiles } from '../services/api';
+import { loginAdmin, fetchAdminSettings, updateAdminSettings, refreshAdminSync, deactivateAdminImage, fetchAdminImages, activateAdminImage, uploadAdminFiles, deleteAdminImage } from '../services/api';
 import { AppSettings, AdminImageRecord } from '../types';
 
 interface AdminPanelProps {
@@ -145,6 +145,21 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onUpdate }) => {
         setImages(prev => prev.map(img => img.id === image.id ? { ...img, isActive: !img.isActive } : img));
       } else {
         alert(result.message || `Failed to ${actionLabel.toLowerCase()} image.`);
+      }
+    } catch {
+      logout();
+    }
+  };
+
+  const handleDelete = async (image: AdminImageRecord) => {
+    const confirmed = window.confirm(`Permanently delete image ${image.id}? This will remove it from R2 and the database.`);
+    if (!confirmed) return;
+    try {
+      const result = await deleteAdminImage(image.id);
+      if (result.ok) {
+        setImages(prev => prev.filter(img => img.id !== image.id));
+      } else {
+        alert(result.message || 'Delete failed.');
       }
     } catch {
       logout();
@@ -379,6 +394,13 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onUpdate }) => {
                                 type="button"
                               >
                                 {img.isActive ? 'Deactivate' : 'Activate'}
+                              </button>
+                              <button
+                                onClick={() => handleDelete(img)}
+                                className="text-[10px] text-red-500 hover:text-red-400 transition-colors tracking-widest uppercase"
+                                type="button"
+                              >
+                                Delete
                               </button>
                             </div>
                           </div>

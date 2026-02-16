@@ -1,4 +1,4 @@
-import { S3Client, ListObjectsV2Command, PutObjectCommand, _Object } from '@aws-sdk/client-s3';
+import { S3Client, ListObjectsV2Command, PutObjectCommand, DeleteObjectCommand, _Object } from '@aws-sdk/client-s3';
 import { env } from '../config/env';
 
 export class R2Service {
@@ -55,6 +55,19 @@ export class R2Service {
             Key: key,
             Body: body,
             ContentType: contentType,
+        });
+
+        await this.client.send(command);
+    }
+
+    async deleteObject(key: string) {
+        if (!this.client) {
+            throw new Error("R2 Client is not initialized (ENABLE_R2_SYNC is false)");
+        }
+
+        const command = new DeleteObjectCommand({
+            Bucket: env.R2_BUCKET,
+            Key: key,
         });
 
         await this.client.send(command);

@@ -232,4 +232,36 @@ export const adminRoutes: FastifyPluginAsyncZod = async (app) => {
         return { ok: true };
     });
 
+    // DELETE /api/admin/images/:id
+    app.delete('/images/:id', {
+        schema: {
+            params: z.object({
+                id: z.string()
+            })
+        }
+    }, async (req, reply) => {
+        if (!env.ENABLE_R2_SYNC) {
+            return reply.code(400).send({ ok: false, message: 'R2 sync is disabled' });
+        }
+
+        const { id } = req.params;
+        const record = await prisma.image.findUnique({
+            where: { id },
+            select: { originalKey: true }
+        });
+
+        if (!record) {
+            return reply.code(404).send({ ok: false, message: 'Image not found' } as any);
+        }
+
+        try {
+            const r2 = new R2Service();
+            await r2.deleteObject(record.originalKey);
+            await prisma.image.delete({ where: { id } });
+            return { ok: true };
+        } catch (e) {
+            return reply.code(500).send({ ok: false, message: 'Delete failed' } as any);
+        }
+    });
+
 };

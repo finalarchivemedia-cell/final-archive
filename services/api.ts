@@ -195,6 +195,21 @@ export const uploadAdminFiles = async (files: File[]): Promise<{ ok: boolean; up
   }
 };
 
+export const deleteAdminImage = async (id: string): Promise<{ ok: boolean; message?: string }> => {
+  try {
+    const res = await fetch(`${API_BASE}/admin/images/${id}`, {
+      method: 'DELETE',
+      headers: getAuthHeaders(false)
+    });
+    if (res.status === 401) throw new Error('Unauthorized');
+    const data = await res.json().catch(() => ({}));
+    return res.ok ? { ok: true } : { ok: false, message: data?.message };
+  } catch (e: any) {
+    if (e.message === 'Unauthorized') throw e;
+    return { ok: false, message: 'Request failed' };
+  }
+};
+
 // --- Contact ---
 export const sendContact = async (data: { email: string; message: string }): Promise<boolean> => {
   try {

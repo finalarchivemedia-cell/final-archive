@@ -26,7 +26,8 @@ export const Gallery: React.FC<GalleryProps> = ({
   startRecord,
   nextRecord,
   onFirstCycleComplete,
-  active 
+  active,
+  singleMode
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const layerRefA = useRef<HTMLElement | null>(null);

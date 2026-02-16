@@ -1,6 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
 import gsap from 'gsap';
-import { LOGO_PATH } from '../constants';
 
 interface LogoOverlayProps {
   onIntroComplete: () => void;
@@ -9,42 +8,15 @@ interface LogoOverlayProps {
 
 export const LogoOverlay: React.FC<LogoOverlayProps> = ({ onIntroComplete, hoverEnabled }) => {
   const containerRef = useRef<HTMLDivElement>(null);
-  const titleRef = useRef<HTMLImageElement>(null);
-  const taglineRef = useRef<HTMLImageElement>(null);
+  const titleRef = useRef<SVGSVGElement>(null);
+  const taglineRef = useRef<SVGSVGElement>(null);
   const tlRef = useRef<gsap.core.Timeline | null>(null);
-  const [logoSrc, setLogoSrc] = useState<string>('/logo-v2.svg');
   const [logoLoaded, setLogoLoaded] = useState(false);
 
-  // Preload logo image (only once)
+  // Vector text logo is immediate
   useEffect(() => {
-    if (logoLoaded) return; // Prevent duplicate loading
-    
-    // Try loading logo-v2.svg first
-    const img = new Image();
-    img.src = '/logo-v2.svg';
-    
-    img.onload = () => {
-      console.log('[LogoOverlay] Logo loaded successfully: /logo-v2.svg');
-      setLogoLoaded(true);
-      setLogoSrc('/logo-v2.svg');
-    };
-    
-    img.onerror = () => {
-      console.warn('[LogoOverlay] Failed to load /logo-v2.svg, trying fallback');
-      const fallbackImg = new Image();
-      fallbackImg.src = LOGO_PATH;
-      fallbackImg.onload = () => {
-        console.log('[LogoOverlay] Logo loaded from fallback:', LOGO_PATH);
-        setLogoLoaded(true);
-        setLogoSrc(LOGO_PATH);
-      };
-      fallbackImg.onerror = () => {
-        console.error('[LogoOverlay] Failed to load logo from both sources');
-        setLogoLoaded(true);
-        setLogoSrc(LOGO_PATH);
-      };
-    };
-  }, [logoLoaded]);
+    setLogoLoaded(true);
+  }, []);
 
   useEffect(() => {
     if (!logoLoaded) return; // Wait for logo to load
@@ -155,18 +127,12 @@ export const LogoOverlay: React.FC<LogoOverlayProps> = ({ onIntroComplete, hover
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
       >
-        {/* Top Part: "Final Archive" (vector SVG image) */}
-        <img
+        {/* Top Part: "Final Archive" (vector text) */}
+        <svg
           ref={titleRef}
-          src={logoSrc || LOGO_PATH}
-          alt=""
           className="absolute border-none outline-none ring-0 shadow-none pointer-events-none"
+          viewBox="0 0 1000 500"
           style={{
-            // Show top 60% - better clipping for both mobile and web
-            clipPath: 'polygon(0% 0%, 100% 0%, 100% 60%, 0% 60%)',
-            WebkitClipPath: 'polygon(0% 0%, 100% 0%, 100% 60%, 0% 60%)',
-            objectPosition: 'center center',
-            objectFit: 'contain',
             border: 'none',
             outline: 'none',
             maxWidth: '100%',
@@ -181,30 +147,28 @@ export const LogoOverlay: React.FC<LogoOverlayProps> = ({ onIntroComplete, hover
             margin: 'auto',
             visibility: logoLoaded ? 'visible' : 'hidden'
           }}
-          onLoad={() => {
-            if (!logoLoaded) setLogoLoaded(true);
-          }}
-          onError={() => {
-            if (logoSrc !== LOGO_PATH) setLogoSrc(LOGO_PATH);
-            if (!logoLoaded) setLogoLoaded(true);
-          }}
-          draggable={false}
-        />
+          aria-hidden="true"
+        >
+          <text
+            x="500"
+            y="240"
+            textAnchor="middle"
+            fontFamily="Times New Roman, Times, serif"
+            fontSize="150"
+            fontStyle="italic"
+            fill="#f2f2f2"
+            letterSpacing="2"
+          >
+            Final Archive
+          </text>
+        </svg>
 
-        {/* Bottom Part: "For All Eternity" (vector SVG image) */}
-        <img
+        {/* Bottom Part: "For All Eternity" (vector text) */}
+        <svg
           ref={taglineRef}
-          src={logoSrc || LOGO_PATH}
-          alt=""
           className="absolute border-none outline-none ring-0 shadow-none pointer-events-none"
+          viewBox="0 0 1000 500"
           style={{
-            // Show bottom 40% - better clipping for both mobile and web
-            clipPath: 'polygon(0% 60%, 100% 60%, 100% 100%, 0% 100%)',
-            WebkitClipPath: 'polygon(0% 60%, 100% 60%, 100% 100%, 0% 100%)',
-            objectPosition: 'center center',
-            objectFit: 'contain',
-            filter: 'contrast(1.2) sepia(0.2)',
-            mixBlendMode: 'screen',
             border: 'none',
             outline: 'none',
             maxWidth: '100%',
@@ -217,19 +181,27 @@ export const LogoOverlay: React.FC<LogoOverlayProps> = ({ onIntroComplete, hover
             right: 0,
             bottom: 0,
             margin: 'auto',
+            mixBlendMode: 'screen',
+            filter: 'contrast(1.2) sepia(0.2)',
             opacity: 0,
             visibility: 'hidden',
             pointerEvents: 'none'
           }}
-          onLoad={() => {
-            if (!logoLoaded) setLogoLoaded(true);
-          }}
-          onError={() => {
-            if (logoSrc !== LOGO_PATH) setLogoSrc(LOGO_PATH);
-            if (!logoLoaded) setLogoLoaded(true);
-          }}
-          draggable={false}
-        />
+          aria-hidden="true"
+        >
+          <text
+            x="500"
+            y="320"
+            textAnchor="middle"
+            fontFamily="Times New Roman, Times, serif"
+            fontSize="60"
+            fontStyle="italic"
+            fill="#f2f2f2"
+            letterSpacing="6"
+          >
+            For All Eternity
+          </text>
+        </svg>
       </div>
     </div>
   );

@@ -175,6 +175,26 @@ export const activateAdminImage = async (id: string): Promise<{ ok: boolean; mes
   }
 };
 
+export const uploadAdminFiles = async (files: File[]): Promise<{ ok: boolean; uploaded?: number; skipped?: number; message?: string }> => {
+  try {
+    const form = new FormData();
+    files.forEach(file => {
+      form.append('files', file, file.name);
+    });
+    const res = await fetch(`${API_BASE}/admin/upload`, {
+      method: 'POST',
+      headers: getAuthHeaders(false),
+      body: form
+    });
+    if (res.status === 401) throw new Error('Unauthorized');
+    const data = await res.json().catch(() => ({}));
+    return res.ok ? { ok: true, ...data } : { ok: false, message: data?.message || 'Upload failed' };
+  } catch (e: any) {
+    if (e.message === 'Unauthorized') throw e;
+    return { ok: false, message: 'Upload failed' };
+  }
+};
+
 // --- Contact ---
 export const sendContact = async (data: { email: string; message: string }): Promise<boolean> => {
   try {

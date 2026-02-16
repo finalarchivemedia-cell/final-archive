@@ -3,6 +3,7 @@ import helmet from '@fastify/helmet';
 import cors from '@fastify/cors';
 import rateLimit from '@fastify/rate-limit';
 import jwt from '@fastify/jwt';
+import multipart from '@fastify/multipart';
 import { serializerCompiler, validatorCompiler, ZodTypeProvider } from 'fastify-type-provider-zod';
 import { env } from './config/env';
 import { publicRoutes } from './routes/public';
@@ -35,6 +36,13 @@ export const buildApp = () => {
     app.register(rateLimit, {
         max: 100,
         timeWindow: '1 minute',
+    });
+
+    app.register(multipart, {
+        limits: {
+            fileSize: 50 * 1024 * 1024, // 50MB per file
+            files: 25
+        }
     });
 
     // Auth

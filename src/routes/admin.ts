@@ -5,6 +5,8 @@ import { env } from '../config/env';
 import bcrypt from 'bcryptjs';
 
 import { runSync } from '../jobs/syncR2';
+import { R2Service } from '../services/r2';
+import { IdGenerator } from '../services/idGenerator';
 
 // Manual sync function logic (reused for job)
 export const syncR2Logic = async () => {
@@ -123,6 +125,67 @@ export const adminRoutes: FastifyPluginAsyncZod = async (app) => {
             return reply.code(400).send(result);
         }
         return result;
+    });
+
+    // POST /api/admin/upload
+    app.post('/upload', async (req, reply) => {
+        if (!env.ENABLE_R2_SYNC) {
+            return reply.code(400).send({ ok: false, message: 'R2 sync is disabled' });
+        }
+
+        const r2 = new R2Service();
+        const uploaded: string[] = [];
+        const skipped: string[] = [];
+        const errors: string[] = [];
+        const prefix = env.R2_PREFIX ? env.R2_PREFIX.replace(/\/?$/, '/') : '';
+
+        try {
+            const parts = req.parts();
+            for await (const part of parts) {
+                if (part.type !== 'file') continue;
+                const filename = part.filename || 'upload';
+                const mediaType = R2Service.getMediaType(filename);
+                if (!mediaType) {
+                    skipped.push(filename);
+                    continue;
+                }
+
+                const chunks: Buffer[] = [];
+                for await (const chunk of part.file) {
+                    chunks.push(chunk as Buffer);
+                }
+                const buffer = Buffer.concat(chunks);
+
+                const safeName = filename.replace(/[^a-zA-Z0-9._-]/g, '_');
+                const unique = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+                const key = `${prefix}admin/${unique}-${safeName}`;
+
+                await r2.putObject(key, buffer, part.mimetype);
+
+                const url = `${env.CDN_BASE_URL}/${key}`;
+                await IdGenerator.createImageRecord({
+                    originalKey: key,
+                    url,
+                    mediaType,
+                    sizeBytes: buffer.length,
+                    contentType: part.mimetype,
+                });
+
+                uploaded.push(filename);
+            }
+
+            return {
+                ok: true,
+                uploaded: uploaded.length,
+                skipped: skipped.length,
+                errors,
+            };
+        } catch (err: any) {
+            return reply.code(500).send({
+                ok: false,
+                message: 'Upload failed',
+            });
+        }
     });
 
     // POST /api/admin/images/:id/deactivate

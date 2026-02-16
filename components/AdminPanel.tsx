@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { loginAdmin, fetchAdminSettings, updateAdminSettings, refreshAdminSync, deactivateAdminImage, fetchAdminImages, activateAdminImage } from '../services/api';
+import React, { useState, useEffect, useRef } from 'react';
+import { loginAdmin, fetchAdminSettings, updateAdminSettings, refreshAdminSync, deactivateAdminImage, fetchAdminImages, activateAdminImage, uploadAdminFiles } from '../services/api';
 import { AppSettings, AdminImageRecord } from '../types';
 
 interface AdminPanelProps {
@@ -21,9 +21,12 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onUpdate }) => {
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
   const [syncStatus, setSyncStatus] = useState<'idle' | 'syncing' | 'done' | 'error'>('idle');
   const [syncMessage, setSyncMessage] = useState('');
+  const [uploadStatus, setUploadStatus] = useState<'idle' | 'uploading' | 'done' | 'error'>('idle');
+  const [uploadMessage, setUploadMessage] = useState('');
   const [images, setImages] = useState<AdminImageRecord[]>([]);
   const [imagesLoading, setImagesLoading] = useState(false);
   const [imagesError, setImagesError] = useState('');
+  const uploadInputRef = useRef<HTMLInputElement>(null);
 
   // Check auth and fetch settings
   useEffect(() => {
@@ -148,6 +151,33 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onUpdate }) => {
     }
   };
 
+  const handleUpload = async (files: FileList | null) => {
+    if (!files || files.length === 0) return;
+    setUploadStatus('uploading');
+    setUploadMessage('');
+    try {
+      const result = await uploadAdminFiles(Array.from(files));
+      if (result.ok) {
+        setUploadStatus('done');
+        setUploadMessage(`Uploaded ${result.uploaded ?? 0}, skipped ${result.skipped ?? 0}`);
+        setTimeout(() => setUploadStatus('idle'), 2500);
+        setTimeout(() => loadImages(), 1500);
+      } else {
+        setUploadStatus('error');
+        setUploadMessage(result.message || 'Upload failed');
+      }
+    } catch (e: any) {
+      if (e.message === 'Unauthorized') {
+        logout();
+        return;
+      }
+      setUploadStatus('error');
+      setUploadMessage('Upload failed');
+    } finally {
+      if (uploadInputRef.current) uploadInputRef.current.value = '';
+    }
+  };
+
   if (!token) {
     return (
       <div className="absolute inset-0 z-[100] flex items-center justify-center bg-black/90 backdrop-blur-sm text-white p-4">
@@ -268,6 +298,33 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onUpdate }) => {
                 </div>
                 {syncMessage && syncStatus !== 'error' && (
                   <div className="text-[10px] text-neutral-400 tracking-widest uppercase">{syncMessage}</div>
+                )}
+                <div className="flex items-center gap-4">
+                  <input
+                    ref={uploadInputRef}
+                    type="file"
+                    multiple
+                    accept=".jpg,.jpeg,.png,.webp,.gif,.avif,.mp4,.webm,.mov"
+                    className="hidden"
+                    onChange={(e) => handleUpload(e.target.files)}
+                  />
+                  <button
+                    onClick={() => uploadInputRef.current?.click()}
+                    className={`px-4 py-2 text-xs font-bold tracking-widest uppercase transition-all duration-300 border ${
+                      uploadStatus === 'done'
+                        ? 'bg-green-900 border-green-700 text-green-100'
+                        : 'bg-transparent text-white border-white/30 hover:border-white'
+                    }`}
+                    type="button"
+                  >
+                    {uploadStatus === 'uploading' ? 'UPLOADING...' : uploadStatus === 'done' ? 'UPLOADED' : 'UPLOAD FILES'}
+                  </button>
+                  {uploadStatus === 'error' && (
+                    <span className="text-[10px] text-red-400 tracking-widest uppercase">{uploadMessage || 'UPLOAD FAILED'}</span>
+                  )}
+                </div>
+                {uploadMessage && uploadStatus !== 'error' && (
+                  <div className="text-[10px] text-neutral-400 tracking-widest uppercase">{uploadMessage}</div>
                 )}
               </div>
 

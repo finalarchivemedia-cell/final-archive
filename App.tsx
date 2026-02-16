@@ -26,6 +26,16 @@ const GalleryRouteHandler: React.FC<{
 }> = ({ settings, introComplete, images, onFirstCycleComplete }) => {
   const { id } = useParams();
   const location = useLocation();
+  const singleMode = Boolean(id && ID_REGEX.test(id));
+
+  const handleImageChange = useCallback((imageId: string) => {
+    if (singleMode) return;
+    const nextPath = `/${imageId}`;
+    if (location.pathname !== nextPath) {
+      window.history.replaceState(null, '', nextPath);
+    }
+  }, [location.pathname, singleMode]);
+
 
   // We hold the pre-resolved start sequence here
   const [readyData, setReadyData] = useState<{
@@ -115,16 +125,6 @@ const GalleryRouteHandler: React.FC<{
   if (!introComplete) {
     return null;
   }
-
-  const singleMode = Boolean(id && ID_REGEX.test(id));
-
-  const handleImageChange = useCallback((imageId: string) => {
-    if (singleMode) return;
-    const nextPath = `/${imageId}`;
-    if (location.pathname !== nextPath) {
-      window.history.replaceState(null, '', nextPath);
-    }
-  }, [location.pathname, singleMode]);
 
   return (
     <Gallery

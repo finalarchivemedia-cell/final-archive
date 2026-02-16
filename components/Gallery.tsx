@@ -10,6 +10,7 @@ interface GalleryProps {
   onFirstCycleComplete: () => void;
   active: boolean; 
   singleMode?: boolean;
+  onImageChange?: (id: string) => void;
 }
 
 // Helper to get random image excluding current
@@ -27,7 +28,8 @@ export const Gallery: React.FC<GalleryProps> = ({
   nextRecord,
   onFirstCycleComplete,
   active,
-  singleMode
+  singleMode,
+  onImageChange
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const layerRefA = useRef<HTMLElement | null>(null);
@@ -156,6 +158,12 @@ export const Gallery: React.FC<GalleryProps> = ({
     setLayerBReady(false);
   }, [urlB]);
 
+  useEffect(() => {
+    if (currentImg?.id) {
+      onImageChange?.(currentImg.id);
+    }
+  }, [currentImg?.id, onImageChange]);
+
   const baseMediaStyle: React.CSSProperties = {
     border: 'none',
     outline: 'none',
@@ -217,7 +225,14 @@ export const Gallery: React.FC<GalleryProps> = ({
             decoding="async"
             loading="eager"
             fetchPriority="high"
-            onLoad={() => setLayerAReady(true)}
+            onLoad={(e) => {
+              const el = e.currentTarget;
+              if ('decode' in el) {
+                el.decode().then(() => setLayerAReady(true)).catch(() => setLayerAReady(true));
+              } else {
+                setLayerAReady(true);
+              }
+            }}
           />
         )
       )}
@@ -259,7 +274,14 @@ export const Gallery: React.FC<GalleryProps> = ({
             decoding="async"
             loading="eager"
             fetchPriority="high"
-            onLoad={() => setLayerBReady(true)}
+            onLoad={(e) => {
+              const el = e.currentTarget;
+              if ('decode' in el) {
+                el.decode().then(() => setLayerBReady(true)).catch(() => setLayerBReady(true));
+              } else {
+                setLayerBReady(true);
+              }
+            }}
           />
         )
       )}

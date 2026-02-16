@@ -1,4 +1,4 @@
-import React, { useState, useEffect, Suspense } from 'react';
+import React, { useState, useEffect, Suspense, useCallback } from 'react';
 import { Routes, Route, useLocation, useParams } from 'react-router-dom';
 import { LogoOverlay } from './components/LogoOverlay';
 import { Gallery } from './components/Gallery';
@@ -25,6 +25,7 @@ const GalleryRouteHandler: React.FC<{
   onFirstCycleComplete: () => void;
 }> = ({ settings, introComplete, images, onFirstCycleComplete }) => {
   const { id } = useParams();
+  const location = useLocation();
 
   // We hold the pre-resolved start sequence here
   const [readyData, setReadyData] = useState<{
@@ -117,6 +118,14 @@ const GalleryRouteHandler: React.FC<{
 
   const singleMode = Boolean(id && ID_REGEX.test(id));
 
+  const handleImageChange = useCallback((imageId: string) => {
+    if (singleMode) return;
+    const nextPath = `/${imageId}`;
+    if (location.pathname !== nextPath) {
+      window.history.replaceState(null, '', nextPath);
+    }
+  }, [location.pathname, singleMode]);
+
   return (
     <Gallery
       settings={settings}
@@ -126,6 +135,7 @@ const GalleryRouteHandler: React.FC<{
       active={introComplete}
       onFirstCycleComplete={onFirstCycleComplete}
       singleMode={singleMode}
+      onImageChange={handleImageChange}
     />
   );
 };

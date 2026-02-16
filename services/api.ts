@@ -65,10 +65,10 @@ export const fetchPublicSettings = async (): Promise<{ displayDurationSec: numbe
 
 // --- Admin Endpoints ---
 
-const getAuthHeaders = () => {
+const getAuthHeaders = (includeJson = true) => {
   const token = localStorage.getItem('admin_token');
   return {
-    'Content-Type': 'application/json',
+    ...(includeJson ? { 'Content-Type': 'application/json' } : {}),
     'Authorization': `Bearer ${token}`
   };
 };
@@ -149,7 +149,7 @@ export const deactivateAdminImage = async (id: string): Promise<{ ok: boolean; m
   try {
     const res = await fetch(`${API_BASE}/admin/images/${id}/deactivate`, {
       method: 'POST',
-      headers: getAuthHeaders()
+      headers: getAuthHeaders(false)
     });
     if (res.status === 401) throw new Error('Unauthorized');
     const data = await res.json().catch(() => ({}));
@@ -164,7 +164,7 @@ export const activateAdminImage = async (id: string): Promise<{ ok: boolean; mes
   try {
     const res = await fetch(`${API_BASE}/admin/images/${id}/activate`, {
       method: 'POST',
-      headers: getAuthHeaders()
+      headers: getAuthHeaders(false)
     });
     if (res.status === 401) throw new Error('Unauthorized');
     const data = await res.json().catch(() => ({}));

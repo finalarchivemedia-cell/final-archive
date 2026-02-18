@@ -51,10 +51,17 @@ export const Gallery: React.FC<GalleryProps> = ({
   // So initial state: true = zoomed in (maxScale) → zoom out to 1
   const zoomInRef = useRef(true); // true = start zoomed in, false = start at full frame
   const timelineRef = useRef<gsap.core.Timeline | null>(null);
+  const lastImageIdRef = useRef<string | null>(null); // Track last image ID to prevent duplicate URL updates
 
   // 1. Initialization
   useEffect(() => {
-    if (startRecord) setCurrentImg(startRecord);
+    if (startRecord) {
+      setCurrentImg(startRecord);
+      // Initialize lastImageIdRef to prevent duplicate URL update on mount
+      if (startRecord.id !== lastImageIdRef.current) {
+        lastImageIdRef.current = startRecord.id;
+      }
+    }
     if (nextRecord) setNextImg(nextRecord);
   }, [startRecord, nextRecord]);
 
@@ -276,8 +283,11 @@ export const Gallery: React.FC<GalleryProps> = ({
     setLayerBReady(false);
   }, [urlB]);
 
+  // Update URL only when image actually changes (not on every render)
+  // This prevents duplicate URL updates and image reloads
   useEffect(() => {
-    if (currentImg?.id) {
+    if (currentImg?.id && currentImg.id !== lastImageIdRef.current) {
+      lastImageIdRef.current = currentImg.id;
       onImageChange?.(currentImg.id);
     }
   }, [currentImg?.id, onImageChange]);

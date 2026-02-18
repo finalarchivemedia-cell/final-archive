@@ -259,9 +259,9 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onUpdate }) => {
   }
 
   return (
-    <div className="absolute inset-0 bg-black/95 backdrop-blur-sm z-[100] text-white flex flex-col items-center justify-center p-8 overflow-y-auto">
-      <div className="w-full max-w-3xl space-y-12 my-auto">
-        <div className="flex justify-between items-end border-b border-white/20 pb-4">
+    <div className="fixed inset-0 bg-black/80 backdrop-blur-md z-[100] text-white flex items-start justify-center p-6 sm:p-8 overflow-y-auto">
+      <div className="w-full max-w-3xl bg-black/60 border border-white/10 rounded-md p-6 sm:p-8 space-y-10">
+        <div className="flex items-end justify-between border-b border-white/20 pb-4">
           <h1 className="text-2xl font-serif tracking-widest">SETTINGS</h1>
           <button onClick={logout} className="text-xs text-neutral-500 hover:text-white transition-colors tracking-widest uppercase">
             Logout
@@ -332,7 +332,7 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onUpdate }) => {
               </div>
 
               <div className="flex flex-col gap-3">
-                <div className="flex items-center gap-4">
+                <div className="flex flex-wrap items-center gap-3">
                 <button
                   onClick={handleSyncNow}
                   className={`px-4 py-2 text-xs font-bold tracking-widest uppercase transition-all duration-300 border ${
@@ -351,7 +351,7 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onUpdate }) => {
                 {syncMessage && syncStatus !== 'error' && (
                   <div className="text-[10px] text-neutral-400 tracking-widest uppercase">{syncMessage}</div>
                 )}
-                <div className="flex items-center gap-4">
+                <div className="flex flex-wrap items-center gap-3">
                   <input
                     ref={uploadInputRef}
                     type="file"
@@ -378,7 +378,7 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onUpdate }) => {
                 {uploadMessage && uploadStatus !== 'error' && (
                   <div className="text-[10px] text-neutral-400 tracking-widest uppercase">{uploadMessage}</div>
                 )}
-                <div className="flex items-center gap-4">
+                <div className="flex flex-wrap items-center gap-3">
                   <input
                     ref={musicInputRef}
                     type="file"

@@ -2,6 +2,8 @@ import React, { useEffect, useRef, useState } from 'react';
 import gsap from 'gsap';
 import { AppSettings, ImageRecord } from '../types';
 
+// Gallery component for background media display
+
 interface GalleryProps {
   settings: AppSettings;
   images: ImageRecord[]; 
@@ -74,7 +76,7 @@ export const Gallery: React.FC<GalleryProps> = ({
     // Reset Z-Index and Visibility
     gsap.set(currentEl, { zIndex: 10, autoAlpha: 1 });
     if (!singleMode && nextEl) {
-      gsap.set(nextEl, { zIndex: 5, autoAlpha: 0 }); 
+    gsap.set(nextEl, { zIndex: 5, autoAlpha: 0 }); 
     }
 
     const tl = gsap.timeline({
@@ -86,12 +88,12 @@ export const Gallery: React.FC<GalleryProps> = ({
         if (cycleCount.current === 1) {
           onFirstCycleComplete();
         }
-
+        
         if (!singleMode && nextImg) {
-          const nextLoopRecord = getRandomImage(images, nextImg.id);
-          setActiveLayer(prev => prev === 'A' ? 'B' : 'A');
-          setCurrentImg(nextImg); 
-          if (nextLoopRecord) setNextImg(nextLoopRecord); 
+        const nextLoopRecord = getRandomImage(images, nextImg.id);
+        setActiveLayer(prev => prev === 'A' ? 'B' : 'A');
+        setCurrentImg(nextImg); 
+        if (nextLoopRecord) setNextImg(nextLoopRecord); 
         }
         zoomInRef.current = !zoomInRef.current;
       }
@@ -123,18 +125,18 @@ export const Gallery: React.FC<GalleryProps> = ({
     }
 
     if (!singleMode && nextEl && nextReady) {
-      // Crossfade
-      tl.to(currentEl, {
-        autoAlpha: 0,
-        duration: 2.0,
+    // Crossfade
+    tl.to(currentEl, {
+      autoAlpha: 0,
+      duration: 2.0,
         ease: "sine.inOut"
-      }, duration);
+    }, duration);
 
-      tl.to(nextEl, {
-        autoAlpha: 1,
-        duration: 2.0,
+    tl.to(nextEl, {
+      autoAlpha: 1,
+      duration: 2.0,
         ease: "sine.inOut"
-      }, duration);
+    }, duration);
     }
 
     // Initial Fade In for first cycle handled in timeline (no delay)

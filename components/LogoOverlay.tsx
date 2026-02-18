@@ -139,7 +139,7 @@ export const LogoOverlay: React.FC<LogoOverlayProps> = ({ onIntroComplete, hover
         height: '100%',
         margin: 0,
         padding: 0,
-        backgroundColor: '#000' // Ensure black background
+        backgroundColor: 'transparent' // Transparent so Gallery images show through
       }}
     >
       <div 

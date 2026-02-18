@@ -60,7 +60,11 @@ export const Gallery: React.FC<GalleryProps> = ({
   useEffect(() => {
     const currentReady = activeLayer === 'A' ? layerAReady : layerBReady;
     const nextReady = activeLayer === 'A' ? layerBReady : layerAReady;
-    if (!active || !currentImg || (!nextImg && !singleMode) || !currentReady) return;
+    // Allow first image to show even if not fully ready (will fade in when ready)
+    // Only block if we're waiting for next image in crossfade
+    if (!active || !currentImg || (!nextImg && !singleMode)) return;
+    // For first cycle, don't block on currentReady - allow immediate fade-in
+    if (cycleCount.current > 0 && !currentReady) return;
 
     if (timelineRef.current) timelineRef.current.kill();
 
@@ -128,8 +132,15 @@ export const Gallery: React.FC<GalleryProps> = ({
       0
     );
 
+    // First cycle: fade in the first image immediately
     if (cycleCount.current === 0) {
-      tl.fromTo(currentEl, { autoAlpha: 0 }, { autoAlpha: 1, duration: 0.4, ease: "sine.inOut" }, 0);
+      // Ensure image is visible even if still loading
+      gsap.set(currentEl, { autoAlpha: 0 });
+      tl.to(currentEl, { 
+        autoAlpha: 1, 
+        duration: 0.6, 
+        ease: "power2.inOut" 
+      }, 0);
     }
 
     if (!singleMode && nextEl && nextReady) {

@@ -260,18 +260,7 @@ export default function App() {
         {/* Admin */}
         <Route path="/admin" element={
           <Suspense fallback={null}>
-            <div className="w-full h-full relative">
-              {/* Dummy Gallery for Admin BG */}
-              {images.length > 0 && (
-                <Gallery
-                  settings={settings}
-                  images={images}
-                  startRecord={images[0]}
-                  nextRecord={images[1] || images[0]}
-                  active={true}
-                  onFirstCycleComplete={() => { }}
-                />
-              )}
+            <div className="w-full h-full bg-black">
               <AdminPanel onUpdate={setSettings} />
             </div>
           </Suspense>

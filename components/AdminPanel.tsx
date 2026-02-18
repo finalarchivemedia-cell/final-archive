@@ -232,212 +232,239 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onUpdate }) => {
 
   if (!token) {
     return (
-      <div className="absolute inset-0 z-[100] flex items-center justify-center bg-black/90 backdrop-blur-sm text-white p-4">
-        <form onSubmit={handleLogin} className="w-full max-w-sm flex flex-col gap-4">
-          <h1 className="text-xl font-serif tracking-widest text-center mb-8">ADMIN ACCESS</h1>
+      <div className="fixed inset-0 z-[100] bg-black text-white flex items-center justify-center p-6">
+        <div className="w-full max-w-md border border-white/10 bg-black/70 backdrop-blur-md rounded-xl p-6 sm:p-8">
+          <div className="mb-6 text-center">
+            <div className="text-[11px] uppercase tracking-[0.35em] text-white/70">Final Archive</div>
+            <h1 className="mt-3 text-xl font-serif tracking-widest">Admin Access</h1>
+          </div>
+
+          <form onSubmit={handleLogin} className="flex flex-col gap-4">
 
           <input
             type="password"
             value={password}
             onChange={e => setPassword(e.target.value)}
             placeholder="Enter Password"
-            className="bg-neutral-900 border border-neutral-800 p-3 text-center tracking-widest outline-none focus:border-white transition-colors placeholder:text-neutral-700"
+            className="bg-black border border-white/10 px-4 py-3 rounded-md text-center tracking-[0.25em] outline-none focus:border-white/40 transition-colors placeholder:text-white/20"
           />
 
-          {error && <div className="text-red-500 text-xs text-center tracking-widest">{error}</div>}
+          {error && <div className="text-red-400 text-xs text-center tracking-widest">{error}</div>}
 
           <button
             type="submit"
             disabled={loading}
-            className="bg-white text-black py-3 hover:bg-neutral-200 transition-colors tracking-widest text-sm font-bold uppercase disabled:opacity-50"
+            className="bg-white text-black py-3 rounded-md hover:bg-neutral-200 transition-colors tracking-[0.3em] text-sm font-bold uppercase disabled:opacity-50"
           >
             {loading ? '...' : 'Login'}
           </button>
-        </form>
+          </form>
+        </div>
       </div>
     );
   }
 
-  return (
-    <div className="fixed inset-0 z-[100] text-white">
-      {/* Dim / blur overlay */}
-      <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" />
+  const card = 'border border-white/10 bg-white/5 rounded-xl';
+  const label = 'text-[11px] uppercase tracking-[0.25em] text-white/60';
+  const buttonBase = 'px-4 py-2 text-[11px] font-bold tracking-[0.25em] uppercase transition-colors border rounded-md';
 
-      {/* Bottom dock panel (client request: controls/content not at top) */}
-      <div className="absolute inset-x-0 bottom-0 pb-[env(safe-area-inset-bottom)]">
-        <div className="mx-auto w-full max-w-4xl border border-white/10 bg-black/75 backdrop-blur-md rounded-t-xl shadow-2xl">
-          <div className="flex items-center justify-between px-5 sm:px-6 py-4 border-b border-white/10">
-            <div className="text-[12px] uppercase tracking-[0.35em] text-white/80">Settings</div>
-            <button
-              onClick={logout}
-              className="text-[10px] text-white/50 hover:text-white/80 transition-colors tracking-[0.25em] uppercase"
-            >
-              Logout
-            </button>
+  return (
+    <div className="fixed inset-0 z-[100] bg-black text-white">
+      <div className="absolute inset-0 pointer-events-none bg-gradient-to-b from-white/5 via-transparent to-transparent" />
+
+      <div className="relative h-full w-full flex flex-col">
+        <header className="flex items-center justify-between px-5 sm:px-8 py-5 border-b border-white/10">
+          <div>
+            <div className="text-[10px] uppercase tracking-[0.35em] text-white/60">Private Panel</div>
+            <div className="mt-1 text-xl font-serif tracking-widest">Final Archive</div>
           </div>
+          <button
+            onClick={logout}
+            className="text-[10px] text-white/50 hover:text-white/80 transition-colors tracking-[0.25em] uppercase"
+            type="button"
+          >
+            Logout
+          </button>
+        </header>
 
         {loading ? (
-          <div className="p-8 text-center animate-pulse tracking-widest text-xs text-white/50">LOADING...</div>
+          <div className="flex-1 flex items-center justify-center text-xs tracking-widest text-white/50 animate-pulse">
+            LOADING...
+          </div>
         ) : (
-          <div className="p-5 sm:p-6 max-h-[70vh] overflow-y-auto space-y-8">
-            {/* Duration Slider */}
-            <div className="space-y-4">
-              <div className="flex justify-between text-xs tracking-widest uppercase text-neutral-400">
-                <label>Display Duration</label>
-                <span className="text-white">{settings.displayDurationSec}s</span>
-              </div>
-              <input
-                type="range"
-                min="1"
-                max="10"
-                step="1"
-                value={settings.displayDurationSec}
-                onChange={e => setSettings({ ...settings, displayDurationSec: Number(e.target.value) })}
-                className="w-full h-1 bg-neutral-800 rounded-lg appearance-none cursor-pointer accent-white"
-              />
-            </div>
+          <div className="flex-1 overflow-y-auto px-5 sm:px-8 py-6 pb-10">
+            <div className="mx-auto w-full max-w-6xl grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Left column */}
+              <div className="space-y-6">
+                <section className={`${card} p-5 sm:p-6`}>
+                  <div className={`${label} mb-5`}>Playback</div>
 
-            {/* Crop Slider */}
-            <div className="space-y-4">
-              <div className="flex justify-between text-xs tracking-widest uppercase text-neutral-400">
-                <label>Crop / Zoom</label>
-                <span className="text-white">{settings.cropPercent}%</span>
-              </div>
-              <input
-                type="range"
-                min="25"
-                max="100"
-                step="1"
-                value={settings.cropPercent}
-                onChange={e => setSettings({ ...settings, cropPercent: Number(e.target.value) })}
-                className="w-full h-1 bg-neutral-800 rounded-lg appearance-none cursor-pointer accent-white"
-              />
-            </div>
-
-            <div className="pt-6">
-              <button
-                onClick={handleSave}
-                className={`w-full py-4 text-sm font-bold tracking-[0.2em] uppercase transition-all duration-300 border ${saveStatus === 'saved'
-                  ? 'bg-green-900 border-green-700 text-green-100'
-                  : 'bg-white text-black border-white hover:bg-neutral-200'
-                  }`}
-              >
-                {saveStatus === 'saving' ? 'SAVING...' : saveStatus === 'saved' ? 'SAVED' : 'SAVE CHANGES'}
-              </button>
-            </div>
-
-            {/* Content Controls */}
-            <div className="pt-4 border-t border-white/10">
-              <div className="flex items-center justify-between text-xs tracking-widest uppercase text-neutral-400 mb-4">
-                <span>Content Controls</span>
-                <button
-                  onClick={loadImages}
-                  className="text-[10px] text-neutral-500 hover:text-white transition-colors uppercase tracking-widest"
-                  type="button"
-                >
-                  Refresh List
-                </button>
-              </div>
-
-              <div className="flex flex-col gap-3">
-                <div className="flex flex-wrap items-center gap-3">
-                <button
-                  onClick={handleSyncNow}
-                  className={`px-4 py-2 text-xs font-bold tracking-widest uppercase transition-all duration-300 border ${
-                    syncStatus === 'done'
-                      ? 'bg-green-900 border-green-700 text-green-100'
-                      : 'bg-transparent text-white border-white/30 hover:border-white'
-                  }`}
-                  type="button"
-                >
-                  {syncStatus === 'syncing' ? 'SYNCING...' : syncStatus === 'done' ? 'SYNC STARTED' : 'SYNC NOW'}
-                </button>
-                  {syncStatus === 'error' && (
-                    <span className="text-[10px] text-red-400 tracking-widest uppercase">{syncMessage || 'SYNC FAILED'}</span>
-                  )}
-                </div>
-                {syncMessage && syncStatus !== 'error' && (
-                  <div className="text-[10px] text-neutral-400 tracking-widest uppercase">{syncMessage}</div>
-                )}
-                <div className="flex flex-wrap items-center gap-3">
-                  <input
-                    ref={uploadInputRef}
-                    type="file"
-                    multiple
-                    accept=".jpg,.jpeg,.png,.webp,.gif,.avif,.mp4,.webm,.mov"
-                    className="hidden"
-                    onChange={(e) => handleUpload(e.target.files)}
-                  />
-                  <button
-                    onClick={() => uploadInputRef.current?.click()}
-                    className={`px-4 py-2 text-xs font-bold tracking-widest uppercase transition-all duration-300 border ${
-                      uploadStatus === 'done'
-                        ? 'bg-green-900 border-green-700 text-green-100'
-                        : 'bg-transparent text-white border-white/30 hover:border-white'
-                    }`}
-                    type="button"
-                  >
-                    {uploadStatus === 'uploading' ? 'UPLOADING...' : uploadStatus === 'done' ? 'UPLOADED' : 'UPLOAD FILES'}
-                  </button>
-                  {uploadStatus === 'error' && (
-                    <span className="text-[10px] text-red-400 tracking-widest uppercase">{uploadMessage || 'UPLOAD FAILED'}</span>
-                  )}
-                </div>
-                {uploadMessage && uploadStatus !== 'error' && (
-                  <div className="text-[10px] text-neutral-400 tracking-widest uppercase">{uploadMessage}</div>
-                )}
-                <div className="flex flex-wrap items-center gap-3">
-                  <input
-                    ref={musicInputRef}
-                    type="file"
-                    accept=".mp3,.m4a,.wav,.aac"
-                    className="hidden"
-                    onChange={(e) => handleMusicUpload(e.target.files)}
-                  />
-                  <button
-                    onClick={() => musicInputRef.current?.click()}
-                    className={`px-4 py-2 text-xs font-bold tracking-widest uppercase transition-all duration-300 border ${
-                      musicStatus === 'done'
-                        ? 'bg-green-900 border-green-700 text-green-100'
-                        : 'bg-transparent text-white border-white/30 hover:border-white'
-                    }`}
-                    type="button"
-                  >
-                    {musicStatus === 'uploading' ? 'UPLOADING MUSIC...' : musicStatus === 'done' ? 'MUSIC UPDATED' : 'UPLOAD MUSIC'}
-                  </button>
-                  {musicStatus === 'error' && (
-                    <span className="text-[10px] text-red-400 tracking-widest uppercase">{musicMessage || 'UPLOAD FAILED'}</span>
-                  )}
-                </div>
-                {musicMessage && musicStatus !== 'error' && (
-                  <div className="text-[10px] text-neutral-400 tracking-widest uppercase">
-                    {musicMessage}
-                    {musicUrl ? ` • ${musicUrl}` : ''}
+                  <div className="space-y-4">
+                    <div className="flex justify-between items-center">
+                      <label className={label}>Display Duration</label>
+                      <span className="text-white/90 text-[11px] tracking-[0.25em]">{settings.displayDurationSec}s</span>
+                    </div>
+                    <input
+                      type="range"
+                      min="1"
+                      max="10"
+                      step="1"
+                      value={settings.displayDurationSec}
+                      onChange={e => setSettings({ ...settings, displayDurationSec: Number(e.target.value) })}
+                      className="w-full h-1 bg-white/10 rounded-lg appearance-none cursor-pointer accent-white"
+                    />
                   </div>
-                )}
+
+                  <div className="space-y-4 pt-4">
+                    <div className="flex justify-between items-center">
+                      <label className={label}>Crop / Zoom</label>
+                      <span className="text-white/90 text-[11px] tracking-[0.25em]">{settings.cropPercent}%</span>
+                    </div>
+                    <input
+                      type="range"
+                      min="25"
+                      max="100"
+                      step="1"
+                      value={settings.cropPercent}
+                      onChange={e => setSettings({ ...settings, cropPercent: Number(e.target.value) })}
+                      className="w-full h-1 bg-white/10 rounded-lg appearance-none cursor-pointer accent-white"
+                    />
+                  </div>
+
+                  <div className="pt-6">
+                    <button
+                      onClick={handleSave}
+                      type="button"
+                      className={
+                        saveStatus === 'saved'
+                          ? `${buttonBase} w-full bg-green-900/40 border-green-700/60 text-green-100`
+                          : `${buttonBase} w-full bg-white text-black border-white hover:bg-neutral-200`
+                      }
+                    >
+                      {saveStatus === 'saving' ? 'SAVING...' : saveStatus === 'saved' ? 'SAVED' : 'SAVE CHANGES'}
+                    </button>
+                  </div>
+                </section>
+
+                <section className={`${card} p-5 sm:p-6`}>
+                  <div className="flex items-center justify-between mb-5">
+                    <div className={label}>Content</div>
+                    <button
+                      onClick={loadImages}
+                      className="text-[10px] text-white/40 hover:text-white/70 transition-colors uppercase tracking-[0.25em]"
+                      type="button"
+                    >
+                      Refresh
+                    </button>
+                  </div>
+
+                  <div className="flex flex-col gap-3">
+                    <div className="flex flex-wrap items-center gap-3">
+                      <button
+                        onClick={handleSyncNow}
+                        className={
+                          syncStatus === 'done'
+                            ? `${buttonBase} bg-green-900/40 border-green-700/60 text-green-100`
+                            : `${buttonBase} bg-transparent text-white border-white/20 hover:border-white/40`
+                        }
+                        type="button"
+                      >
+                        {syncStatus === 'syncing' ? 'SYNCING...' : syncStatus === 'done' ? 'SYNC STARTED' : 'SYNC NOW'}
+                      </button>
+                      {syncStatus === 'error' && (
+                        <span className="text-[10px] text-red-400 tracking-[0.25em] uppercase">{syncMessage || 'SYNC FAILED'}</span>
+                      )}
+                    </div>
+                    {syncMessage && syncStatus !== 'error' && (
+                      <div className="text-[10px] text-white/40 tracking-[0.25em] uppercase">{syncMessage}</div>
+                    )}
+
+                    <div className="flex flex-wrap items-center gap-3">
+                      <input
+                        ref={uploadInputRef}
+                        type="file"
+                        multiple
+                        accept=".jpg,.jpeg,.png,.webp,.gif,.avif,.mp4,.webm,.mov"
+                        className="hidden"
+                        onChange={(e) => handleUpload(e.target.files)}
+                      />
+                      <button
+                        onClick={() => uploadInputRef.current?.click()}
+                        className={
+                          uploadStatus === 'done'
+                            ? `${buttonBase} bg-green-900/40 border-green-700/60 text-green-100`
+                            : `${buttonBase} bg-transparent text-white border-white/20 hover:border-white/40`
+                        }
+                        type="button"
+                      >
+                        {uploadStatus === 'uploading' ? 'UPLOADING...' : uploadStatus === 'done' ? 'UPLOADED' : 'UPLOAD FILES'}
+                      </button>
+                      {uploadStatus === 'error' && (
+                        <span className="text-[10px] text-red-400 tracking-[0.25em] uppercase">{uploadMessage || 'UPLOAD FAILED'}</span>
+                      )}
+                    </div>
+                    {uploadMessage && uploadStatus !== 'error' && (
+                      <div className="text-[10px] text-white/40 tracking-[0.25em] uppercase">{uploadMessage}</div>
+                    )}
+
+                    <div className="flex flex-wrap items-center gap-3">
+                      <input
+                        ref={musicInputRef}
+                        type="file"
+                        accept=".mp3,.m4a,.wav,.aac"
+                        className="hidden"
+                        onChange={(e) => handleMusicUpload(e.target.files)}
+                      />
+                      <button
+                        onClick={() => musicInputRef.current?.click()}
+                        className={
+                          musicStatus === 'done'
+                            ? `${buttonBase} bg-green-900/40 border-green-700/60 text-green-100`
+                            : `${buttonBase} bg-transparent text-white border-white/20 hover:border-white/40`
+                        }
+                        type="button"
+                      >
+                        {musicStatus === 'uploading' ? 'UPLOADING MUSIC...' : musicStatus === 'done' ? 'MUSIC UPDATED' : 'UPLOAD MUSIC'}
+                      </button>
+                      {musicStatus === 'error' && (
+                        <span className="text-[10px] text-red-400 tracking-[0.25em] uppercase">{musicMessage || 'UPLOAD FAILED'}</span>
+                      )}
+                    </div>
+                    {musicMessage && musicStatus !== 'error' && (
+                      <div className="text-[10px] text-white/40 tracking-[0.25em] uppercase">
+                        {musicMessage}
+                        {musicUrl ? ` • ${musicUrl}` : ''}
+                      </div>
+                    )}
+                  </div>
+                </section>
               </div>
 
-              <div className="mt-6">
-                <div className="text-xs tracking-widest uppercase text-neutral-400 mb-3">
-                  Images ({images.filter(img => img.isActive).length} active / {images.length} total)
+              {/* Right column */}
+              <section className={`${card} p-5 sm:p-6`}>
+                <div className="flex items-center justify-between mb-5">
+                  <div className={label}>
+                    Library ({images.filter(img => img.isActive).length} active / {images.length})
+                  </div>
+                  <div className="text-[10px] text-white/40 tracking-[0.25em] uppercase">IDs are permanent</div>
                 </div>
 
                 {imagesLoading && (
-                  <div className="text-center animate-pulse tracking-widest text-xs text-neutral-400">LOADING IMAGES...</div>
+                  <div className="text-center animate-pulse tracking-widest text-xs text-white/40">LOADING IMAGES...</div>
                 )}
                 {imagesError && (
-                  <div className="text-center tracking-widest text-xs text-red-500">{imagesError}</div>
+                  <div className="text-center tracking-widest text-xs text-red-400">{imagesError}</div>
                 )}
 
                 {!imagesLoading && !imagesError && (
-                  <div className="max-h-[40vh] overflow-y-auto border border-white/10 rounded-sm">
+                  <div className="max-h-[65vh] overflow-y-auto border border-white/10 rounded-md">
                     {images.length === 0 ? (
-                      <div className="p-4 text-center text-xs tracking-widest text-neutral-500">NO IMAGES FOUND</div>
+                      <div className="p-6 text-center text-xs tracking-widest text-white/30">NO IMAGES FOUND</div>
                     ) : (
                       <div className="divide-y divide-white/10">
                         {images.map((img) => (
                           <div key={img.id} className="flex items-center gap-4 p-3">
-                            <div className="w-16 h-12 bg-black/60 border border-white/10 flex items-center justify-center">
+                            <div className="w-20 h-14 bg-black/60 border border-white/10 rounded-sm overflow-hidden flex items-center justify-center">
                               {img.mediaType === 'VIDEO' ? (
                                 <video src={img.url} className="w-full h-full object-cover" muted />
                               ) : (
@@ -445,10 +472,18 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onUpdate }) => {
                               )}
                             </div>
                             <div className="flex-1 min-w-0">
-                              <div className="text-xs tracking-widest">{img.id}</div>
-                              <div className="text-[10px] text-neutral-500 tracking-widest uppercase">{img.mediaType}</div>
-                              <div className={`text-[10px] tracking-widest uppercase ${img.isActive ? 'text-green-400' : 'text-red-400'}`}>
-                                {img.isActive ? 'Active' : 'Inactive'}
+                              <div className="text-[12px] tracking-[0.25em]">{img.id}</div>
+                              <div className="mt-1 flex items-center gap-2">
+                                <span className="text-[10px] text-white/40 tracking-[0.25em] uppercase">{img.mediaType}</span>
+                                <span
+                                  className={
+                                    img.isActive
+                                      ? 'text-[10px] tracking-[0.25em] uppercase px-2 py-[2px] rounded-full border text-green-200 border-green-700/60 bg-green-900/30'
+                                      : 'text-[10px] tracking-[0.25em] uppercase px-2 py-[2px] rounded-full border text-red-200 border-red-700/60 bg-red-900/30'
+                                  }
+                                >
+                                  {img.isActive ? 'ACTIVE' : 'INACTIVE'}
+                                </span>
                               </div>
                             </div>
                             <div className="flex items-center gap-2">
@@ -456,22 +491,24 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onUpdate }) => {
                                 href={img.url}
                                 target="_blank"
                                 rel="noreferrer"
-                                className="text-[10px] text-neutral-500 hover:text-white transition-colors tracking-widest uppercase"
+                                className="text-[10px] text-white/40 hover:text-white/70 transition-colors tracking-[0.25em] uppercase"
                               >
                                 Open
                               </a>
                               <button
                                 onClick={() => handleToggleActive(img)}
-                                className={`text-[10px] transition-colors tracking-widest uppercase ${
-                                  img.isActive ? 'text-red-400 hover:text-red-300' : 'text-green-400 hover:text-green-300'
-                                }`}
+                                className={
+                                  img.isActive
+                                    ? 'text-[10px] transition-colors tracking-[0.25em] uppercase text-red-300 hover:text-red-200'
+                                    : 'text-[10px] transition-colors tracking-[0.25em] uppercase text-green-300 hover:text-green-200'
+                                }
                                 type="button"
                               >
                                 {img.isActive ? 'Deactivate' : 'Activate'}
                               </button>
                               <button
                                 onClick={() => handleDelete(img)}
-                                className="text-[10px] text-red-500 hover:text-red-400 transition-colors tracking-widest uppercase"
+                                className="text-[10px] text-red-400 hover:text-red-300 transition-colors tracking-[0.25em] uppercase"
                                 type="button"
                               >
                                 Delete
@@ -483,11 +520,10 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onUpdate }) => {
                     )}
                   </div>
                 )}
-              </div>
+              </section>
             </div>
           </div>
         )}
-        </div>
       </div>
     </div>
   );

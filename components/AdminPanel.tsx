@@ -264,27 +264,32 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onUpdate }) => {
     );
   }
 
-  const card = 'border border-white/10 bg-white/5 rounded-xl';
-  const label = 'text-[11px] uppercase tracking-[0.25em] text-white/60';
-  const buttonBase = 'px-4 py-2 text-[11px] font-bold tracking-[0.25em] uppercase transition-colors border rounded-md';
+  // Professional card styling with glass-morphism effect
+  const card = 'border border-white/10 bg-white/[0.08] backdrop-blur-md rounded-xl shadow-lg';
+  const label = 'text-[11px] uppercase tracking-[0.25em] text-white/60 mb-4';
+  const buttonBase = 'px-4 py-2 text-[11px] font-bold tracking-[0.25em] uppercase transition-all duration-200 border rounded-md';
 
   return (
-    <div className="fixed inset-0 z-[100] bg-black text-white">
-      <div className="absolute inset-0 pointer-events-none bg-gradient-to-b from-white/5 via-transparent to-transparent" />
+    <div className="fixed inset-0 z-[100] text-white overflow-hidden">
+      {/* Background with blur overlay */}
+      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
 
       <div className="relative h-full w-full flex flex-col">
-        <header className="flex items-center justify-between px-5 sm:px-8 py-5 border-b border-white/10">
-          <div>
-            <div className="text-[10px] uppercase tracking-[0.35em] text-white/60">Private Panel</div>
-            <div className="mt-1 text-xl font-serif tracking-widest">Final Archive</div>
+        {/* Header */}
+        <header className="relative border-b border-white/10 bg-white/[0.05] backdrop-blur-md">
+          <div className="flex items-center justify-between px-6 sm:px-8 py-4">
+            <div>
+              <div className="text-[10px] uppercase tracking-[0.35em] text-white/50">Private Panel</div>
+              <div className="mt-1 text-xl font-serif tracking-widest text-white/90">Final Archive</div>
+            </div>
+            <button
+              onClick={logout}
+              className="text-[10px] text-white/50 hover:text-white/90 transition-colors tracking-[0.25em] uppercase px-3 py-1.5 border border-white/10 hover:border-white/30 rounded"
+              type="button"
+            >
+              Logout
+            </button>
           </div>
-          <button
-            onClick={logout}
-            className="text-[10px] text-white/50 hover:text-white/80 transition-colors tracking-[0.25em] uppercase"
-            type="button"
-          >
-            Logout
-          </button>
         </header>
 
         {loading ? (
@@ -292,53 +297,56 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onUpdate }) => {
             LOADING...
           </div>
         ) : (
-          <div className="flex-1 overflow-y-auto px-5 sm:px-8 py-6 pb-10">
-            <div className="mx-auto w-full max-w-6xl grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {/* Left column */}
-              <div className="space-y-6">
-                <section className={`${card} p-5 sm:p-6`}>
-                  <div className={`${label} mb-5`}>Playback</div>
+          <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-6 pb-8">
+            <div className="mx-auto w-full max-w-7xl grid grid-cols-1 lg:grid-cols-2 gap-5">
+              {/* Left column: Settings & Content */}
+              <div className="space-y-5">
+                {/* Playback Settings Card */}
+                <section className={`${card} p-6`}>
+                  <div className={label}>Playback Settings</div>
 
-                  <div className="space-y-4">
-                    <div className="flex justify-between items-center">
-                      <label className={label}>Display Duration</label>
-                      <span className="text-white/90 text-[11px] tracking-[0.25em]">{settings.displayDurationSec}s</span>
+                  <div className="space-y-5">
+                    <div className="space-y-3">
+                      <div className="flex justify-between items-center">
+                        <label className="text-[11px] uppercase tracking-[0.25em] text-white/70">Display Duration</label>
+                        <span className="text-white/90 text-[12px] tracking-[0.25em] font-medium">{settings.displayDurationSec}s</span>
+                      </div>
+                      <input
+                        type="range"
+                        min="1"
+                        max="10"
+                        step="1"
+                        value={settings.displayDurationSec}
+                        onChange={e => setSettings({ ...settings, displayDurationSec: Number(e.target.value) })}
+                        className="w-full h-1.5 bg-white/10 rounded-lg appearance-none cursor-pointer accent-white"
+                      />
                     </div>
-                    <input
-                      type="range"
-                      min="1"
-                      max="10"
-                      step="1"
-                      value={settings.displayDurationSec}
-                      onChange={e => setSettings({ ...settings, displayDurationSec: Number(e.target.value) })}
-                      className="w-full h-1 bg-white/10 rounded-lg appearance-none cursor-pointer accent-white"
-                    />
+
+                    <div className="space-y-3">
+                      <div className="flex justify-between items-center">
+                        <label className="text-[11px] uppercase tracking-[0.25em] text-white/70">Crop / Zoom</label>
+                        <span className="text-white/90 text-[12px] tracking-[0.25em] font-medium">{settings.cropPercent}%</span>
+                      </div>
+                      <input
+                        type="range"
+                        min="25"
+                        max="100"
+                        step="1"
+                        value={settings.cropPercent}
+                        onChange={e => setSettings({ ...settings, cropPercent: Number(e.target.value) })}
+                        className="w-full h-1.5 bg-white/10 rounded-lg appearance-none cursor-pointer accent-white"
+                      />
+                    </div>
                   </div>
 
-                  <div className="space-y-4 pt-4">
-                    <div className="flex justify-between items-center">
-                      <label className={label}>Crop / Zoom</label>
-                      <span className="text-white/90 text-[11px] tracking-[0.25em]">{settings.cropPercent}%</span>
-                    </div>
-                    <input
-                      type="range"
-                      min="25"
-                      max="100"
-                      step="1"
-                      value={settings.cropPercent}
-                      onChange={e => setSettings({ ...settings, cropPercent: Number(e.target.value) })}
-                      className="w-full h-1 bg-white/10 rounded-lg appearance-none cursor-pointer accent-white"
-                    />
-                  </div>
-
-                  <div className="pt-6">
+                  <div className="pt-6 mt-6 border-t border-white/10">
                     <button
                       onClick={handleSave}
                       type="button"
                       className={
                         saveStatus === 'saved'
-                          ? `${buttonBase} w-full bg-green-900/40 border-green-700/60 text-green-100`
-                          : `${buttonBase} w-full bg-white text-black border-white hover:bg-neutral-200`
+                          ? `${buttonBase} w-full bg-green-900/50 border-green-600/60 text-green-100 hover:bg-green-900/60`
+                          : `${buttonBase} w-full bg-white/90 text-black border-white/30 hover:bg-white`
                       }
                     >
                       {saveStatus === 'saving' ? 'SAVING...' : saveStatus === 'saved' ? 'SAVED' : 'SAVE CHANGES'}
@@ -346,12 +354,13 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onUpdate }) => {
                   </div>
                 </section>
 
-                <section className={`${card} p-5 sm:p-6`}>
-                  <div className="flex items-center justify-between mb-5">
-                    <div className={label}>Content</div>
+                {/* Content Controls Card */}
+                <section className={`${card} p-6`}>
+                  <div className="flex items-center justify-between mb-4">
+                    <div className={label}>Content Management</div>
                     <button
                       onClick={loadImages}
-                      className="text-[10px] text-white/40 hover:text-white/70 transition-colors uppercase tracking-[0.25em]"
+                      className="text-[10px] text-white/50 hover:text-white/80 transition-colors uppercase tracking-[0.25em] px-2 py-1 border border-white/10 hover:border-white/20 rounded"
                       type="button"
                     >
                       Refresh
@@ -359,13 +368,14 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onUpdate }) => {
                   </div>
 
                   <div className="flex flex-col gap-3">
-                    <div className="flex flex-wrap items-center gap-3">
+                    {/* Sync Now */}
+                    <div className="flex flex-wrap items-center gap-2">
                       <button
                         onClick={handleSyncNow}
                         className={
                           syncStatus === 'done'
-                            ? `${buttonBase} bg-green-900/40 border-green-700/60 text-green-100`
-                            : `${buttonBase} bg-transparent text-white border-white/20 hover:border-white/40`
+                            ? `${buttonBase} bg-green-900/50 border-green-600/60 text-green-100 hover:bg-green-900/60`
+                            : `${buttonBase} bg-white/5 border-white/20 text-white hover:bg-white/10 hover:border-white/30`
                         }
                         type="button"
                       >
@@ -376,10 +386,11 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onUpdate }) => {
                       )}
                     </div>
                     {syncMessage && syncStatus !== 'error' && (
-                      <div className="text-[10px] text-white/40 tracking-[0.25em] uppercase">{syncMessage}</div>
+                      <div className="text-[10px] text-white/50 tracking-[0.25em] uppercase">{syncMessage}</div>
                     )}
 
-                    <div className="flex flex-wrap items-center gap-3">
+                    {/* Upload Files */}
+                    <div className="flex flex-wrap items-center gap-2">
                       <input
                         ref={uploadInputRef}
                         type="file"
@@ -392,8 +403,8 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onUpdate }) => {
                         onClick={() => uploadInputRef.current?.click()}
                         className={
                           uploadStatus === 'done'
-                            ? `${buttonBase} bg-green-900/40 border-green-700/60 text-green-100`
-                            : `${buttonBase} bg-transparent text-white border-white/20 hover:border-white/40`
+                            ? `${buttonBase} bg-green-900/50 border-green-600/60 text-green-100 hover:bg-green-900/60`
+                            : `${buttonBase} bg-white/5 border-white/20 text-white hover:bg-white/10 hover:border-white/30`
                         }
                         type="button"
                       >
@@ -404,10 +415,11 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onUpdate }) => {
                       )}
                     </div>
                     {uploadMessage && uploadStatus !== 'error' && (
-                      <div className="text-[10px] text-white/40 tracking-[0.25em] uppercase">{uploadMessage}</div>
+                      <div className="text-[10px] text-white/50 tracking-[0.25em] uppercase">{uploadMessage}</div>
                     )}
 
-                    <div className="flex flex-wrap items-center gap-3">
+                    {/* Upload Music */}
+                    <div className="flex flex-wrap items-center gap-2">
                       <input
                         ref={musicInputRef}
                         type="file"
@@ -419,8 +431,8 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onUpdate }) => {
                         onClick={() => musicInputRef.current?.click()}
                         className={
                           musicStatus === 'done'
-                            ? `${buttonBase} bg-green-900/40 border-green-700/60 text-green-100`
-                            : `${buttonBase} bg-transparent text-white border-white/20 hover:border-white/40`
+                            ? `${buttonBase} bg-green-900/50 border-green-600/60 text-green-100 hover:bg-green-900/60`
+                            : `${buttonBase} bg-white/5 border-white/20 text-white hover:bg-white/10 hover:border-white/30`
                         }
                         type="button"
                       >
@@ -431,7 +443,7 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onUpdate }) => {
                       )}
                     </div>
                     {musicMessage && musicStatus !== 'error' && (
-                      <div className="text-[10px] text-white/40 tracking-[0.25em] uppercase">
+                      <div className="text-[10px] text-white/50 tracking-[0.25em] uppercase">
                         {musicMessage}
                         {musicUrl ? ` • ${musicUrl}` : ''}
                       </div>
@@ -440,9 +452,9 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onUpdate }) => {
                 </section>
               </div>
 
-              {/* Right column */}
-              <section className={`${card} p-5 sm:p-6`}>
-                <div className="flex items-center justify-between mb-5">
+              {/* Right column: Library */}
+              <section className={`${card} p-6`}>
+                <div className="flex items-center justify-between mb-4">
                   <div className={label}>
                     Library ({images.filter(img => img.isActive).length} active / {images.length})
                   </div>
@@ -457,14 +469,14 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onUpdate }) => {
                 )}
 
                 {!imagesLoading && !imagesError && (
-                  <div className="max-h-[65vh] overflow-y-auto border border-white/10 rounded-md">
+                  <div className="max-h-[65vh] overflow-y-auto border border-white/10 rounded-lg bg-black/20 backdrop-blur-sm">
                     {images.length === 0 ? (
-                      <div className="p-6 text-center text-xs tracking-widest text-white/30">NO IMAGES FOUND</div>
+                      <div className="p-8 text-center text-xs tracking-widest text-white/40">NO IMAGES FOUND</div>
                     ) : (
                       <div className="divide-y divide-white/10">
                         {images.map((img) => (
-                          <div key={img.id} className="flex items-center gap-4 p-3">
-                            <div className="w-20 h-14 bg-black/60 border border-white/10 rounded-sm overflow-hidden flex items-center justify-center">
+                          <div key={img.id} className="flex items-center gap-4 p-4 hover:bg-white/5 transition-colors">
+                            <div className="w-24 h-16 bg-black/40 border border-white/10 rounded-md overflow-hidden flex items-center justify-center flex-shrink-0">
                               {img.mediaType === 'VIDEO' ? (
                                 <video src={img.url} className="w-full h-full object-cover" muted />
                               ) : (
@@ -472,26 +484,26 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onUpdate }) => {
                               )}
                             </div>
                             <div className="flex-1 min-w-0">
-                              <div className="text-[12px] tracking-[0.25em]">{img.id}</div>
-                              <div className="mt-1 flex items-center gap-2">
-                                <span className="text-[10px] text-white/40 tracking-[0.25em] uppercase">{img.mediaType}</span>
+                              <div className="text-[13px] tracking-[0.25em] font-medium text-white/90 mb-1.5">{img.id}</div>
+                              <div className="flex items-center gap-2">
+                                <span className="text-[10px] text-white/50 tracking-[0.25em] uppercase">{img.mediaType}</span>
                                 <span
                                   className={
                                     img.isActive
-                                      ? 'text-[10px] tracking-[0.25em] uppercase px-2 py-[2px] rounded-full border text-green-200 border-green-700/60 bg-green-900/30'
-                                      : 'text-[10px] tracking-[0.25em] uppercase px-2 py-[2px] rounded-full border text-red-200 border-red-700/60 bg-red-900/30'
+                                      ? 'text-[10px] tracking-[0.25em] uppercase px-2.5 py-1 rounded-full border text-green-200 border-green-600/50 bg-green-900/40'
+                                      : 'text-[10px] tracking-[0.25em] uppercase px-2.5 py-1 rounded-full border text-red-200 border-red-600/50 bg-red-900/40'
                                   }
                                 >
                                   {img.isActive ? 'ACTIVE' : 'INACTIVE'}
                                 </span>
                               </div>
                             </div>
-                            <div className="flex items-center gap-2">
+                            <div className="flex items-center gap-2 flex-shrink-0">
                               <a
                                 href={img.url}
                                 target="_blank"
                                 rel="noreferrer"
-                                className="text-[10px] text-white/40 hover:text-white/70 transition-colors tracking-[0.25em] uppercase"
+                                className="text-[10px] text-white/50 hover:text-white/80 transition-colors tracking-[0.25em] uppercase px-2 py-1 border border-white/10 hover:border-white/20 rounded"
                               >
                                 Open
                               </a>
@@ -499,8 +511,8 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onUpdate }) => {
                                 onClick={() => handleToggleActive(img)}
                                 className={
                                   img.isActive
-                                    ? 'text-[10px] transition-colors tracking-[0.25em] uppercase text-red-300 hover:text-red-200'
-                                    : 'text-[10px] transition-colors tracking-[0.25em] uppercase text-green-300 hover:text-green-200'
+                                    ? 'text-[10px] transition-colors tracking-[0.25em] uppercase text-red-300 hover:text-red-200 px-2 py-1 border border-red-500/30 hover:border-red-500/50 rounded'
+                                    : 'text-[10px] transition-colors tracking-[0.25em] uppercase text-green-300 hover:text-green-200 px-2 py-1 border border-green-500/30 hover:border-green-500/50 rounded'
                                 }
                                 type="button"
                               >
@@ -508,7 +520,7 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onUpdate }) => {
                               </button>
                               <button
                                 onClick={() => handleDelete(img)}
-                                className="text-[10px] text-red-400 hover:text-red-300 transition-colors tracking-[0.25em] uppercase"
+                                className="text-[10px] text-red-400 hover:text-red-300 transition-colors tracking-[0.25em] uppercase px-2 py-1 border border-red-500/30 hover:border-red-500/50 rounded"
                                 type="button"
                               >
                                 Delete

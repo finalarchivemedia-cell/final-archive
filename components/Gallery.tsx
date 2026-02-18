@@ -139,14 +139,16 @@ export const Gallery: React.FC<GalleryProps> = ({
     });
     timelineRef.current = tl;
 
-    const moveDuration = duration + 2.0;
-
     // Client requirement: Alternate motion style
     // Image A: starts zoomed in (maxScale) → breathes out to full frame (1)
     // Image B: starts full frame (1) → breathes in (maxScale)
     // Pattern alternates: zoom out, zoom in, zoom out, zoom in...
     const startScale = zoomInRef.current ? maxScale : 1;
     const endScale = zoomInRef.current ? 1 : maxScale;
+    
+    // Current image's zoom duration = display duration (not extended)
+    // This ensures zoom completes before next image takes over
+    const zoomDuration = duration;
     
     // CRITICAL: Set correct initial scale directly - no abrupt resets
     // This prevents screen changes and maintains smooth flow
@@ -160,6 +162,7 @@ export const Gallery: React.FC<GalleryProps> = ({
 
     // Smooth continuous motion - alternating zoom pattern
     // Use fromTo to ensure we start from exact startScale and end at exact endScale
+    // Zoom duration = display duration (not extended) to prevent overlap
     tl.fromTo(currentEl, 
       { 
         scale: startScale,
@@ -167,7 +170,7 @@ export const Gallery: React.FC<GalleryProps> = ({
       }, 
       { 
         scale: endScale, 
-        duration: moveDuration, 
+        duration: zoomDuration, 
         ease: "power1.inOut", // Smooth continuous motion
         force3D: true
       },
@@ -212,8 +215,10 @@ export const Gallery: React.FC<GalleryProps> = ({
       // Bring next image to front before crossfade
       tl.set(nextEl, { zIndex: 15 }, crossfadeStart);
       
-      // Start next image's zoom animation simultaneously with crossfade
-      // This ensures continuous zoom motion - no interruption
+      // Start next image's zoom animation AFTER crossfade completes
+      // This prevents double zoom - current image completes, then next starts
+      // Next image's zoom starts when it becomes visible (after crossfade)
+      const nextZoomStart = crossfadeStart + 2.0; // After crossfade completes
       tl.fromTo(nextEl,
         {
           scale: nextStartScale,
@@ -221,11 +226,11 @@ export const Gallery: React.FC<GalleryProps> = ({
         },
         {
           scale: nextEndScale,
-          duration: moveDuration,
+          duration: duration, // Same duration as display time
           ease: "power1.inOut",
           force3D: true
         },
-        crossfadeStart
+        nextZoomStart
       );
       
       // Smooth crossfade with perfect overlap - no gaps, no flashes

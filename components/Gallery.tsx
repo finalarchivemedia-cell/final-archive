@@ -94,6 +94,11 @@ export const Gallery: React.FC<GalleryProps> = ({
     });
     if (!singleMode && nextEl) {
       // Next image behind, ready for crossfade
+      // CRITICAL: Set next image's initial scale based on NEXT zoom direction
+      // This ensures smooth transition - next image starts at correct scale
+      const nextZoomDirection = !zoomInRef.current; // Next image will have opposite direction
+      const nextStartScale = nextZoomDirection ? maxScale : 1;
+      
       gsap.set(nextEl, { 
         zIndex: 5, 
         autoAlpha: 0,
@@ -103,7 +108,10 @@ export const Gallery: React.FC<GalleryProps> = ({
         right: 0,
         bottom: 0,
         width: '100%',
-        height: '100%'
+        height: '100%',
+        scale: nextStartScale, // Set correct initial scale for next image
+        transformOrigin: 'center center',
+        force3D: true
       }); 
     }
 
@@ -140,14 +148,9 @@ export const Gallery: React.FC<GalleryProps> = ({
     const startScale = zoomInRef.current ? maxScale : 1;
     const endScale = zoomInRef.current ? 1 : maxScale;
     
-    // CRITICAL: Reset scale BEFORE setting initial state to prevent layout issues
-    // This ensures each image starts from the correct position
-    gsap.set(currentEl, { 
-      scale: 1, // Reset first
-      clearProps: 'scale' // Clear any previous scale transforms
-    });
-    
-    // Now set the correct initial scale and properties
+    // CRITICAL: Set correct initial scale directly - no abrupt resets
+    // This prevents screen changes and maintains smooth flow
+    // Don't reset scale first as it causes visual jumps
     gsap.set(currentEl, { 
       scale: startScale, 
       autoAlpha: 1,
@@ -195,8 +198,35 @@ export const Gallery: React.FC<GalleryProps> = ({
       // Start crossfade slightly before duration ends for seamless transition
       const crossfadeStart = Math.max(0, duration - 2.0);
       
+      // Calculate next image's zoom pattern (opposite of current)
+      const nextZoomDirection = !zoomInRef.current;
+      const nextStartScale = nextZoomDirection ? maxScale : 1;
+      const nextEndScale = nextZoomDirection ? 1 : maxScale;
+      
+      // Ensure next image starts at correct scale before crossfade
+      tl.set(nextEl, { 
+        scale: nextStartScale,
+        force3D: true
+      }, crossfadeStart - 0.1); // Set slightly before crossfade
+      
       // Bring next image to front before crossfade
       tl.set(nextEl, { zIndex: 15 }, crossfadeStart);
+      
+      // Start next image's zoom animation simultaneously with crossfade
+      // This ensures continuous zoom motion - no interruption
+      tl.fromTo(nextEl,
+        {
+          scale: nextStartScale,
+          force3D: true
+        },
+        {
+          scale: nextEndScale,
+          duration: moveDuration,
+          ease: "power1.inOut",
+          force3D: true
+        },
+        crossfadeStart
+      );
       
       // Smooth crossfade with perfect overlap - no gaps, no flashes
       tl.to(currentEl, {

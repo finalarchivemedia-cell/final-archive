@@ -9,7 +9,8 @@ interface LogoOverlayProps {
 
 export const LogoOverlay: React.FC<LogoOverlayProps> = ({ onIntroComplete, hoverEnabled }) => {
   const containerRef = useRef<HTMLDivElement>(null);
-  const logoRef = useRef<HTMLImageElement>(null);
+  const titleRef = useRef<HTMLImageElement>(null); // "Final Archive" (top part)
+  const taglineRef = useRef<HTMLImageElement>(null); // "For All Eternity" (bottom part)
   const tlRef = useRef<gsap.core.Timeline | null>(null);
   const [logoLoaded, setLogoLoaded] = useState(false);
   const logoSrc = `${LOGO_PATH}?v=${Date.now()}`; // Cache-bust for logo updates
@@ -28,7 +29,7 @@ export const LogoOverlay: React.FC<LogoOverlayProps> = ({ onIntroComplete, hover
   useEffect(() => {
     if (!logoLoaded) return; // Wait for logo to load
     
-    // Master Timeline - Strict Sequencing (logo.svg contains both "Final Archive Media" and "For All Eternity")
+    // Master Timeline - Client Requirements: Strict 6-Step Sequence
     const tl = gsap.timeline({
       onComplete: () => {
         onIntroComplete();
@@ -36,46 +37,56 @@ export const LogoOverlay: React.FC<LogoOverlayProps> = ({ onIntroComplete, hover
     });
     tlRef.current = tl;
 
-    // Initial State: Logo hidden
-    gsap.set(logoRef.current, { 
+    // Initial State: Both parts hidden
+    gsap.set([titleRef.current, taglineRef.current], { 
       autoAlpha: 0,
       opacity: 0,
       visibility: 'hidden',
       display: 'none'
     });
     
-    // Step 1: Black screen hold 1s (Delay start of next tween)
+    // Step 1: Black screen hold 1s
+    // (No animation, just delay)
     
-    // Step 2: Logo (contains "Final Archive Media") fades in over 1s
-    tl.set(logoRef.current, { 
+    // Step 2: "Final Archive" (top part) fades in over 1s, centered, holds 3s
+    tl.set(titleRef.current, { 
       display: 'block',
       visibility: 'visible'
     });
-    tl.to(logoRef.current, { 
+    tl.to(titleRef.current, { 
       autoAlpha: 1, 
       opacity: 1,
       duration: 1, 
       ease: "sine.inOut" 
     }, "+=1.0"); // The +=1.0 is the Step 1 delay
 
-    // Step 3: Hold logo for 3s (both parts visible)
+    // Step 3: Hold "Final Archive" for 3s
     tl.to({}, { duration: 3 });
 
-    // Step 4: Logo already contains "For All Eternity" - no separate fade needed
-    // (Both parts are already visible from Step 2)
-    tl.to({}, { duration: 1 });
-
-    // Step 5: Logo fades out over 2s (but we'll keep it faint for Step 6)
-    // Actually, we fade to faint instead of completely out
-    tl.to(logoRef.current, { 
-      autoAlpha: 0.3, 
+    // Step 4: While "Final Archive" is up, "For All Eternity" (bottom part) fades in underneath - dimmed
+    tl.set(taglineRef.current, { 
+      display: 'block',
+      visibility: 'visible',
+      opacity: 0.3, // Dimmed from start
+      autoAlpha: 0.3
+    });
+    tl.to(taglineRef.current, { 
+      autoAlpha: 0.3, // Keep dimmed
       opacity: 0.3,
+      duration: 1, 
+      ease: "sine.inOut" 
+    });
+
+    // Step 5: "Final Archive" fades out over 2s
+    tl.to(titleRef.current, { 
+      autoAlpha: 0, 
+      opacity: 0,
       duration: 2, 
       ease: "sine.inOut" 
     });
 
-    // Step 6: Logo remains faint permanently (showing "For All Eternity" part faintly)
-    // Already set in Step 5
+    // Step 6: "For All Eternity" stays permanent but faint (etched) - already set in Step 4
+    // No additional animation needed
 
     return () => {
       tl.kill();
@@ -86,12 +97,12 @@ export const LogoOverlay: React.FC<LogoOverlayProps> = ({ onIntroComplete, hover
   // Hover Interaction (Gated by hoverEnabled - Step 8)
   const handleMouseEnter = () => {
     if (!hoverEnabled) return;
-    gsap.to(logoRef.current, { autoAlpha: 1, duration: 0.5, ease: "sine.out" });
+    gsap.to(taglineRef.current, { autoAlpha: 1, duration: 0.5, ease: "sine.out" });
   };
 
   const handleMouseLeave = () => {
     // Return to "etched" state
-    gsap.to(logoRef.current, { autoAlpha: 0.3, duration: 0.5, ease: "sine.in" });
+    gsap.to(taglineRef.current, { autoAlpha: 0.3, duration: 0.5, ease: "sine.in" });
   };
 
   return (
@@ -127,11 +138,11 @@ export const LogoOverlay: React.FC<LogoOverlayProps> = ({ onIntroComplete, hover
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
       >
-        {/* Logo Image - Contains both "Final Archive Media" and "For All Eternity" */}
+        {/* "Final Archive" - Top part of logo (clip-path shows only top ~55%) */}
         <img
-          ref={logoRef}
+          ref={titleRef}
           src={logoSrc}
-          alt="Final Archive Media"
+          alt="Final Archive"
           className="border-none outline-none ring-0 shadow-none pointer-events-none"
           style={{
             border: 'none',
@@ -143,8 +154,42 @@ export const LogoOverlay: React.FC<LogoOverlayProps> = ({ onIntroComplete, hover
             display: 'none', // GSAP will control visibility
             objectFit: 'contain',
             objectPosition: 'center center',
+            clipPath: 'inset(0% 0% 45% 0%)', // Show only top 55% (Final Archive part)
+            WebkitClipPath: 'inset(0% 0% 45% 0%)',
             opacity: 0,
-            visibility: 'hidden'
+            visibility: 'hidden',
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0
+          }}
+          aria-hidden="true"
+        />
+
+        {/* "For All Eternity" - Bottom part of logo (clip-path shows only bottom ~45%) */}
+        <img
+          ref={taglineRef}
+          src={logoSrc}
+          alt="For All Eternity"
+          className="border-none outline-none ring-0 shadow-none pointer-events-none"
+          style={{
+            border: 'none',
+            outline: 'none',
+            maxWidth: '100%',
+            maxHeight: '100%',
+            width: 'auto',
+            height: 'auto',
+            display: 'none', // GSAP will control visibility
+            objectFit: 'contain',
+            objectPosition: 'center center',
+            clipPath: 'inset(55% 0% 0% 0%)', // Show only bottom 45% (For All Eternity part)
+            WebkitClipPath: 'inset(55% 0% 0% 0%)',
+            opacity: 0,
+            visibility: 'hidden',
+            position: 'absolute',
+            bottom: 0,
+            left: 0,
+            right: 0
           }}
           aria-hidden="true"
         />

@@ -295,11 +295,37 @@ export default function App() {
 
       {/* Footer - Only visible after intro is complete, at bottom per client requirements */}
       {introComplete && !isAdmin && (
-        <div className="fixed bottom-6 left-0 right-0 z-[60] flex justify-center pointer-events-none mix-blend-difference">
+        <div
+          className="fixed bottom-6 left-0 right-0 z-[60] flex justify-center pointer-events-none mix-blend-difference"
+          // Inline fallback so the tiny Contact text is always bottom-center even if CSS/Tailwind fails
+          style={{
+            position: 'fixed',
+            left: 0,
+            right: 0,
+            bottom: 24,
+            zIndex: 60,
+            display: 'flex',
+            justifyContent: 'center',
+            pointerEvents: 'none',
+          }}
+        >
           <button
             type="button"
             onClick={() => setContactOpen(true)}
             className="pointer-events-auto text-[10px] text-gray-500 uppercase tracking-widest hover:text-white transition-colors duration-300 opacity-50 hover:opacity-100"
+            style={{
+              pointerEvents: 'auto',
+              fontSize: 10,
+              letterSpacing: '0.2em',
+              textTransform: 'uppercase',
+              color: 'rgba(255,255,255,0.35)',
+              background: 'transparent',
+              border: 'none',
+              padding: 0,
+              cursor: 'pointer',
+              opacity: 0.55,
+              transition: 'opacity 150ms ease, color 150ms ease',
+            }}
           >
             Contact
           </button>
@@ -308,6 +334,22 @@ export default function App() {
             <a
               href="/admin"
               className="absolute right-6 pointer-events-auto text-[10px] text-gray-500 uppercase tracking-widest hover:text-white transition-colors duration-300 opacity-30 hover:opacity-100"
+              style={{
+                position: 'absolute',
+                right: 24,
+                pointerEvents: 'auto',
+                fontSize: 10,
+                letterSpacing: '0.2em',
+                textTransform: 'uppercase',
+                color: 'rgba(255,255,255,0.28)',
+                textDecoration: 'none',
+                background: 'transparent',
+                border: 'none',
+                padding: 0,
+                cursor: 'pointer',
+                opacity: 0.35,
+                transition: 'opacity 150ms ease, color 150ms ease',
+              }}
             >
               Admin
             </a>

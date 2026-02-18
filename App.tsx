@@ -287,8 +287,8 @@ export default function App() {
         }}
       />
 
-      {/* Footer - Only visible after intro is complete */}
-      {introComplete && (
+      {/* Footer - Only visible after intro is complete, at bottom per client requirements */}
+      {introComplete && !isAdmin && (
         <div className="fixed bottom-6 left-0 right-0 z-[60] flex justify-center pointer-events-none mix-blend-difference">
           <button
             type="button"

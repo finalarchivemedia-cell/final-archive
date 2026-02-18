@@ -259,8 +259,8 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onUpdate }) => {
   }
 
   return (
-    <div className="absolute inset-0 bg-black/95 backdrop-blur-sm z-[100] text-white flex flex-col items-center justify-center p-8">
-      <div className="w-full max-w-3xl space-y-12">
+    <div className="absolute inset-0 bg-black/95 backdrop-blur-sm z-[100] text-white flex flex-col items-center justify-center p-8 overflow-y-auto">
+      <div className="w-full max-w-3xl space-y-12 my-auto">
         <div className="flex justify-between items-end border-b border-white/20 pb-4">
           <h1 className="text-2xl font-serif tracking-widest">SETTINGS</h1>
           <button onClick={logout} className="text-xs text-neutral-500 hover:text-white transition-colors tracking-widest uppercase">

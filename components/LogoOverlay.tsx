@@ -13,7 +13,9 @@ export const LogoOverlay: React.FC<LogoOverlayProps> = ({ onIntroComplete, hover
   const taglineRef = useRef<HTMLImageElement>(null); // "For All Eternity" (bottom part)
   const tlRef = useRef<gsap.core.Timeline | null>(null);
   const [logoLoaded, setLogoLoaded] = useState(false);
-  const logoSrc = `${LOGO_PATH}?v=${Date.now()}`; // Cache-bust for logo updates
+  // Use LOGO_PATH directly (no cache-busting) to match preload in index.html
+  // Cache headers in _headers file handle cache control
+  const logoSrc = LOGO_PATH;
 
   // Load logo image with preload optimization
   useEffect(() => {

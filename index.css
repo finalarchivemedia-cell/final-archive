@@ -1,3 +1,4 @@
-/* Intentionally minimal.
-   Tailwind is loaded via CDN in index.html; this file exists to avoid a missing file warning. */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 

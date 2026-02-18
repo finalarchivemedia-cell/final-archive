@@ -130,53 +130,54 @@ export const LogoOverlay: React.FC<LogoOverlayProps> = ({ onIntroComplete, hover
       <div 
         className="relative border-none outline-none overflow-hidden logo-container"
         style={{
-          position: 'relative'
+          position: 'relative',
+          width: '85vw',
+          maxWidth: '600px',
+          aspectRatio: '2 / 1',
+          minHeight: '180px',
+          maxHeight: '300px',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center'
         }}
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
       >
-        {/* Logo Image */}
+        {/* Logo Image - Centered at top */}
         <img
           ref={titleRef}
           src={logoSrc}
           alt="Final Archive"
-          className="absolute border-none outline-none ring-0 shadow-none pointer-events-none"
+          className="border-none outline-none ring-0 shadow-none pointer-events-none"
           style={{
             border: 'none',
             outline: 'none',
             maxWidth: '100%',
-            maxHeight: '100%',
+            maxHeight: '60%',
             width: 'auto',
             height: 'auto',
             display: logoLoaded ? 'block' : 'none',
-            top: '50%',
-            left: '50%',
-            transform: 'translate(-50%, -50%)',
-            margin: 'auto',
             objectFit: 'contain',
-            objectPosition: 'center center'
+            objectPosition: 'center center',
+            marginBottom: '10px'
           }}
           aria-hidden="true"
         />
 
-        {/* Bottom Part: "For All Eternity" (vector text) */}
+        {/* Bottom Part: "For All Eternity" (vector text) - Positioned below logo */}
         <svg
           ref={taglineRef}
-          className="absolute border-none outline-none ring-0 shadow-none pointer-events-none"
-          viewBox="0 0 1000 500"
+          className="border-none outline-none ring-0 shadow-none pointer-events-none"
+          viewBox="0 0 1000 200"
           style={{ 
             border: 'none',
             outline: 'none',
             maxWidth: '100%',
-            maxHeight: '100%',
             width: '100%',
-            height: '100%',
+            height: 'auto',
             display: 'block',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            margin: 'auto',
+            marginTop: '10px',
             mixBlendMode: 'screen',
             filter: 'contrast(1.2) sepia(0.2)',
             opacity: 0,
@@ -187,7 +188,7 @@ export const LogoOverlay: React.FC<LogoOverlayProps> = ({ onIntroComplete, hover
         >
           <text
             x="500"
-            y="320"
+            y="100"
             textAnchor="middle"
             fontFamily="Times New Roman, Times, serif"
             fontSize="60"

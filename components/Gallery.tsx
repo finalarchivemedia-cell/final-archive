@@ -77,10 +77,32 @@ export const Gallery: React.FC<GalleryProps> = ({
     
     if (!currentEl || (!nextEl && !singleMode)) return;
 
-    // Reset Z-Index and Visibility
-    gsap.set(currentEl, { zIndex: 10, autoAlpha: 1 });
+    // Reset Z-Index and Visibility - ensure smooth transitions
+    // Current image always on top initially
+    gsap.set(currentEl, { 
+      zIndex: 10, 
+      autoAlpha: 1,
+      position: 'absolute',
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      width: '100%',
+      height: '100%'
+    });
     if (!singleMode && nextEl) {
-    gsap.set(nextEl, { zIndex: 5, autoAlpha: 0 }); 
+      // Next image behind, ready for crossfade
+      gsap.set(nextEl, { 
+        zIndex: 5, 
+        autoAlpha: 0,
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        width: '100%',
+        height: '100%'
+      }); 
     }
 
     const tl = gsap.timeline({
@@ -144,20 +166,33 @@ export const Gallery: React.FC<GalleryProps> = ({
     }
 
     if (!singleMode && nextEl && nextReady) {
-      // Smooth crossfade - no hard cuts, continuous motion
+      // Smooth crossfade - ensure next image is ready before starting
+      // Start crossfade slightly before duration ends for seamless transition
+      const crossfadeStart = Math.max(0, duration - 2.0);
+      
+      // Bring next image to front before crossfade
+      tl.set(nextEl, { zIndex: 15 }, crossfadeStart);
+      
+      // Smooth crossfade with perfect overlap - no gaps, no flashes
       tl.to(currentEl, {
         autoAlpha: 0,
         duration: 2.0,
-        ease: "power1.inOut", // Smoother transition
-        force3D: true
-      }, duration);
+        ease: "power1.inOut",
+        force3D: true,
+        immediateRender: false
+      }, crossfadeStart);
 
       tl.to(nextEl, {
         autoAlpha: 1,
         duration: 2.0,
-        ease: "power1.inOut", // Smoother transition
-        force3D: true
-      }, duration);
+        ease: "power1.inOut",
+        force3D: true,
+        immediateRender: false
+      }, crossfadeStart);
+      
+      // After crossfade complete, swap z-index for next cycle
+      tl.set(currentEl, { zIndex: 5 }, crossfadeStart + 2.0);
+      tl.set(nextEl, { zIndex: 10 }, crossfadeStart + 2.0);
     }
 
     // Initial Fade In for first cycle handled in timeline (no delay)
@@ -199,6 +234,15 @@ export const Gallery: React.FC<GalleryProps> = ({
     transform: 'translateZ(0)', // Force GPU layer
     backfaceVisibility: 'hidden', // Prevent flicker
     WebkitBackfaceVisibility: 'hidden',
+    position: 'absolute', // Ensure no layout shifts
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    width: '100%',
+    height: '100%',
+    objectFit: 'cover', // Ensure full coverage
+    objectPosition: 'center center',
   };
 
   return (
@@ -221,43 +265,45 @@ export const Gallery: React.FC<GalleryProps> = ({
           <video
             ref={(el) => { layerRefA.current = el; }}
             src={urlA}
-            className="absolute inset-0 w-full h-full object-cover"
-            style={{
-              ...baseMediaStyle,
-              objectPosition: 'center center',
-              minWidth: '100%',
-              minHeight: '100%',
-            }}
+            style={baseMediaStyle}
             muted
             playsInline
             loop
             autoPlay
             preload="metadata"
             poster={typeA === 'VIDEO' ? `${urlA}#t=0.1` : undefined}
-            onLoadedMetadata={() => setLayerAReady(true)}
+            onLoadedMetadata={() => {
+              requestAnimationFrame(() => {
+                setLayerAReady(true);
+              });
+            }}
           />
         ) : (
         <img
             ref={(el) => { layerRefA.current = el; }}
           src={urlA}
-          className="absolute inset-0 w-full h-full object-cover"
           alt=""
           draggable={false}
-            style={{
-              ...baseMediaStyle,
-              objectPosition: 'center center',
-              minWidth: '100%',
-              minHeight: '100%',
-            }}
+            style={baseMediaStyle}
             decoding="async"
             loading="eager"
             fetchPriority="high"
             onLoad={(e) => {
               const el = e.currentTarget;
+              // Ensure image is fully decoded before marking as ready
               if ('decode' in el) {
-                el.decode().then(() => setLayerAReady(true)).catch(() => setLayerAReady(true));
+                el.decode()
+                  .then(() => {
+                    // Small delay to ensure rendering is complete
+                    requestAnimationFrame(() => {
+                      setLayerAReady(true);
+                    });
+                  })
+                  .catch(() => setLayerAReady(true));
               } else {
-                setLayerAReady(true);
+                requestAnimationFrame(() => {
+                  setLayerAReady(true);
+                });
               }
             }}
           />
@@ -270,43 +316,45 @@ export const Gallery: React.FC<GalleryProps> = ({
           <video
             ref={(el) => { layerRefB.current = el; }}
             src={urlB}
-            className="absolute inset-0 w-full h-full object-cover"
-            style={{
-              ...baseMediaStyle,
-              objectPosition: 'center center',
-              minWidth: '100%',
-              minHeight: '100%',
-            }}
+            style={baseMediaStyle}
             muted
             playsInline
             loop
             autoPlay
             preload="metadata"
             poster={typeB === 'VIDEO' ? `${urlB}#t=0.1` : undefined}
-            onLoadedMetadata={() => setLayerBReady(true)}
+            onLoadedMetadata={() => {
+              requestAnimationFrame(() => {
+                setLayerBReady(true);
+              });
+            }}
           />
         ) : (
         <img
             ref={(el) => { layerRefB.current = el; }}
           src={urlB}
-          className="absolute inset-0 w-full h-full object-cover"
           alt=""
           draggable={false}
-            style={{
-              ...baseMediaStyle,
-              objectPosition: 'center center',
-              minWidth: '100%',
-              minHeight: '100%',
-            }}
+            style={baseMediaStyle}
             decoding="async"
             loading="eager"
             fetchPriority="high"
             onLoad={(e) => {
               const el = e.currentTarget;
+              // Ensure image is fully decoded before marking as ready
               if ('decode' in el) {
-                el.decode().then(() => setLayerBReady(true)).catch(() => setLayerBReady(true));
+                el.decode()
+                  .then(() => {
+                    // Small delay to ensure rendering is complete
+                    requestAnimationFrame(() => {
+                      setLayerBReady(true);
+                    });
+                  })
+                  .catch(() => setLayerBReady(true));
               } else {
-                setLayerBReady(true);
+                requestAnimationFrame(() => {
+                  setLayerBReady(true);
+                });
               }
             }}
           />

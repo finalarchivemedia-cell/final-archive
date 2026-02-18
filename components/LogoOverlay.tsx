@@ -50,12 +50,17 @@ export const LogoOverlay: React.FC<LogoOverlayProps> = ({ onIntroComplete, hover
     gsap.set([titleRef.current, taglineRef.current], { 
       autoAlpha: 0,
       opacity: 0,
-      visibility: 'hidden'
+      visibility: 'hidden',
+      display: 'none'
     });
     
     // Step 1: Black screen hold 1s (Delay start of next tween)
     
-    // Step 2: "Final Archive" fades in over 1s
+    // Step 2: "Final Archive" (logo) fades in over 1s
+    tl.set(titleRef.current, { 
+      display: 'block',
+      visibility: 'visible'
+    });
     tl.to(titleRef.current, { 
       autoAlpha: 1, 
       opacity: 1,
@@ -69,6 +74,7 @@ export const LogoOverlay: React.FC<LogoOverlayProps> = ({ onIntroComplete, hover
     // Step 4: "For All Eternity" fades in over 1s (to full visibility initially)
     // CRITICAL: Make visible first, then fade in
     tl.set(taglineRef.current, { 
+      display: 'block',
       visibility: 'visible',
       opacity: 0,
       autoAlpha: 0
@@ -157,10 +163,12 @@ export const LogoOverlay: React.FC<LogoOverlayProps> = ({ onIntroComplete, hover
             maxHeight: '60%',
             width: 'auto',
             height: 'auto',
-            display: logoLoaded ? 'block' : 'none',
+            display: 'none', // GSAP will control visibility
             objectFit: 'contain',
             objectPosition: 'center center',
-            marginBottom: '10px'
+            marginBottom: '10px',
+            opacity: 0,
+            visibility: 'hidden'
           }}
           aria-hidden="true"
         />
@@ -176,7 +184,7 @@ export const LogoOverlay: React.FC<LogoOverlayProps> = ({ onIntroComplete, hover
             maxWidth: '100%',
             width: '100%',
             height: 'auto',
-            display: 'block',
+            display: 'none', // GSAP will control visibility
             marginTop: '10px',
             mixBlendMode: 'screen',
             filter: 'contrast(1.2) sepia(0.2)',

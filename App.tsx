@@ -152,9 +152,10 @@ export default function App() {
   const audioRef = React.useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
+    // Performance: Parallel fetch for settings and images (non-blocking)
     // Sync public settings from backend
-    import('./services/api').then(({ fetchPublicSettings }) => {
-      fetchPublicSettings().then(s => {
+    const settingsPromise = import('./services/api').then(({ fetchPublicSettings }) => {
+      return fetchPublicSettings().then(s => {
         if (s) {
           setSettings({
             duration: s.displayDurationSec,
@@ -167,9 +168,9 @@ export default function App() {
       });
     });
 
-    // Performance Requirement:
-    // Fetch immediately on mount. Do NOT wait for idle callback.
-    fetchImageList()
+    // Performance Requirement: Fetch immediately on mount
+    // Do NOT wait for idle callback - critical for TTFB < 0.1s
+    const imagesPromise = fetchImageList()
       .then(data => {
         console.log('[App] Images loaded:', data.length);
         setImages(data);
@@ -178,6 +179,11 @@ export default function App() {
         console.error('[App] Failed to load images:', err);
         setImages([]);
       });
+
+    // Execute both in parallel for faster load
+    Promise.all([settingsPromise, imagesPromise]).catch(err => {
+      console.error('[App] Initialization error:', err);
+    });
   }, []);
 
   useEffect(() => {

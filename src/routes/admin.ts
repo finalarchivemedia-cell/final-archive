@@ -248,9 +248,9 @@ export const adminRoutes: FastifyPluginAsyncZod = async (app) => {
         const { id } = req.params;
 
         const result = await prisma.image.updateMany({
-            where: { id },
-            data: { isActive: false }
-        });
+                where: { id },
+                data: { isActive: false }
+            });
 
         if (result.count === 0) {
             return reply.code(404).send({ ok: false, message: 'Image not found' } as any);

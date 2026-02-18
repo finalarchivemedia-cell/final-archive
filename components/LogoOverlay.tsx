@@ -9,16 +9,23 @@ interface LogoOverlayProps {
 
 export const LogoOverlay: React.FC<LogoOverlayProps> = ({ onIntroComplete, hoverEnabled }) => {
   const containerRef = useRef<HTMLDivElement>(null);
-  const titleRef = useRef<HTMLImageElement>(null); // "Final Archive" (top part)
+  const titleRef = useRef<HTMLImageElement>(null); // "Final Archive Media" (top part)
   const taglineRef = useRef<HTMLImageElement>(null); // "For All Eternity" (bottom part)
   const tlRef = useRef<gsap.core.Timeline | null>(null);
   const [logoLoaded, setLogoLoaded] = useState(false);
   const logoSrc = `${LOGO_PATH}?v=${Date.now()}`; // Cache-bust for logo updates
 
-  // Load logo image
+  // Load logo image with preload optimization
   useEffect(() => {
     const img = new Image();
-    img.onload = () => setLogoLoaded(true);
+    img.onload = () => {
+      // Ensure image is fully decoded
+      if ('decode' in img) {
+        img.decode().then(() => setLogoLoaded(true)).catch(() => setLogoLoaded(true));
+      } else {
+        setLogoLoaded(true);
+      }
+    };
     img.onerror = () => {
       console.warn('[LogoOverlay] Failed to load logo, using fallback');
       setLogoLoaded(true); // Still proceed with animation
@@ -29,7 +36,8 @@ export const LogoOverlay: React.FC<LogoOverlayProps> = ({ onIntroComplete, hover
   useEffect(() => {
     if (!logoLoaded) return; // Wait for logo to load
     
-    // Master Timeline - Client Requirements: Strict 6-Step Sequence
+    // Master Timeline - Client Requirements: EXACT 6-Step Sequence
+    // Each step must fully finish before the next step begins
     const tl = gsap.timeline({
       onComplete: () => {
         onIntroComplete();
@@ -37,7 +45,7 @@ export const LogoOverlay: React.FC<LogoOverlayProps> = ({ onIntroComplete, hover
     });
     tlRef.current = tl;
 
-    // Initial State: Both parts hidden
+    // Initial State: Both parts hidden, black screen
     gsap.set([titleRef.current, taglineRef.current], { 
       autoAlpha: 0,
       opacity: 0,
@@ -45,10 +53,10 @@ export const LogoOverlay: React.FC<LogoOverlayProps> = ({ onIntroComplete, hover
       display: 'none'
     });
     
-    // Step 1: Black screen hold 1s
-    // (No animation, just delay)
+    // Step 1: Show black screen for 1 second (exact delay)
+    tl.to({}, { duration: 1 });
     
-    // Step 2: "Final Archive" (top part) fades in over 1s, centered, holds 3s
+    // Step 2: "Final Archive Media" (top part) fades in over 1 second, centered
     tl.set(titleRef.current, { 
       display: 'block',
       visibility: 'visible'
@@ -57,52 +65,62 @@ export const LogoOverlay: React.FC<LogoOverlayProps> = ({ onIntroComplete, hover
       autoAlpha: 1, 
       opacity: 1,
       duration: 1, 
-      ease: "sine.inOut" 
-    }, "+=1.0"); // The +=1.0 is the Step 1 delay
+      ease: "power2.inOut" // Smooth fade
+    });
 
-    // Step 3: Hold "Final Archive" for 3s
+    // Step 3: Hold "Final Archive Media" for 3 seconds (exact)
     tl.to({}, { duration: 3 });
 
-    // Step 4: While "Final Archive" is up, "For All Eternity" (bottom part) fades in underneath - dimmed
+    // Step 4: "For All Eternity" (bottom part) fades in underneath over 1 second, styled dimmed/etched
     tl.set(taglineRef.current, { 
       display: 'block',
       visibility: 'visible',
-      opacity: 0.3, // Dimmed from start
-      autoAlpha: 0.3
+      autoAlpha: 0,
+      opacity: 0
     });
     tl.to(taglineRef.current, { 
-      autoAlpha: 0.3, // Keep dimmed
+      autoAlpha: 0.3, // Faint etched style (30% opacity)
       opacity: 0.3,
       duration: 1, 
-      ease: "sine.inOut" 
+      ease: "power2.inOut"
     });
 
-    // Step 5: "Final Archive" fades out over 2s
+    // Step 5: "Final Archive Media" fades out over 2 seconds
     tl.to(titleRef.current, { 
       autoAlpha: 0, 
       opacity: 0,
       duration: 2, 
-      ease: "sine.inOut" 
+      ease: "power2.inOut" 
     });
 
-    // Step 6: "For All Eternity" stays permanent but faint (etched) - already set in Step 4
-    // No additional animation needed
+    // Step 6: "For All Eternity" remains permanently visible in faint etched style (already at 0.3 opacity)
+    // No additional animation - it stays at 0.3 opacity
 
     return () => {
-      tl.kill();
+      if (tlRef.current) tlRef.current.kill();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [logoLoaded]); // Run when logo is loaded
 
-  // Hover Interaction (Gated by hoverEnabled - Step 8)
+  // Hover Interaction (Gated by hoverEnabled - Step 8, after first photo sequence)
   const handleMouseEnter = () => {
     if (!hoverEnabled) return;
-    gsap.to(taglineRef.current, { autoAlpha: 1, duration: 0.5, ease: "sine.out" });
+    gsap.to(taglineRef.current, { 
+      autoAlpha: 1, 
+      opacity: 1,
+      duration: 0.5, 
+      ease: "power2.out" 
+    });
   };
 
   const handleMouseLeave = () => {
-    // Return to "etched" state
-    gsap.to(taglineRef.current, { autoAlpha: 0.3, duration: 0.5, ease: "sine.in" });
+    // Return to "etched" state (0.3 opacity)
+    gsap.to(taglineRef.current, { 
+      autoAlpha: 0.3, 
+      opacity: 0.3,
+      duration: 0.5, 
+      ease: "power2.in" 
+    });
   };
 
   return (
@@ -118,7 +136,8 @@ export const LogoOverlay: React.FC<LogoOverlayProps> = ({ onIntroComplete, hover
         width: '100%',
         height: '100%',
         margin: 0,
-        padding: 0
+        padding: 0,
+        backgroundColor: '#000' // Ensure black background
       }}
     >
       <div 
@@ -127,7 +146,7 @@ export const LogoOverlay: React.FC<LogoOverlayProps> = ({ onIntroComplete, hover
           position: 'relative',
           width: '85vw',
           maxWidth: '600px',
-          aspectRatio: '2 / 1',
+          aspectRatio: '3 / 1', // Adjusted for new SVG aspect ratio (1200x400 = 3:1)
           minHeight: '180px',
           maxHeight: '300px',
           display: 'flex',
@@ -138,11 +157,13 @@ export const LogoOverlay: React.FC<LogoOverlayProps> = ({ onIntroComplete, hover
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
       >
-        {/* "Final Archive" - Top part of logo (clip-path shows only top ~55%) */}
+        {/* "Final Archive Media" - Top part of logo SVG */}
+        {/* SVG structure: "Final Archive Media" at y=160, "For All Eternity" at y=260, total height=400 */}
+        {/* Clip to show top ~40% (0 to ~160px of 400px) */}
         <img
           ref={titleRef}
           src={logoSrc}
-          alt="Final Archive"
+          alt="Final Archive Media"
           className="border-none outline-none ring-0 shadow-none pointer-events-none"
           style={{
             border: 'none',
@@ -154,19 +175,21 @@ export const LogoOverlay: React.FC<LogoOverlayProps> = ({ onIntroComplete, hover
             display: 'none', // GSAP will control visibility
             objectFit: 'contain',
             objectPosition: 'center center',
-            clipPath: 'inset(0% 0% 45% 0%)', // Show only top 55% (Final Archive part)
-            WebkitClipPath: 'inset(0% 0% 45% 0%)',
+            clipPath: 'inset(0% 0% 60% 0%)', // Show top 40% (Final Archive Media)
+            WebkitClipPath: 'inset(0% 0% 60% 0%)',
             opacity: 0,
             visibility: 'hidden',
             position: 'absolute',
             top: 0,
-            left: 0,
-            right: 0
+            left: '50%',
+            transform: 'translateX(-50%)',
+            willChange: 'opacity' // Performance optimization
           }}
           aria-hidden="true"
         />
 
-        {/* "For All Eternity" - Bottom part of logo (clip-path shows only bottom ~45%) */}
+        {/* "For All Eternity" - Bottom part of logo SVG */}
+        {/* Clip to show bottom ~60% (from ~160px to 400px) */}
         <img
           ref={taglineRef}
           src={logoSrc}
@@ -182,14 +205,15 @@ export const LogoOverlay: React.FC<LogoOverlayProps> = ({ onIntroComplete, hover
             display: 'none', // GSAP will control visibility
             objectFit: 'contain',
             objectPosition: 'center center',
-            clipPath: 'inset(55% 0% 0% 0%)', // Show only bottom 45% (For All Eternity part)
-            WebkitClipPath: 'inset(55% 0% 0% 0%)',
+            clipPath: 'inset(40% 0% 0% 0%)', // Show bottom 60% (For All Eternity)
+            WebkitClipPath: 'inset(40% 0% 0% 0%)',
             opacity: 0,
             visibility: 'hidden',
             position: 'absolute',
             bottom: 0,
-            left: 0,
-            right: 0
+            left: '50%',
+            transform: 'translateX(-50%)',
+            willChange: 'opacity' // Performance optimization
           }}
           aria-hidden="true"
         />

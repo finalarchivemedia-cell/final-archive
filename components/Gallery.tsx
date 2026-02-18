@@ -104,39 +104,49 @@ export const Gallery: React.FC<GalleryProps> = ({
 
     const startScale = zoomInRef.current ? maxScale : 1;
     const endScale = zoomInRef.current ? 1 : maxScale;
-    gsap.set(currentEl, { scale: startScale, autoAlpha: 1 });
+    
+    // Use transform3d for GPU acceleration and smooth animations
+    gsap.set(currentEl, { 
+      scale: startScale, 
+      autoAlpha: 1,
+      transformOrigin: 'center center',
+      force3D: true // Force GPU acceleration
+    });
 
-    if (zoomInRef.current) {
-      tl.fromTo(currentEl, 
-        { scale: startScale }, 
-        { scale: endScale, duration: moveDuration, ease: "sine.inOut" },
-        0
-      );
-    } else {
-      tl.fromTo(currentEl, 
-        { scale: startScale }, 
-        { scale: endScale, duration: moveDuration, ease: "sine.inOut" },
-        0
-      );
-    }
+    // Smooth continuous motion - alternating zoom in/out
+    tl.fromTo(currentEl, 
+      { 
+        scale: startScale,
+        force3D: true
+      }, 
+      { 
+        scale: endScale, 
+        duration: moveDuration, 
+        ease: "power1.inOut", // Smoother than sine for continuous motion
+        force3D: true
+      },
+      0
+    );
 
     if (cycleCount.current === 0) {
       tl.fromTo(currentEl, { autoAlpha: 0 }, { autoAlpha: 1, duration: 0.4, ease: "sine.inOut" }, 0);
     }
 
     if (!singleMode && nextEl && nextReady) {
-    // Crossfade
-    tl.to(currentEl, {
-      autoAlpha: 0,
-      duration: 2.0,
-        ease: "sine.inOut"
-    }, duration);
+      // Smooth crossfade - no hard cuts, continuous motion
+      tl.to(currentEl, {
+        autoAlpha: 0,
+        duration: 2.0,
+        ease: "power1.inOut", // Smoother transition
+        force3D: true
+      }, duration);
 
-    tl.to(nextEl, {
-      autoAlpha: 1,
-      duration: 2.0,
-        ease: "sine.inOut"
-    }, duration);
+      tl.to(nextEl, {
+        autoAlpha: 1,
+        duration: 2.0,
+        ease: "power1.inOut", // Smoother transition
+        force3D: true
+      }, duration);
     }
 
     // Initial Fade In for first cycle handled in timeline (no delay)
@@ -174,6 +184,10 @@ export const Gallery: React.FC<GalleryProps> = ({
     padding: 0,
     display: 'block',
     opacity: 0, // Controlled by GSAP
+    willChange: 'transform, opacity', // GPU acceleration hint
+    transform: 'translateZ(0)', // Force GPU layer
+    backfaceVisibility: 'hidden', // Prevent flicker
+    WebkitBackfaceVisibility: 'hidden',
   };
 
   return (
@@ -196,7 +210,7 @@ export const Gallery: React.FC<GalleryProps> = ({
           <video
             ref={(el) => { layerRefA.current = el; }}
             src={urlA}
-            className="absolute inset-0 w-full h-full object-cover will-change-transform"
+            className="absolute inset-0 w-full h-full object-cover"
             style={{
               ...baseMediaStyle,
               objectPosition: 'center center',
@@ -215,7 +229,7 @@ export const Gallery: React.FC<GalleryProps> = ({
         <img
             ref={(el) => { layerRefA.current = el; }}
           src={urlA}
-          className="absolute inset-0 w-full h-full object-cover will-change-transform"
+          className="absolute inset-0 w-full h-full object-cover"
           alt=""
           draggable={false}
             style={{
@@ -245,7 +259,7 @@ export const Gallery: React.FC<GalleryProps> = ({
           <video
             ref={(el) => { layerRefB.current = el; }}
             src={urlB}
-            className="absolute inset-0 w-full h-full object-cover will-change-transform"
+            className="absolute inset-0 w-full h-full object-cover"
             style={{
               ...baseMediaStyle,
               objectPosition: 'center center',
@@ -264,7 +278,7 @@ export const Gallery: React.FC<GalleryProps> = ({
         <img
             ref={(el) => { layerRefB.current = el; }}
           src={urlB}
-          className="absolute inset-0 w-full h-full object-cover will-change-transform"
+          className="absolute inset-0 w-full h-full object-cover"
           alt=""
           draggable={false}
             style={{

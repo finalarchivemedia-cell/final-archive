@@ -232,8 +232,34 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onUpdate }) => {
 
   if (!token) {
     return (
-      <div className="fixed inset-0 z-[100] bg-black text-white flex items-center justify-center p-6">
-        <div className="w-full max-w-md border border-white/10 bg-black/70 backdrop-blur-md rounded-xl p-6 sm:p-8">
+      <div
+        className="fixed inset-0 z-[100] bg-black text-white flex items-center justify-center p-6"
+        // Inline fallbacks so the login always centers even if Tailwind/CSS is cached/missing
+        style={{
+          position: 'fixed',
+          inset: 0,
+          zIndex: 100,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: 24,
+          backgroundColor: 'rgba(0,0,0,0.85)',
+          color: '#fff',
+        }}
+      >
+        <div
+          className="w-full max-w-md border border-white/10 bg-black/70 backdrop-blur-md rounded-xl p-6 sm:p-8"
+          style={{
+            width: '100%',
+            maxWidth: 440,
+            border: '1px solid rgba(255,255,255,0.12)',
+            background: 'rgba(0,0,0,0.55)',
+            WebkitBackdropFilter: 'blur(12px)',
+            backdropFilter: 'blur(12px)',
+            borderRadius: 16,
+            padding: 24,
+          }}
+        >
           <div className="mb-6 text-center">
             <div className="text-[11px] uppercase tracking-[0.35em] text-white/70">Final Archive</div>
             <h1 className="mt-3 text-xl font-serif tracking-widest">Admin Access</h1>
@@ -247,6 +273,16 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onUpdate }) => {
             onChange={e => setPassword(e.target.value)}
             placeholder="Enter Password"
             className="bg-black border border-white/10 px-4 py-3 rounded-md text-center tracking-[0.25em] outline-none focus:border-white/40 transition-colors placeholder:text-white/20"
+            style={{
+              width: '100%',
+              background: 'rgba(0,0,0,0.75)',
+              border: '1px solid rgba(255,255,255,0.14)',
+              borderRadius: 10,
+              padding: '12px 16px',
+              textAlign: 'center',
+              color: '#fff',
+              outline: 'none',
+            }}
           />
 
           {error && <div className="text-red-400 text-xs text-center tracking-widest">{error}</div>}
@@ -255,6 +291,19 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onUpdate }) => {
             type="submit"
             disabled={loading}
             className="bg-white text-black py-3 rounded-md hover:bg-neutral-200 transition-colors tracking-[0.3em] text-sm font-bold uppercase disabled:opacity-50"
+            style={{
+              width: '100%',
+              background: '#fff',
+              color: '#000',
+              borderRadius: 10,
+              padding: '12px 16px',
+              border: '1px solid rgba(255,255,255,0.2)',
+              cursor: loading ? 'not-allowed' : 'pointer',
+              opacity: loading ? 0.7 : 1,
+              letterSpacing: '0.3em',
+              textTransform: 'uppercase',
+              fontWeight: 700,
+            }}
           >
             {loading ? '...' : 'Login'}
           </button>

@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import gsap from 'gsap';
+import { LOGO_PATH } from '../constants';
 
 interface LogoOverlayProps {
   onIntroComplete: () => void;
@@ -8,15 +9,22 @@ interface LogoOverlayProps {
 
 export const LogoOverlay: React.FC<LogoOverlayProps> = ({ onIntroComplete, hoverEnabled }) => {
   const containerRef = useRef<HTMLDivElement>(null);
-  const titleRef = useRef<SVGSVGElement>(null);
+  const titleRef = useRef<HTMLImageElement>(null);
   const taglineRef = useRef<SVGSVGElement>(null);
   const tlRef = useRef<gsap.core.Timeline | null>(null);
   const [logoLoaded, setLogoLoaded] = useState(false);
+  const logoSrc = `${LOGO_PATH}?v=${Date.now()}`; // Cache-bust for logo updates
 
-  // Vector text logo is immediate
+  // Load logo image
   useEffect(() => {
-    setLogoLoaded(true);
-  }, []);
+    const img = new Image();
+    img.onload = () => setLogoLoaded(true);
+    img.onerror = () => {
+      console.warn('[LogoOverlay] Failed to load logo, using fallback');
+      setLogoLoaded(true); // Still proceed with animation
+    };
+    img.src = logoSrc;
+  }, [logoSrc]);
 
   useEffect(() => {
     if (!logoLoaded) return; // Wait for logo to load
@@ -74,7 +82,7 @@ export const LogoOverlay: React.FC<LogoOverlayProps> = ({ onIntroComplete, hover
 
     // Step 5: "Final Archive" fades out over 2s
     tl.to(titleRef.current, { 
-      autoAlpha: 0,
+      autoAlpha: 0, 
       opacity: 0,
       duration: 2, 
       ease: "sine.inOut" 
@@ -127,48 +135,36 @@ export const LogoOverlay: React.FC<LogoOverlayProps> = ({ onIntroComplete, hover
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
       >
-        {/* Top Part: "Final Archive" (vector text) */}
-        <svg
+        {/* Logo Image */}
+        <img
           ref={titleRef}
+          src={logoSrc}
+          alt="Final Archive"
           className="absolute border-none outline-none ring-0 shadow-none pointer-events-none"
-          viewBox="0 0 1000 500"
           style={{
             border: 'none',
             outline: 'none',
             maxWidth: '100%',
             maxHeight: '100%',
-            width: '100%',
-            height: '100%',
-            display: 'block',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
+            width: 'auto',
+            height: 'auto',
+            display: logoLoaded ? 'block' : 'none',
+            top: '50%',
+            left: '50%',
+            transform: 'translate(-50%, -50%)',
             margin: 'auto',
-            visibility: logoLoaded ? 'visible' : 'hidden'
+            objectFit: 'contain',
+            objectPosition: 'center center'
           }}
           aria-hidden="true"
-        >
-          <text
-            x="500"
-            y="240"
-            textAnchor="middle"
-            fontFamily="Times New Roman, Times, serif"
-            fontSize="150"
-            fontStyle="italic"
-            fill="#f2f2f2"
-            letterSpacing="2"
-          >
-            Final Archive
-          </text>
-        </svg>
+        />
 
         {/* Bottom Part: "For All Eternity" (vector text) */}
         <svg
           ref={taglineRef}
           className="absolute border-none outline-none ring-0 shadow-none pointer-events-none"
           viewBox="0 0 1000 500"
-          style={{
+          style={{ 
             border: 'none',
             outline: 'none',
             maxWidth: '100%',

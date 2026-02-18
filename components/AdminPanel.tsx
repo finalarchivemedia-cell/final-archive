@@ -313,39 +313,138 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onUpdate }) => {
     );
   }
 
-  const smallCaps = 'uppercase tracking-[0.25em] text-[11px] text-white/60';
-  const thinLine = 'border-t border-white/15';
-  const btn = 'border border-white/25 text-white/85 hover:text-white hover:border-white/45 transition-colors px-4 py-2 text-[11px] font-bold tracking-[0.25em] uppercase';
-  const btnDanger = 'border border-red-500/35 text-red-300/90 hover:text-red-200 hover:border-red-500/55 transition-colors px-3 py-1.5 text-[10px] tracking-[0.25em] uppercase';
-  const btnLink = 'text-[10px] text-white/45 hover:text-white/80 transition-colors tracking-[0.25em] uppercase';
+  // Inline CSS fallback (admin dashboard) — avoids relying on Tailwind in production.
+  const overlayStyle: React.CSSProperties = {
+    position: 'fixed',
+    inset: 0,
+    zIndex: 100,
+    color: '#fff',
+    background: 'rgba(0,0,0,0.55)',
+    WebkitBackdropFilter: 'blur(10px)',
+    backdropFilter: 'blur(10px)',
+  };
+
+  const wrapStyle: React.CSSProperties = {
+    width: '100%',
+    maxWidth: 980,
+    margin: '0 auto',
+    padding: '48px 24px 72px',
+  };
+
+  const smallCapsStyle: React.CSSProperties = {
+    fontSize: 11,
+    letterSpacing: '0.25em',
+    textTransform: 'uppercase',
+    color: 'rgba(255,255,255,0.62)',
+  };
+
+  const valueStyle: React.CSSProperties = {
+    fontSize: 11,
+    letterSpacing: '0.25em',
+    color: 'rgba(255,255,255,0.78)',
+  };
+
+  const lineStyle: React.CSSProperties = {
+    borderTop: '1px solid rgba(255,255,255,0.18)',
+  };
+
+  const linkStyle: React.CSSProperties = {
+    fontSize: 10,
+    letterSpacing: '0.25em',
+    textTransform: 'uppercase',
+    color: 'rgba(255,255,255,0.55)',
+    textDecoration: 'none',
+    background: 'transparent',
+    border: 'none',
+    padding: 0,
+    cursor: 'pointer',
+  };
+
+  const buttonStyle: React.CSSProperties = {
+    width: '100%',
+    maxWidth: 320,
+    border: '1px solid rgba(255,255,255,0.28)',
+    background: 'transparent',
+    color: 'rgba(255,255,255,0.86)',
+    padding: '10px 14px',
+    fontSize: 11,
+    fontWeight: 700,
+    letterSpacing: '0.25em',
+    textTransform: 'uppercase',
+    cursor: 'pointer',
+  };
+
+  const dangerButtonStyle: React.CSSProperties = {
+    border: '1px solid rgba(239,68,68,0.38)',
+    background: 'transparent',
+    color: 'rgba(252,165,165,0.95)',
+    padding: '7px 10px',
+    fontSize: 10,
+    letterSpacing: '0.25em',
+    textTransform: 'uppercase',
+    cursor: 'pointer',
+  };
 
   return (
-    <div className="fixed inset-0 z-[100] text-white">
-      <div className="absolute inset-0 bg-black/30 backdrop-blur-sm" />
+    <div style={overlayStyle}>
+      {/* Local CSS for range inputs (works even if global CSS fails) */}
+      <style>{`
+        .fa-range {
+          -webkit-appearance: none;
+          appearance: none;
+          width: 100%;
+          height: 2px;
+          background: rgba(255,255,255,0.22);
+          outline: none;
+        }
+        .fa-range::-webkit-slider-thumb {
+          -webkit-appearance: none;
+          appearance: none;
+          width: 14px;
+          height: 14px;
+          border-radius: 999px;
+          background: rgba(255,255,255,0.95);
+          border: 1px solid rgba(0,0,0,0.35);
+          cursor: pointer;
+        }
+        .fa-range::-moz-range-thumb {
+          width: 14px;
+          height: 14px;
+          border-radius: 999px;
+          background: rgba(255,255,255,0.95);
+          border: 1px solid rgba(0,0,0,0.35);
+          cursor: pointer;
+        }
+        .fa-hoverlink:hover { color: rgba(255,255,255,0.85) !important; }
+        .fa-btn:hover { border-color: rgba(255,255,255,0.48) !important; color: rgba(255,255,255,0.96) !important; }
+        .fa-danger:hover { border-color: rgba(239,68,68,0.65) !important; color: rgba(254,202,202,1) !important; }
+      `}</style>
 
-      <div className="relative h-full w-full overflow-y-auto">
-        <div className="mx-auto w-full max-w-4xl px-6 sm:px-8 py-12">
-          <div className="flex items-start justify-between gap-6">
-            <div>
-              <div className="text-3xl sm:text-4xl font-serif tracking-[0.2em]">SETTINGS</div>
+      <div style={{ position: 'relative', width: '100%', height: '100%', overflowY: 'auto' }}>
+        <div style={wrapStyle}>
+          <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 24 }}>
+            <div style={{ fontFamily: 'Times New Roman, Times, serif', letterSpacing: '0.2em', fontSize: 34 }}>
+              SETTINGS
             </div>
-            <button onClick={logout} className={btnLink} type="button">
+            <button onClick={logout} type="button" className="fa-hoverlink" style={linkStyle}>
               LOGOUT
-          </button>
-        </div>
+            </button>
+          </div>
 
-          <div className={`mt-6 ${thinLine}`} />
+          <div style={{ marginTop: 18, ...lineStyle }} />
 
         {loading ? (
-            <div className="py-16 text-center text-xs tracking-widest text-white/50 animate-pulse">LOADING...</div>
+            <div style={{ padding: '64px 0', textAlign: 'center', fontSize: 12, letterSpacing: '0.25em', color: 'rgba(255,255,255,0.55)' }}>
+              LOADING...
+            </div>
         ) : (
-            <div className="space-y-10 pt-10">
+            <div style={{ paddingTop: 40, display: 'flex', flexDirection: 'column', gap: 34 }}>
               {/* Duration */}
-            <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <div className={smallCaps}>DISPLAY DURATION</div>
-                  <div className="text-[11px] tracking-[0.25em] text-white/80">{settings.displayDurationSec}s</div>
-              </div>
+              <div>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <div style={smallCapsStyle}>DISPLAY DURATION</div>
+                  <div style={valueStyle}>{settings.displayDurationSec}s</div>
+                </div>
               <input
                 type="range"
                 min="1"
@@ -353,16 +452,17 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onUpdate }) => {
                 step="1"
                 value={settings.displayDurationSec}
                 onChange={e => setSettings({ ...settings, displayDurationSec: Number(e.target.value) })}
-                  className="w-full h-[2px] bg-white/20 rounded-lg appearance-none cursor-pointer accent-white"
+                  className="fa-range"
+                  style={{ marginTop: 12 }}
               />
             </div>
 
               {/* Crop */}
-            <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <div className={smallCaps}>CROP / ZOOM</div>
-                  <div className="text-[11px] tracking-[0.25em] text-white/80">{settings.cropPercent}%</div>
-              </div>
+              <div>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <div style={smallCapsStyle}>CROP / ZOOM</div>
+                  <div style={valueStyle}>{settings.cropPercent}%</div>
+                </div>
               <input
                 type="range"
                 min="25"
@@ -370,37 +470,50 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onUpdate }) => {
                 step="1"
                 value={settings.cropPercent}
                 onChange={e => setSettings({ ...settings, cropPercent: Number(e.target.value) })}
-                  className="w-full h-[2px] bg-white/20 rounded-lg appearance-none cursor-pointer accent-white"
+                  className="fa-range"
+                  style={{ marginTop: 12 }}
               />
             </div>
 
               {/* Save */}
-              <div className="pt-4">
+              <div style={{ paddingTop: 8 }}>
               <button
                 onClick={handleSave}
                   type="button"
-                  className="w-full bg-white text-black py-5 text-[12px] font-semibold tracking-[0.35em] uppercase hover:bg-white/90 transition-colors"
+                  style={{
+                    width: '100%',
+                    background: '#fff',
+                    color: '#000',
+                    padding: '18px 16px',
+                    fontSize: 12,
+                    fontWeight: 600,
+                    letterSpacing: '0.35em',
+                    textTransform: 'uppercase',
+                    border: '1px solid rgba(255,255,255,0.25)',
+                    cursor: 'pointer',
+                  }}
                 >
                   {saveStatus === 'saving' ? 'SAVING...' : 'SAVE CHANGES'}
                 </button>
               </div>
 
-              <div className={`pt-2 ${thinLine}`} />
+              <div style={{ paddingTop: 10, ...lineStyle }} />
 
               {/* Content controls */}
-              <div className="pt-6">
-                <div className="flex items-start justify-between gap-6">
-                  <div className={smallCaps}>CONTENT CONTROLS</div>
-                  <button onClick={loadImages} type="button" className={btnLink}>
+              <div style={{ paddingTop: 22 }}>
+                <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 24 }}>
+                  <div style={smallCapsStyle}>CONTENT CONTROLS</div>
+                  <button onClick={loadImages} type="button" className="fa-hoverlink" style={linkStyle}>
                     REFRESH LIST
                   </button>
                 </div>
 
-                <div className="mt-4 flex flex-col gap-3 w-full max-w-xs">
+                <div style={{ marginTop: 16, display: 'flex', flexDirection: 'column', gap: 10, width: '100%', maxWidth: 340 }}>
                   <button
                     onClick={handleSyncNow}
-                    className={btn}
                     type="button"
+                    className="fa-btn"
+                    style={buttonStyle}
                   >
                     {syncStatus === 'syncing' ? 'SYNCING...' : 'SYNC NOW'}
                   </button>
@@ -415,8 +528,9 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onUpdate }) => {
                   />
                   <button
                     onClick={() => uploadInputRef.current?.click()}
-                    className={btn}
                     type="button"
+                    className="fa-btn"
+                    style={buttonStyle}
                   >
                     {uploadStatus === 'uploading' ? 'UPLOADING...' : 'UPLOAD FILES'}
                   </button>
@@ -430,21 +544,26 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onUpdate }) => {
                   />
                   <button
                     onClick={() => musicInputRef.current?.click()}
-                    className={btn}
                     type="button"
+                    className="fa-btn"
+                    style={buttonStyle}
                   >
                     {musicStatus === 'uploading' ? 'UPLOADING MUSIC...' : 'UPLOAD MUSIC'}
                   </button>
 
                   {/* Status lines */}
                   {syncMessage && (
-                    <div className="text-[10px] tracking-[0.25em] uppercase text-white/45">{syncMessage}</div>
+                    <div style={{ fontSize: 10, letterSpacing: '0.25em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.45)' }}>
+                      {syncMessage}
+                    </div>
                   )}
                   {uploadMessage && (
-                    <div className="text-[10px] tracking-[0.25em] uppercase text-white/45">{uploadMessage}</div>
+                    <div style={{ fontSize: 10, letterSpacing: '0.25em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.45)' }}>
+                      {uploadMessage}
+                    </div>
                   )}
                   {musicMessage && (
-                    <div className="text-[10px] tracking-[0.25em] uppercase text-white/45">
+                    <div style={{ fontSize: 10, letterSpacing: '0.25em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.45)' }}>
                       {musicMessage}
                       {musicUrl ? ` • ${musicUrl}` : ''}
                     </div>
@@ -453,57 +572,90 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onUpdate }) => {
               </div>
 
               {/* Images */}
-              <div className="pt-6">
-                <div className={`${smallCaps} mb-3`}>
+              <div style={{ paddingTop: 22 }}>
+                <div style={{ ...smallCapsStyle, marginBottom: 12 }}>
                   IMAGES ({images.filter(i => i.isActive).length} ACTIVE / {images.length} TOTAL)
                 </div>
 
                 {imagesLoading && (
-                  <div className="py-10 text-center text-xs tracking-widest text-white/40 animate-pulse">LOADING IMAGES...</div>
+                  <div style={{ padding: '40px 0', textAlign: 'center', fontSize: 12, letterSpacing: '0.25em', color: 'rgba(255,255,255,0.4)' }}>
+                    LOADING IMAGES...
+                  </div>
                 )}
                 {imagesError && (
-                  <div className="py-6 text-center text-xs tracking-widest text-red-400">{imagesError}</div>
+                  <div style={{ padding: '24px 0', textAlign: 'center', fontSize: 12, letterSpacing: '0.25em', color: 'rgba(248,113,113,0.95)' }}>
+                    {imagesError}
+                  </div>
                 )}
 
                 {!imagesLoading && !imagesError && (
-                  <div className="border border-white/15">
+                  <div style={{ border: '1px solid rgba(255,255,255,0.18)' }}>
                     {images.length === 0 ? (
-                      <div className="p-6 text-center text-xs tracking-widest text-white/40">NO IMAGES FOUND</div>
+                      <div style={{ padding: 24, textAlign: 'center', fontSize: 12, letterSpacing: '0.25em', color: 'rgba(255,255,255,0.4)' }}>
+                        NO IMAGES FOUND
+                      </div>
                     ) : (
-                      <div className="divide-y divide-white/10">
+                      <div>
                         {images.map((img) => (
-                          <div key={img.id} className="flex items-center justify-between gap-4 p-4">
-                            <div className="flex items-center gap-4 min-w-0">
-                              <div className="w-16 h-12 border border-white/15 bg-black/30 overflow-hidden flex items-center justify-center shrink-0">
+                          <div
+                            key={img.id}
+                            style={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'space-between',
+                              gap: 16,
+                              padding: 14,
+                              borderTop: '1px solid rgba(255,255,255,0.10)',
+                            }}
+                          >
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 14, minWidth: 0 }}>
+                              <div
+                                style={{
+                                  width: 64,
+                                  height: 48,
+                                  border: '1px solid rgba(255,255,255,0.16)',
+                                  background: 'rgba(0,0,0,0.25)',
+                                  overflow: 'hidden',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                  flexShrink: 0,
+                                }}
+                              >
                                 {img.mediaType === 'VIDEO' ? (
                                   <video src={img.url} className="w-full h-full object-cover" muted />
                                 ) : (
                                   <img src={img.url} alt="" className="w-full h-full object-cover" />
                                 )}
                               </div>
-                              <div className="min-w-0">
-                                <div className="text-[12px] tracking-[0.25em] text-white/85 truncate">{img.id}</div>
-                                <div className="mt-1 flex items-center gap-3">
-                                  <span className="text-[10px] tracking-[0.25em] uppercase text-white/40">{img.mediaType}</span>
-                                  <span className={`text-[10px] tracking-[0.25em] uppercase ${img.isActive ? 'text-green-300' : 'text-red-300'}`}>
+                              <div style={{ minWidth: 0 }}>
+                                <div style={{ fontSize: 12, letterSpacing: '0.25em', color: 'rgba(255,255,255,0.86)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                  {img.id}
+                                </div>
+                                <div style={{ marginTop: 6, display: 'flex', alignItems: 'center', gap: 12 }}>
+                                  <span style={{ fontSize: 10, letterSpacing: '0.25em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.40)' }}>
+                                    {img.mediaType}
+                                  </span>
+                                  <span style={{ fontSize: 10, letterSpacing: '0.25em', textTransform: 'uppercase', color: img.isActive ? 'rgba(134,239,172,0.95)' : 'rgba(252,165,165,0.95)' }}>
                                     {img.isActive ? 'ACTIVE' : 'INACTIVE'}
                                   </span>
                                 </div>
                               </div>
                             </div>
 
-                            <div className="flex items-center gap-3 shrink-0">
-                              <a href={img.url} target="_blank" rel="noreferrer" className={btnLink}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexShrink: 0 }}>
+                              <a href={img.url} target="_blank" rel="noreferrer" className="fa-hoverlink" style={{ ...linkStyle, fontSize: 10 }}>
                                 OPEN
                               </a>
                               <button
                                 onClick={() => handleToggleActive(img)}
-                                className={img.isActive ? btnDanger : btn}
                                 type="button"
+                                className={img.isActive ? 'fa-danger' : 'fa-btn'}
+                                style={img.isActive ? dangerButtonStyle : { ...buttonStyle, width: 'auto', maxWidth: 'unset', padding: '7px 10px', fontSize: 10 }}
                               >
                                 {img.isActive ? 'DEACTIVATE' : 'ACTIVATE'}
                               </button>
-                              <button onClick={() => handleDelete(img)} className={btnDanger} type="button">
+                              <button onClick={() => handleDelete(img)} className="fa-danger" style={dangerButtonStyle} type="button">
                                 DELETE
               </button>
                             </div>

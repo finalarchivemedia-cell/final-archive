@@ -12,8 +12,8 @@
     <!-- Performance: Preconnect for faster API requests -->
     <link rel="preconnect" href="https://final-archive-production.up.railway.app" crossorigin />
     <link rel="dns-prefetch" href="https://final-archive-production.up.railway.app" />
-    <!-- Preload logo for instant intro animation (without cache-busting to match actual request) -->
-    <link rel="preload" href="/final-archive-media.svg" as="image" type="image/svg+xml" />
+    <!-- Note: do NOT preload the logo globally because /admin does not use it and Chrome warns.
+         Logo is fetched by `LogoOverlay` on the public route. -->
     <style>
       /* Reset to prevent 'white line' artifacts */
       *, *::before, *::after {

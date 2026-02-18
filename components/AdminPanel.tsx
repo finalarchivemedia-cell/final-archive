@@ -259,19 +259,27 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onUpdate }) => {
   }
 
   return (
-    <div className="fixed inset-0 bg-black/80 backdrop-blur-md z-[100] text-white flex items-start justify-center p-6 sm:p-8 overflow-y-auto">
-      <div className="w-full max-w-3xl bg-black/60 border border-white/10 rounded-md p-6 sm:p-8 space-y-10">
-        <div className="flex items-end justify-between border-b border-white/20 pb-4">
-          <h1 className="text-2xl font-serif tracking-widest">SETTINGS</h1>
-          <button onClick={logout} className="text-xs text-neutral-500 hover:text-white transition-colors tracking-widest uppercase">
-            Logout
-          </button>
-        </div>
+    <div className="fixed inset-0 z-[100] text-white">
+      {/* Dim / blur overlay */}
+      <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" />
+
+      {/* Bottom dock panel (client request: controls/content not at top) */}
+      <div className="absolute inset-x-0 bottom-0 pb-[env(safe-area-inset-bottom)]">
+        <div className="mx-auto w-full max-w-4xl border border-white/10 bg-black/75 backdrop-blur-md rounded-t-xl shadow-2xl">
+          <div className="flex items-center justify-between px-5 sm:px-6 py-4 border-b border-white/10">
+            <div className="text-[12px] uppercase tracking-[0.35em] text-white/80">Settings</div>
+            <button
+              onClick={logout}
+              className="text-[10px] text-white/50 hover:text-white/80 transition-colors tracking-[0.25em] uppercase"
+            >
+              Logout
+            </button>
+          </div>
 
         {loading ? (
-          <div className="text-center animate-pulse tracking-widest text-xs">LOADING...</div>
+          <div className="p-8 text-center animate-pulse tracking-widest text-xs text-white/50">LOADING...</div>
         ) : (
-          <div className="space-y-10">
+          <div className="p-5 sm:p-6 max-h-[70vh] overflow-y-auto space-y-8">
             {/* Duration Slider */}
             <div className="space-y-4">
               <div className="flex justify-between text-xs tracking-widest uppercase text-neutral-400">
@@ -479,6 +487,7 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onUpdate }) => {
             </div>
           </div>
         )}
+        </div>
       </div>
     </div>
   );

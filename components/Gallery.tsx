@@ -47,7 +47,9 @@ export const Gallery: React.FC<GalleryProps> = ({
   
   // Logic Refs
   const cycleCount = useRef(0);
-  const zoomInRef = useRef(true);
+  // Client requirement: First image starts zoomed in and breathes out
+  // So initial state: true = zoomed in (maxScale) → zoom out to 1
+  const zoomInRef = useRef(true); // true = start zoomed in, false = start at full frame
   const timelineRef = useRef<gsap.core.Timeline | null>(null);
 
   // 1. Initialization
@@ -115,23 +117,37 @@ export const Gallery: React.FC<GalleryProps> = ({
           onFirstCycleComplete();
         }
         
-        if (!singleMode && nextImg) {
-        const nextLoopRecord = getRandomImage(images, nextImg.id);
-        setActiveLayer(prev => prev === 'A' ? 'B' : 'A');
-        setCurrentImg(nextImg); 
-        if (nextLoopRecord) setNextImg(nextLoopRecord); 
-        }
+        // CRITICAL: Toggle zoom direction BEFORE switching images
+        // This ensures the next image uses the correct zoom pattern immediately
         zoomInRef.current = !zoomInRef.current;
+        
+        if (!singleMode && nextImg) {
+          const nextLoopRecord = getRandomImage(images, nextImg.id);
+          setActiveLayer(prev => prev === 'A' ? 'B' : 'A');
+          setCurrentImg(nextImg); 
+          if (nextLoopRecord) setNextImg(nextLoopRecord); 
+        }
       }
     });
     timelineRef.current = tl;
 
     const moveDuration = duration + 2.0;
 
+    // Client requirement: Alternate motion style
+    // Image A: starts zoomed in (maxScale) → breathes out to full frame (1)
+    // Image B: starts full frame (1) → breathes in (maxScale)
+    // Pattern alternates: zoom out, zoom in, zoom out, zoom in...
     const startScale = zoomInRef.current ? maxScale : 1;
     const endScale = zoomInRef.current ? 1 : maxScale;
     
-    // Use transform3d for GPU acceleration and smooth animations
+    // CRITICAL: Reset scale BEFORE setting initial state to prevent layout issues
+    // This ensures each image starts from the correct position
+    gsap.set(currentEl, { 
+      scale: 1, // Reset first
+      clearProps: 'scale' // Clear any previous scale transforms
+    });
+    
+    // Now set the correct initial scale and properties
     gsap.set(currentEl, { 
       scale: startScale, 
       autoAlpha: 1,
@@ -139,7 +155,8 @@ export const Gallery: React.FC<GalleryProps> = ({
       force3D: true // Force GPU acceleration
     });
 
-    // Smooth continuous motion - alternating zoom in/out
+    // Smooth continuous motion - alternating zoom pattern
+    // Use fromTo to ensure we start from exact startScale and end at exact endScale
     tl.fromTo(currentEl, 
       { 
         scale: startScale,
@@ -148,7 +165,7 @@ export const Gallery: React.FC<GalleryProps> = ({
       { 
         scale: endScale, 
         duration: moveDuration, 
-        ease: "power1.inOut", // Smoother than sine for continuous motion
+        ease: "power1.inOut", // Smooth continuous motion
         force3D: true
       },
       0
@@ -157,12 +174,20 @@ export const Gallery: React.FC<GalleryProps> = ({
     // First cycle: fade in the first image immediately
     if (cycleCount.current === 0) {
       // Ensure image is visible even if still loading
+      // Start with correct scale already set above
       gsap.set(currentEl, { autoAlpha: 0 });
       tl.to(currentEl, { 
         autoAlpha: 1, 
         duration: 0.6, 
         ease: "power2.inOut" 
       }, 0);
+    } else {
+      // For subsequent cycles, ensure scale is reset and set correctly
+      // This prevents any scale carryover from previous animations
+      gsap.set(currentEl, { 
+        scale: startScale,
+        force3D: true
+      });
     }
 
     if (!singleMode && nextEl && nextReady) {

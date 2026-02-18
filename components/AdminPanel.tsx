@@ -307,273 +307,205 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onUpdate }) => {
           >
             {loading ? '...' : 'Login'}
           </button>
-          </form>
+        </form>
         </div>
       </div>
     );
   }
 
-  // Professional card styling with glass-morphism effect (Tailwind v4 safe classes)
-  const card = 'border border-white/15 bg-white/10 backdrop-blur-md rounded-2xl shadow-2xl';
-  const label = 'text-[11px] uppercase tracking-[0.25em] text-white/60 mb-4';
-  const buttonBase = 'px-4 py-2 text-[11px] font-bold tracking-[0.25em] uppercase transition-all duration-200 border rounded-md';
+  const smallCaps = 'uppercase tracking-[0.25em] text-[11px] text-white/60';
+  const thinLine = 'border-t border-white/15';
+  const btn = 'border border-white/25 text-white/85 hover:text-white hover:border-white/45 transition-colors px-4 py-2 text-[11px] font-bold tracking-[0.25em] uppercase';
+  const btnDanger = 'border border-red-500/35 text-red-300/90 hover:text-red-200 hover:border-red-500/55 transition-colors px-3 py-1.5 text-[10px] tracking-[0.25em] uppercase';
+  const btnLink = 'text-[10px] text-white/45 hover:text-white/80 transition-colors tracking-[0.25em] uppercase';
 
   return (
-    <div className="fixed inset-0 z-[100] text-white overflow-hidden">
-      {/* Background with blur overlay */}
-      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
+    <div className="fixed inset-0 z-[100] text-white">
+      <div className="absolute inset-0 bg-black/30 backdrop-blur-sm" />
 
-      <div className="relative h-full w-full flex flex-col">
-        {/* Header */}
-        <header className="relative border-b border-white/10 bg-white/5 backdrop-blur-md">
-          <div className="flex items-center justify-between px-6 sm:px-8 py-4">
+      <div className="relative h-full w-full overflow-y-auto">
+        <div className="mx-auto w-full max-w-4xl px-6 sm:px-8 py-12">
+          <div className="flex items-start justify-between gap-6">
             <div>
-              <div className="text-[10px] uppercase tracking-[0.35em] text-white/50">Private Panel</div>
-              <div className="mt-1 text-xl font-serif tracking-widest text-white/90">Final Archive</div>
+              <div className="text-3xl sm:text-4xl font-serif tracking-[0.2em]">SETTINGS</div>
             </div>
-            <button
-              onClick={logout}
-              className="text-[10px] text-white/50 hover:text-white/90 transition-colors tracking-[0.25em] uppercase px-3 py-1.5 border border-white/10 hover:border-white/30 rounded"
-              type="button"
-            >
-              Logout
-            </button>
-          </div>
-        </header>
+            <button onClick={logout} className={btnLink} type="button">
+              LOGOUT
+          </button>
+        </div>
+
+          <div className={`mt-6 ${thinLine}`} />
 
         {loading ? (
-          <div className="flex-1 flex items-center justify-center text-xs tracking-widest text-white/50 animate-pulse">
-            LOADING...
-          </div>
+            <div className="py-16 text-center text-xs tracking-widest text-white/50 animate-pulse">LOADING...</div>
         ) : (
-          <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-6 pb-8">
-            <div className="mx-auto w-full max-w-7xl grid grid-cols-1 lg:grid-cols-2 gap-5">
-              {/* Left column: Settings & Content */}
-              <div className="space-y-5">
-                {/* Playback Settings Card */}
-                <section className={`${card} p-6`}>
-                  <div className={label}>Playback Settings</div>
+            <div className="space-y-10 pt-10">
+              {/* Duration */}
+            <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <div className={smallCaps}>DISPLAY DURATION</div>
+                  <div className="text-[11px] tracking-[0.25em] text-white/80">{settings.displayDurationSec}s</div>
+              </div>
+              <input
+                type="range"
+                min="1"
+                max="10"
+                step="1"
+                value={settings.displayDurationSec}
+                onChange={e => setSettings({ ...settings, displayDurationSec: Number(e.target.value) })}
+                  className="w-full h-[2px] bg-white/20 rounded-lg appearance-none cursor-pointer accent-white"
+              />
+            </div>
 
-                  <div className="space-y-5">
-                    <div className="space-y-3">
-                      <div className="flex justify-between items-center">
-                        <label className="text-[11px] uppercase tracking-[0.25em] text-white/70">Display Duration</label>
-                        <span className="text-white/90 text-[12px] tracking-[0.25em] font-medium">{settings.displayDurationSec}s</span>
-                      </div>
-                      <input
-                        type="range"
-                        min="1"
-                        max="10"
-                        step="1"
-                        value={settings.displayDurationSec}
-                        onChange={e => setSettings({ ...settings, displayDurationSec: Number(e.target.value) })}
-                        className="w-full h-1.5 bg-white/10 rounded-lg appearance-none cursor-pointer accent-white"
-                      />
-                    </div>
+              {/* Crop */}
+            <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <div className={smallCaps}>CROP / ZOOM</div>
+                  <div className="text-[11px] tracking-[0.25em] text-white/80">{settings.cropPercent}%</div>
+              </div>
+              <input
+                type="range"
+                min="25"
+                max="100"
+                step="1"
+                value={settings.cropPercent}
+                onChange={e => setSettings({ ...settings, cropPercent: Number(e.target.value) })}
+                  className="w-full h-[2px] bg-white/20 rounded-lg appearance-none cursor-pointer accent-white"
+              />
+            </div>
 
-                    <div className="space-y-3">
-                      <div className="flex justify-between items-center">
-                        <label className="text-[11px] uppercase tracking-[0.25em] text-white/70">Crop / Zoom</label>
-                        <span className="text-white/90 text-[12px] tracking-[0.25em] font-medium">{settings.cropPercent}%</span>
-                      </div>
-                      <input
-                        type="range"
-                        min="25"
-                        max="100"
-                        step="1"
-                        value={settings.cropPercent}
-                        onChange={e => setSettings({ ...settings, cropPercent: Number(e.target.value) })}
-                        className="w-full h-1.5 bg-white/10 rounded-lg appearance-none cursor-pointer accent-white"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="pt-6 mt-6 border-t border-white/10">
-                    <button
-                      onClick={handleSave}
-                      type="button"
-                      className={
-                        saveStatus === 'saved'
-                          ? `${buttonBase} w-full bg-green-900/50 border-green-600/60 text-green-100 hover:bg-green-900/60`
-                          : `${buttonBase} w-full bg-white/90 text-black border-white/30 hover:bg-white`
-                      }
-                    >
-                      {saveStatus === 'saving' ? 'SAVING...' : saveStatus === 'saved' ? 'SAVED' : 'SAVE CHANGES'}
-                    </button>
-                  </div>
-                </section>
-
-                {/* Content Controls Card */}
-                <section className={`${card} p-6`}>
-                  <div className="flex items-center justify-between mb-4">
-                    <div className={label}>Content Management</div>
-                    <button
-                      onClick={loadImages}
-                      className="text-[10px] text-white/50 hover:text-white/80 transition-colors uppercase tracking-[0.25em] px-2 py-1 border border-white/10 hover:border-white/20 rounded"
-                      type="button"
-                    >
-                      Refresh
-                    </button>
-                  </div>
-
-                  <div className="flex flex-col gap-3">
-                    {/* Sync Now */}
-                    <div className="flex flex-wrap items-center gap-2">
-                      <button
-                        onClick={handleSyncNow}
-                        className={
-                          syncStatus === 'done'
-                            ? `${buttonBase} bg-green-900/50 border-green-600/60 text-green-100 hover:bg-green-900/60`
-                            : `${buttonBase} bg-white/5 border-white/20 text-white hover:bg-white/10 hover:border-white/30`
-                        }
-                        type="button"
-                      >
-                        {syncStatus === 'syncing' ? 'SYNCING...' : syncStatus === 'done' ? 'SYNC STARTED' : 'SYNC NOW'}
-                      </button>
-                      {syncStatus === 'error' && (
-                        <span className="text-[10px] text-red-400 tracking-[0.25em] uppercase">{syncMessage || 'SYNC FAILED'}</span>
-                      )}
-                    </div>
-                    {syncMessage && syncStatus !== 'error' && (
-                      <div className="text-[10px] text-white/50 tracking-[0.25em] uppercase">{syncMessage}</div>
-                    )}
-
-                    {/* Upload Files */}
-                    <div className="flex flex-wrap items-center gap-2">
-                      <input
-                        ref={uploadInputRef}
-                        type="file"
-                        multiple
-                        accept=".jpg,.jpeg,.png,.webp,.gif,.avif,.mp4,.webm,.mov"
-                        className="hidden"
-                        onChange={(e) => handleUpload(e.target.files)}
-                      />
-                      <button
-                        onClick={() => uploadInputRef.current?.click()}
-                        className={
-                          uploadStatus === 'done'
-                            ? `${buttonBase} bg-green-900/50 border-green-600/60 text-green-100 hover:bg-green-900/60`
-                            : `${buttonBase} bg-white/5 border-white/20 text-white hover:bg-white/10 hover:border-white/30`
-                        }
-                        type="button"
-                      >
-                        {uploadStatus === 'uploading' ? 'UPLOADING...' : uploadStatus === 'done' ? 'UPLOADED' : 'UPLOAD FILES'}
-                      </button>
-                      {uploadStatus === 'error' && (
-                        <span className="text-[10px] text-red-400 tracking-[0.25em] uppercase">{uploadMessage || 'UPLOAD FAILED'}</span>
-                      )}
-                    </div>
-                    {uploadMessage && uploadStatus !== 'error' && (
-                      <div className="text-[10px] text-white/50 tracking-[0.25em] uppercase">{uploadMessage}</div>
-                    )}
-
-                    {/* Upload Music */}
-                    <div className="flex flex-wrap items-center gap-2">
-                      <input
-                        ref={musicInputRef}
-                        type="file"
-                        accept=".mp3,.m4a,.wav,.aac"
-                        className="hidden"
-                        onChange={(e) => handleMusicUpload(e.target.files)}
-                      />
-                      <button
-                        onClick={() => musicInputRef.current?.click()}
-                        className={
-                          musicStatus === 'done'
-                            ? `${buttonBase} bg-green-900/50 border-green-600/60 text-green-100 hover:bg-green-900/60`
-                            : `${buttonBase} bg-white/5 border-white/20 text-white hover:bg-white/10 hover:border-white/30`
-                        }
-                        type="button"
-                      >
-                        {musicStatus === 'uploading' ? 'UPLOADING MUSIC...' : musicStatus === 'done' ? 'MUSIC UPDATED' : 'UPLOAD MUSIC'}
-                      </button>
-                      {musicStatus === 'error' && (
-                        <span className="text-[10px] text-red-400 tracking-[0.25em] uppercase">{musicMessage || 'UPLOAD FAILED'}</span>
-                      )}
-                    </div>
-                    {musicMessage && musicStatus !== 'error' && (
-                      <div className="text-[10px] text-white/50 tracking-[0.25em] uppercase">
-                        {musicMessage}
-                        {musicUrl ? ` • ${musicUrl}` : ''}
-                      </div>
-                    )}
-                  </div>
-                </section>
+              {/* Save */}
+              <div className="pt-4">
+              <button
+                onClick={handleSave}
+                  type="button"
+                  className="w-full bg-white text-black py-5 text-[12px] font-semibold tracking-[0.35em] uppercase hover:bg-white/90 transition-colors"
+                >
+                  {saveStatus === 'saving' ? 'SAVING...' : 'SAVE CHANGES'}
+                </button>
               </div>
 
-              {/* Right column: Library */}
-              <section className={`${card} p-6`}>
-                <div className="flex items-center justify-between mb-4">
-                  <div className={label}>
-                    Library ({images.filter(img => img.isActive).length} active / {images.length})
-                  </div>
-                  <div className="text-[10px] text-white/40 tracking-[0.25em] uppercase">IDs are permanent</div>
+              <div className={`pt-2 ${thinLine}`} />
+
+              {/* Content controls */}
+              <div className="pt-6">
+                <div className="flex items-start justify-between gap-6">
+                  <div className={smallCaps}>CONTENT CONTROLS</div>
+                  <button onClick={loadImages} type="button" className={btnLink}>
+                    REFRESH LIST
+                  </button>
+                </div>
+
+                <div className="mt-4 flex flex-col gap-3 w-full max-w-xs">
+                  <button
+                    onClick={handleSyncNow}
+                    className={btn}
+                    type="button"
+                  >
+                    {syncStatus === 'syncing' ? 'SYNCING...' : 'SYNC NOW'}
+                  </button>
+
+                  <input
+                    ref={uploadInputRef}
+                    type="file"
+                    multiple
+                    accept=".jpg,.jpeg,.png,.webp,.gif,.avif,.mp4,.webm,.mov"
+                    className="hidden"
+                    onChange={(e) => handleUpload(e.target.files)}
+                  />
+                  <button
+                    onClick={() => uploadInputRef.current?.click()}
+                    className={btn}
+                    type="button"
+                  >
+                    {uploadStatus === 'uploading' ? 'UPLOADING...' : 'UPLOAD FILES'}
+                  </button>
+
+                  <input
+                    ref={musicInputRef}
+                    type="file"
+                    accept=".mp3,.m4a,.wav,.aac"
+                    className="hidden"
+                    onChange={(e) => handleMusicUpload(e.target.files)}
+                  />
+                  <button
+                    onClick={() => musicInputRef.current?.click()}
+                    className={btn}
+                    type="button"
+                  >
+                    {musicStatus === 'uploading' ? 'UPLOADING MUSIC...' : 'UPLOAD MUSIC'}
+                  </button>
+
+                  {/* Status lines */}
+                  {syncMessage && (
+                    <div className="text-[10px] tracking-[0.25em] uppercase text-white/45">{syncMessage}</div>
+                  )}
+                  {uploadMessage && (
+                    <div className="text-[10px] tracking-[0.25em] uppercase text-white/45">{uploadMessage}</div>
+                  )}
+                  {musicMessage && (
+                    <div className="text-[10px] tracking-[0.25em] uppercase text-white/45">
+                      {musicMessage}
+                      {musicUrl ? ` • ${musicUrl}` : ''}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Images */}
+              <div className="pt-6">
+                <div className={`${smallCaps} mb-3`}>
+                  IMAGES ({images.filter(i => i.isActive).length} ACTIVE / {images.length} TOTAL)
                 </div>
 
                 {imagesLoading && (
-                  <div className="text-center animate-pulse tracking-widest text-xs text-white/40">LOADING IMAGES...</div>
+                  <div className="py-10 text-center text-xs tracking-widest text-white/40 animate-pulse">LOADING IMAGES...</div>
                 )}
                 {imagesError && (
-                  <div className="text-center tracking-widest text-xs text-red-400">{imagesError}</div>
+                  <div className="py-6 text-center text-xs tracking-widest text-red-400">{imagesError}</div>
                 )}
 
                 {!imagesLoading && !imagesError && (
-                  <div className="max-h-[65vh] overflow-y-auto border border-white/10 rounded-lg bg-black/20 backdrop-blur-sm">
+                  <div className="border border-white/15">
                     {images.length === 0 ? (
-                      <div className="p-8 text-center text-xs tracking-widest text-white/40">NO IMAGES FOUND</div>
+                      <div className="p-6 text-center text-xs tracking-widest text-white/40">NO IMAGES FOUND</div>
                     ) : (
                       <div className="divide-y divide-white/10">
                         {images.map((img) => (
-                          <div key={img.id} className="flex items-center gap-4 p-4 hover:bg-white/5 transition-colors">
-                            <div className="w-24 h-16 bg-black/40 border border-white/10 rounded-md overflow-hidden flex items-center justify-center flex-shrink-0">
-                              {img.mediaType === 'VIDEO' ? (
-                                <video src={img.url} className="w-full h-full object-cover" muted />
-                              ) : (
-                                <img src={img.url} alt="" className="w-full h-full object-cover" />
-                              )}
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <div className="text-[13px] tracking-[0.25em] font-medium text-white/90 mb-1.5">{img.id}</div>
-                              <div className="flex items-center gap-2">
-                                <span className="text-[10px] text-white/50 tracking-[0.25em] uppercase">{img.mediaType}</span>
-                                <span
-                                  className={
-                                    img.isActive
-                                      ? 'text-[10px] tracking-[0.25em] uppercase px-2.5 py-1 rounded-full border text-green-200 border-green-600/50 bg-green-900/40'
-                                      : 'text-[10px] tracking-[0.25em] uppercase px-2.5 py-1 rounded-full border text-red-200 border-red-600/50 bg-red-900/40'
-                                  }
-                                >
-                                  {img.isActive ? 'ACTIVE' : 'INACTIVE'}
-                                </span>
+                          <div key={img.id} className="flex items-center justify-between gap-4 p-4">
+                            <div className="flex items-center gap-4 min-w-0">
+                              <div className="w-16 h-12 border border-white/15 bg-black/30 overflow-hidden flex items-center justify-center shrink-0">
+                                {img.mediaType === 'VIDEO' ? (
+                                  <video src={img.url} className="w-full h-full object-cover" muted />
+                                ) : (
+                                  <img src={img.url} alt="" className="w-full h-full object-cover" />
+                                )}
+                              </div>
+                              <div className="min-w-0">
+                                <div className="text-[12px] tracking-[0.25em] text-white/85 truncate">{img.id}</div>
+                                <div className="mt-1 flex items-center gap-3">
+                                  <span className="text-[10px] tracking-[0.25em] uppercase text-white/40">{img.mediaType}</span>
+                                  <span className={`text-[10px] tracking-[0.25em] uppercase ${img.isActive ? 'text-green-300' : 'text-red-300'}`}>
+                                    {img.isActive ? 'ACTIVE' : 'INACTIVE'}
+                                  </span>
+                                </div>
                               </div>
                             </div>
-                            <div className="flex items-center gap-2 flex-shrink-0">
-                              <a
-                                href={img.url}
-                                target="_blank"
-                                rel="noreferrer"
-                                className="text-[10px] text-white/50 hover:text-white/80 transition-colors tracking-[0.25em] uppercase px-2 py-1 border border-white/10 hover:border-white/20 rounded"
-                              >
-                                Open
+
+                            <div className="flex items-center gap-3 shrink-0">
+                              <a href={img.url} target="_blank" rel="noreferrer" className={btnLink}>
+                                OPEN
                               </a>
                               <button
                                 onClick={() => handleToggleActive(img)}
-                                className={
-                                  img.isActive
-                                    ? 'text-[10px] transition-colors tracking-[0.25em] uppercase text-red-300 hover:text-red-200 px-2 py-1 border border-red-500/30 hover:border-red-500/50 rounded'
-                                    : 'text-[10px] transition-colors tracking-[0.25em] uppercase text-green-300 hover:text-green-200 px-2 py-1 border border-green-500/30 hover:border-green-500/50 rounded'
-                                }
+                                className={img.isActive ? btnDanger : btn}
                                 type="button"
                               >
-                                {img.isActive ? 'Deactivate' : 'Activate'}
+                                {img.isActive ? 'DEACTIVATE' : 'ACTIVATE'}
                               </button>
-                              <button
-                                onClick={() => handleDelete(img)}
-                                className="text-[10px] text-red-400 hover:text-red-300 transition-colors tracking-[0.25em] uppercase px-2 py-1 border border-red-500/30 hover:border-red-500/50 rounded"
-                                type="button"
-                              >
-                                Delete
-                              </button>
+                              <button onClick={() => handleDelete(img)} className={btnDanger} type="button">
+                                DELETE
+              </button>
                             </div>
                           </div>
                         ))}
@@ -581,10 +513,10 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onUpdate }) => {
                     )}
                   </div>
                 )}
-              </section>
             </div>
           </div>
         )}
+        </div>
       </div>
     </div>
   );

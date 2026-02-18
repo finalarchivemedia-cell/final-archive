@@ -264,8 +264,8 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onUpdate }) => {
     );
   }
 
-  // Professional card styling with glass-morphism effect
-  const card = 'border border-white/10 bg-white/[0.08] backdrop-blur-md rounded-xl shadow-lg';
+  // Professional card styling with glass-morphism effect (Tailwind v4 safe classes)
+  const card = 'border border-white/15 bg-white/10 backdrop-blur-md rounded-2xl shadow-2xl';
   const label = 'text-[11px] uppercase tracking-[0.25em] text-white/60 mb-4';
   const buttonBase = 'px-4 py-2 text-[11px] font-bold tracking-[0.25em] uppercase transition-all duration-200 border rounded-md';
 
@@ -276,7 +276,7 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onUpdate }) => {
 
       <div className="relative h-full w-full flex flex-col">
         {/* Header */}
-        <header className="relative border-b border-white/10 bg-white/[0.05] backdrop-blur-md">
+        <header className="relative border-b border-white/10 bg-white/5 backdrop-blur-md">
           <div className="flex items-center justify-between px-6 sm:px-8 py-4">
             <div>
               <div className="text-[10px] uppercase tracking-[0.35em] text-white/50">Private Panel</div>

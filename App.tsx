@@ -260,7 +260,24 @@ export default function App() {
         {/* Admin */}
         <Route path="/admin" element={
           <Suspense fallback={null}>
-            <div className="w-full h-full bg-black">
+            <div className="w-full h-full relative bg-black overflow-hidden">
+              {/* Blurred gallery background for "projection" feel */}
+              <div className="absolute inset-0 pointer-events-none">
+                {images.length > 0 && (
+                  <div className="absolute inset-0 blur-2xl brightness-50 scale-110">
+                    <Gallery
+                      settings={settings}
+                      images={images}
+                      startRecord={images[0]}
+                      nextRecord={images[1] || images[0]}
+                      active={true}
+                      onFirstCycleComplete={() => { }}
+                    />
+                  </div>
+                )}
+                <div className="absolute inset-0 bg-black/50" />
+              </div>
+
               <AdminPanel onUpdate={setSettings} />
             </div>
           </Suspense>

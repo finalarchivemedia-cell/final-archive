@@ -1,21 +1,10 @@
-<svg width="1200" height="400" viewBox="0 0 1200 400" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Final Archive Media - For All Eternity">
-  <text x="50%" y="160"
-        text-anchor="middle"
-        font-family="Playfair Display, Georgia, serif"
-        font-size="110"
-        font-weight="400"
-        fill="#3a3a3a"
-        letter-spacing="2">
-    Final Archive Media
-  </text>
-
-  <text x="50%" y="260"
-        text-anchor="middle"
-        font-family="Montserrat, Arial, sans-serif"
-        font-size="48"
-        font-weight="300"
-        fill="#6a6a6a"
-        letter-spacing="6">
-    For All Eternity
-  </text>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 300" width="800" height="300">
+  <defs>
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@1,400;1,500&amp;family=Raleway:wght@300&amp;display=swap');
+    </style>
+  </defs>
+  <rect width="800" height="300" fill="white"/>
+  <text x="400" y="145" text-anchor="middle" font-family="'Playfair Display', Georgia, 'Times New Roman', serif" font-style="italic" font-weight="400" font-size="82" fill="#3d3d3d" letter-spacing="1">Final Archive Media</text>
+  <text x="400" y="200" text-anchor="middle" font-family="'Raleway', 'Helvetica Neue', Arial, sans-serif" font-weight="300" font-size="24" fill="#888888" letter-spacing="6">For All Eternity</text>
 </svg>

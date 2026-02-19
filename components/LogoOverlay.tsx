@@ -10,32 +10,32 @@ interface LogoOverlayProps {
 /**
  * LogoOverlay – Client's mandatory 6-step intro sequence
  *
- * SVG layout (800×300):
- *   "Final Archive" at y≈145, font-size 82  → top ~55%
- *   "For All Eternity" at y≈200, font-size 24  → bottom ~45%
- *
  * Steps (each must fully finish before the next begins):
  *   1. Black screen for 1 second
- *   2. Fade in "Final Archive" over 1 second, centered
- *   3. Hold "Final Archive" for 3 seconds
+ *   2. Fade in "Final Archive Media" over 1 second, centered
+ *   3. Hold "Final Archive Media" for 3 seconds
  *   4. Fade in "For All Eternity" underneath over 1 second, dimmed/etched
- *   5. Fade out "Final Archive" over 2 seconds
+ *   5. Fade out "Final Archive Media" over 2 seconds
  *   6. "For All Eternity" remains permanently visible, faint etched style
  *
  * CRITICAL: Steps 1-6 are BLACK-SCREEN phase with TEXT ONLY.
- *   - Background is solid black during intro
- *   - After Step 6 → onIntroComplete() fires → background fades to transparent
- *   - Gallery starts rendering (Step 7)
- *   - Hover-to-reveal stays disabled until Step 8 (hoverEnabled prop)
+ *   After Step 6 → black fades to transparent → onIntroComplete() → Gallery starts
  */
 
 export const LogoOverlay: React.FC<LogoOverlayProps> = ({ onIntroComplete, hoverEnabled }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const titleRef = useRef<HTMLImageElement>(null);
   const taglineRef = useRef<HTMLImageElement>(null);
-  const tlRef = useRef<gsap.core.Timeline | null>(null);
   const [logoLoaded, setLogoLoaded] = useState(false);
   const [introFinished, setIntroFinished] = useState(false);
+
+  // Store callback in ref so it never triggers useEffect re-runs
+  const onIntroCompleteRef = useRef(onIntroComplete);
+  onIntroCompleteRef.current = onIntroComplete;
+
+  // Guard: only run the intro timeline ONCE
+  const hasRun = useRef(false);
+
   const logoSrc = LOGO_PATH;
 
   // Preload the SVG
@@ -55,16 +55,17 @@ export const LogoOverlay: React.FC<LogoOverlayProps> = ({ onIntroComplete, hover
     img.src = logoSrc;
   }, [logoSrc]);
 
-  // Run the 6-step intro timeline
+  // Run the 6-step intro timeline — ONCE only
   useEffect(() => {
-    if (!logoLoaded) return;
+    if (!logoLoaded || hasRun.current) return;
+    hasRun.current = true;
 
     const container = containerRef.current;
     const title = titleRef.current;
     const tagline = taglineRef.current;
     if (!container || !title || !tagline) return;
 
-    // Initial state: both text elements hidden, container is solid black
+    // Initial state: both text elements hidden
     gsap.set(title, { autoAlpha: 0 });
     gsap.set(tagline, { autoAlpha: 0 });
 
@@ -72,29 +73,28 @@ export const LogoOverlay: React.FC<LogoOverlayProps> = ({ onIntroComplete, hover
       onComplete: () => {
         // After Step 6: fade the black background to transparent so Gallery shows
         gsap.to(container, {
-          backgroundColor: 'transparent',
+          backgroundColor: 'rgba(0,0,0,0)',
           duration: 1.0,
           ease: 'power2.inOut',
           onComplete: () => {
             setIntroFinished(true);
-            onIntroComplete();
+            onIntroCompleteRef.current();
           },
         });
       },
     });
-    tlRef.current = tl;
 
     // Step 1: Black screen for 1 second
     tl.to({}, { duration: 1 });
 
-    // Step 2: Fade in "Final Archive" over 1 second
+    // Step 2: Fade in "Final Archive Media" over 1 second
     tl.to(title, {
       autoAlpha: 1,
       duration: 1,
       ease: 'power2.inOut',
     });
 
-    // Step 3: Hold "Final Archive" for 3 seconds
+    // Step 3: Hold "Final Archive Media" for 3 seconds
     tl.to({}, { duration: 3 });
 
     // Step 4: Fade in "For All Eternity" underneath over 1 second (dimmed/etched)
@@ -104,20 +104,18 @@ export const LogoOverlay: React.FC<LogoOverlayProps> = ({ onIntroComplete, hover
       ease: 'power2.inOut',
     });
 
-    // Step 5: Fade out "Final Archive" over 2 seconds
+    // Step 5: Fade out "Final Archive Media" over 2 seconds
     tl.to(title, {
       autoAlpha: 0,
       duration: 2,
       ease: 'power2.inOut',
     });
 
-    // Step 6: "For All Eternity" stays at 0.3 (faint etched) — no animation needed
-    // Timeline completes → onComplete fires → background fades to transparent
+    // Step 6: "For All Eternity" stays at 0.3 (faint etched)
+    // Timeline completes → onComplete fires → background fades → Gallery starts
 
-    return () => {
-      tl.kill();
-    };
-  }, [logoLoaded, onIntroComplete]);
+    // No cleanup — timeline runs once and must not be killed
+  }, [logoLoaded]);
 
   // Hover: reveal tagline fully (gated by hoverEnabled = Step 8)
   const handleMouseEnter = () => {
@@ -143,8 +141,7 @@ export const LogoOverlay: React.FC<LogoOverlayProps> = ({ onIntroComplete, hover
         height: '100%',
         margin: 0,
         padding: 0,
-        // CRITICAL: Solid black during Steps 1-6 (text-only phase)
-        // After intro, GSAP fades this to transparent so Gallery shows through
+        // Solid black during Steps 1-6, then GSAP fades to transparent
         backgroundColor: introFinished ? 'transparent' : '#000',
         pointerEvents: hoverEnabled ? 'auto' : 'none',
       }}
@@ -162,11 +159,11 @@ export const LogoOverlay: React.FC<LogoOverlayProps> = ({ onIntroComplete, hover
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
       >
-        {/* "Final Archive" — top 55% of SVG */}
+        {/* "Final Archive Media" — top 55% of SVG */}
         <img
           ref={titleRef}
           src={logoSrc}
-          alt="Final Archive"
+          alt="Final Archive Media"
           draggable={false}
           style={{
             position: 'absolute',

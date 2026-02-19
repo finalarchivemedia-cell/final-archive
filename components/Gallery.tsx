@@ -97,7 +97,7 @@ export const Gallery: React.FC<GalleryProps> = ({
     let backLayer = layerBRef.current;
     let isFrontA = true;
 
-    if (!frontLayer || !backLayer) return;
+    if (!frontLayer || (!backLayer && !singleMode)) return;
 
     /* ── Show the very first image ─────────────────────── */
     const firstUrl = currentRecord.current.url;

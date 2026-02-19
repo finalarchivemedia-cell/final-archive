@@ -11,19 +11,22 @@ interface LogoOverlayProps {
  * LogoOverlay – Client's mandatory 6-step intro sequence
  *
  * SVG layout (800×300):
- *   "Final Archive Media" at y≈145, font-size 82  → occupies roughly top 0–55%
- *   "For All Eternity"    at y≈200, font-size 24  → occupies roughly 55–75%
+ *   "Final Archive" at y≈145, font-size 82  → top ~55%
+ *   "For All Eternity" at y≈200, font-size 24  → bottom ~45%
  *
  * Steps (each must fully finish before the next begins):
  *   1. Black screen for 1 second
- *   2. Fade in "Final Archive Media" over 1 second, centered
- *   3. Hold "Final Archive Media" for 3 seconds
+ *   2. Fade in "Final Archive" over 1 second, centered
+ *   3. Hold "Final Archive" for 3 seconds
  *   4. Fade in "For All Eternity" underneath over 1 second, dimmed/etched
- *   5. Fade out "Final Archive Media" over 2 seconds
+ *   5. Fade out "Final Archive" over 2 seconds
  *   6. "For All Eternity" remains permanently visible, faint etched style
  *
- * After Step 6 → onIntroComplete() fires → Gallery starts (Step 7)
- * Hover-to-reveal stays disabled until Step 8 (hoverEnabled prop)
+ * CRITICAL: Steps 1-6 are BLACK-SCREEN phase with TEXT ONLY.
+ *   - Background is solid black during intro
+ *   - After Step 6 → onIntroComplete() fires → background fades to transparent
+ *   - Gallery starts rendering (Step 7)
+ *   - Hover-to-reveal stays disabled until Step 8 (hoverEnabled prop)
  */
 
 export const LogoOverlay: React.FC<LogoOverlayProps> = ({ onIntroComplete, hoverEnabled }) => {
@@ -32,6 +35,7 @@ export const LogoOverlay: React.FC<LogoOverlayProps> = ({ onIntroComplete, hover
   const taglineRef = useRef<HTMLImageElement>(null);
   const tlRef = useRef<gsap.core.Timeline | null>(null);
   const [logoLoaded, setLogoLoaded] = useState(false);
+  const [introFinished, setIntroFinished] = useState(false);
   const logoSrc = LOGO_PATH;
 
   // Preload the SVG
@@ -55,17 +59,27 @@ export const LogoOverlay: React.FC<LogoOverlayProps> = ({ onIntroComplete, hover
   useEffect(() => {
     if (!logoLoaded) return;
 
+    const container = containerRef.current;
     const title = titleRef.current;
     const tagline = taglineRef.current;
-    if (!title || !tagline) return;
+    if (!container || !title || !tagline) return;
 
-    // Initial state: both hidden
+    // Initial state: both text elements hidden, container is solid black
     gsap.set(title, { autoAlpha: 0 });
     gsap.set(tagline, { autoAlpha: 0 });
 
     const tl = gsap.timeline({
       onComplete: () => {
-        onIntroComplete();
+        // After Step 6: fade the black background to transparent so Gallery shows
+        gsap.to(container, {
+          backgroundColor: 'transparent',
+          duration: 1.0,
+          ease: 'power2.inOut',
+          onComplete: () => {
+            setIntroFinished(true);
+            onIntroComplete();
+          },
+        });
       },
     });
     tlRef.current = tl;
@@ -73,24 +87,24 @@ export const LogoOverlay: React.FC<LogoOverlayProps> = ({ onIntroComplete, hover
     // Step 1: Black screen for 1 second
     tl.to({}, { duration: 1 });
 
-    // Step 2: Fade in "Final Archive Media" over 1 second
+    // Step 2: Fade in "Final Archive" over 1 second
     tl.to(title, {
       autoAlpha: 1,
       duration: 1,
       ease: 'power2.inOut',
     });
 
-    // Step 3: Hold "Final Archive Media" for 3 seconds
+    // Step 3: Hold "Final Archive" for 3 seconds
     tl.to({}, { duration: 3 });
 
-    // Step 4: Fade in "For All Eternity" underneath over 1 second (dimmed)
+    // Step 4: Fade in "For All Eternity" underneath over 1 second (dimmed/etched)
     tl.to(tagline, {
       autoAlpha: 0.3,
       duration: 1,
       ease: 'power2.inOut',
     });
 
-    // Step 5: Fade out "Final Archive Media" over 2 seconds
+    // Step 5: Fade out "Final Archive" over 2 seconds
     tl.to(title, {
       autoAlpha: 0,
       duration: 2,
@@ -98,6 +112,7 @@ export const LogoOverlay: React.FC<LogoOverlayProps> = ({ onIntroComplete, hover
     });
 
     // Step 6: "For All Eternity" stays at 0.3 (faint etched) — no animation needed
+    // Timeline completes → onComplete fires → background fades to transparent
 
     return () => {
       tl.kill();
@@ -114,17 +129,6 @@ export const LogoOverlay: React.FC<LogoOverlayProps> = ({ onIntroComplete, hover
     gsap.to(taglineRef.current, { autoAlpha: 0.3, duration: 0.5, ease: 'power2.in' });
   };
 
-  /*
-   * Clip-path math for SVG viewBox 0 0 800 300:
-   *   "Final Archive Media" baseline y=145, font-size=82 → glyph top ≈ y=75, bottom ≈ y=150
-   *   "For All Eternity"    baseline y=200, font-size=24 → glyph top ≈ y=180, bottom ≈ y=205
-   *
-   *   Dividing line ≈ y=165 → 165/300 = 55%
-   *
-   *   Title  clip: inset(0%  0% 45% 0%)  → show top 55%
-   *   Tagline clip: inset(55% 0%  0% 0%)  → show bottom 45%
-   */
-
   return (
     <div
       ref={containerRef}
@@ -139,7 +143,9 @@ export const LogoOverlay: React.FC<LogoOverlayProps> = ({ onIntroComplete, hover
         height: '100%',
         margin: 0,
         padding: 0,
-        backgroundColor: 'transparent',
+        // CRITICAL: Solid black during Steps 1-6 (text-only phase)
+        // After intro, GSAP fades this to transparent so Gallery shows through
+        backgroundColor: introFinished ? 'transparent' : '#000',
         pointerEvents: hoverEnabled ? 'auto' : 'none',
       }}
     >
@@ -148,7 +154,6 @@ export const LogoOverlay: React.FC<LogoOverlayProps> = ({ onIntroComplete, hover
           position: 'relative',
           width: '85vw',
           maxWidth: '700px',
-          /* SVG is 800×300 → aspect 8:3 ≈ 2.67:1 */
           aspectRatio: '800 / 300',
           display: 'flex',
           alignItems: 'center',
@@ -157,11 +162,11 @@ export const LogoOverlay: React.FC<LogoOverlayProps> = ({ onIntroComplete, hover
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
       >
-        {/* "Final Archive Media" — top 55% of SVG */}
+        {/* "Final Archive" — top 55% of SVG */}
         <img
           ref={titleRef}
           src={logoSrc}
-          alt="Final Archive Media"
+          alt="Final Archive"
           draggable={false}
           style={{
             position: 'absolute',

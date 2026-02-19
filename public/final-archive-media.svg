@@ -4,6 +4,6 @@
       @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@1,400;1,500&amp;family=Raleway:wght@300&amp;display=swap');
     </style>
   </defs>
-  <text x="400" y="145" text-anchor="middle" font-family="'Playfair Display', Georgia, 'Times New Roman', serif" font-style="italic" font-weight="400" font-size="82" fill="#e0e0e0" letter-spacing="1">Final Archive Media</text>
+  <text x="400" y="145" text-anchor="middle" font-family="'Playfair Display', Georgia, 'Times New Roman', serif" font-style="italic" font-weight="400" font-size="82" fill="#e0e0e0" letter-spacing="1">Final Archive</text>
   <text x="400" y="200" text-anchor="middle" font-family="'Raleway', 'Helvetica Neue', Arial, sans-serif" font-weight="300" font-size="24" fill="#999999" letter-spacing="6">For All Eternity</text>
 </svg>

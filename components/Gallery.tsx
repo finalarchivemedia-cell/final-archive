@@ -1,432 +1,360 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useCallback } from 'react';
 import gsap from 'gsap';
 import { AppSettings, ImageRecord } from '../types';
 
-// Gallery component for background media display
+/**
+ * Gallery – smooth Ken-Burns background slideshow
+ *
+ * Architecture:
+ *   Two <img> / <video> layers (A & B) stacked absolutely.
+ *   An imperative loop (no React state in the hot path) drives:
+ *     1. Load next image into the hidden layer
+ *     2. Once decoded, crossfade + zoom
+ *     3. Swap roles, repeat
+ *
+ *   All mutable data lives in refs so nothing triggers re-renders
+ *   or timeline kills mid-animation.
+ */
 
 interface GalleryProps {
   settings: AppSettings;
-  images: ImageRecord[]; 
-  startRecord: ImageRecord; 
-  nextRecord: ImageRecord; 
+  images: ImageRecord[];
+  startRecord: ImageRecord;
+  nextRecord: ImageRecord;
   onFirstCycleComplete: () => void;
-  active: boolean; 
+  active: boolean;
   singleMode?: boolean;
   onImageChange?: (id: string) => void;
 }
 
-// Helper to get random image excluding current
-const getRandomImage = (images: ImageRecord[], excludeId?: string): ImageRecord | null => {
-  if (!images || images.length === 0) return null;
+/* ── helpers ─────────────────────────────────────────────── */
+
+const pickRandom = (images: ImageRecord[], excludeId?: string): ImageRecord => {
   const pool = images.filter(img => img.id !== excludeId);
   if (pool.length === 0) return images[0];
   return pool[Math.floor(Math.random() * pool.length)];
 };
 
-export const Gallery: React.FC<GalleryProps> = ({ 
-  settings, 
-  images, 
+/** Preload an image and resolve when fully decoded */
+const preloadImage = (url: string): Promise<void> =>
+  new Promise((resolve) => {
+    const img = new Image();
+    img.onload = () => {
+      if ('decode' in img) {
+        img.decode().then(() => resolve()).catch(() => resolve());
+      } else {
+        resolve();
+      }
+    };
+    img.onerror = () => resolve(); // don't block on error
+    img.src = url;
+  });
+
+/* ── component ───────────────────────────────────────────── */
+
+export const Gallery: React.FC<GalleryProps> = ({
+  settings,
+  images,
   startRecord,
   nextRecord,
   onFirstCycleComplete,
   active,
   singleMode = false,
-  onImageChange
+  onImageChange,
 }) => {
+  /* DOM refs for the two layers */
+  const layerARef = useRef<HTMLImageElement | HTMLVideoElement | null>(null);
+  const layerBRef = useRef<HTMLImageElement | HTMLVideoElement | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
-  const layerRefA = useRef<HTMLElement | null>(null);
-  const layerRefB = useRef<HTMLElement | null>(null);
-  const [layerAReady, setLayerAReady] = useState(false);
-  const [layerBReady, setLayerBReady] = useState(false);
 
-  const [activeLayer, setActiveLayer] = useState<'A' | 'B'>('A');
-  
-  // Initialize directly with props to ensure immediate readiness
-  const [currentImg, setCurrentImg] = useState<ImageRecord | null>(startRecord);
-  const [nextImg, setNextImg] = useState<ImageRecord | null>(nextRecord);
-  
-  // Logic Refs
-  const cycleCount = useRef(0);
-  // Client requirement: First image starts zoomed in and breathes out
-  // So initial state: true = zoomed in (maxScale) → zoom out to 1
-  const zoomInRef = useRef(true); // true = start zoomed in, false = start at full frame
-  const timelineRef = useRef<gsap.core.Timeline | null>(null);
-  const lastImageIdRef = useRef<string | null>(null); // Track last image ID to prevent duplicate URL updates
+  /* Mutable state that must NOT trigger re-renders */
+  const running = useRef(false);
+  const cancelled = useRef(false);
+  const cycleIndex = useRef(0);        // 0 = first image ever shown
+  const zoomIn = useRef(true);         // true → start zoomed-in, breathe out
+  const currentRecord = useRef<ImageRecord>(startRecord);
+  const nextRecordRef = useRef<ImageRecord>(nextRecord);
+  const settingsRef = useRef(settings);
+  const imagesRef = useRef(images);
+  const onFirstCycleRef = useRef(onFirstCycleComplete);
+  const onImageChangeRef = useRef(onImageChange);
+  const lastReportedId = useRef<string | null>(null);
 
-  // 1. Initialization
-  useEffect(() => {
-    if (startRecord) {
-      setCurrentImg(startRecord);
-      // Initialize lastImageIdRef to prevent duplicate URL update on mount
-      if (startRecord.id !== lastImageIdRef.current) {
-        lastImageIdRef.current = startRecord.id;
-      }
-    }
-    if (nextRecord) setNextImg(nextRecord);
-  }, [startRecord, nextRecord]);
+  /* Keep refs in sync with props (no re-renders) */
+  useEffect(() => { settingsRef.current = settings; }, [settings]);
+  useEffect(() => { imagesRef.current = images; }, [images]);
+  useEffect(() => { onFirstCycleRef.current = onFirstCycleComplete; }, [onFirstCycleComplete]);
+  useEffect(() => { onImageChangeRef.current = onImageChange; }, [onImageChange]);
 
-  // 2. Main Animation Loop
-  useEffect(() => {
-    const currentReady = activeLayer === 'A' ? layerAReady : layerBReady;
-    const nextReady = activeLayer === 'A' ? layerBReady : layerAReady;
-    // Allow first image to show even if not fully ready (will fade in when ready)
-    // Only block if we're waiting for next image in crossfade
-    if (!active || !currentImg || (!nextImg && !singleMode)) return;
-    // For first cycle, don't block on currentReady - allow immediate fade-in
-    if (cycleCount.current > 0 && !currentReady) return;
+  /* ── The imperative animation loop ─────────────────────── */
+  const runLoop = useCallback(async () => {
+    if (running.current) return;
+    running.current = true;
+    cancelled.current = false;
 
-    if (timelineRef.current) timelineRef.current.kill();
+    // Determine which layer is "front" and which is "back"
+    let frontLayer = layerARef.current;
+    let backLayer = layerBRef.current;
+    let isFrontA = true;
 
-    const duration = settings.duration;
-    // Calculate max scale based on crop setting (ensure minimum 1.25)
-    const maxScale = Math.max(1.25, 1 / Math.max(0.1, settings.crop));
-    
-    const currentEl = activeLayer === 'A' ? layerRefA.current : layerRefB.current;
-    const nextEl = activeLayer === 'A' ? layerRefB.current : layerRefA.current;
-    
-    if (!currentEl || (!nextEl && !singleMode)) return;
+    if (!frontLayer || !backLayer) return;
 
-    // Reset Z-Index and Visibility - ensure smooth transitions
-    // Current image always on top initially
-    gsap.set(currentEl, { 
-      zIndex: 10, 
-      autoAlpha: 1,
-      position: 'absolute',
-      top: 0,
-      left: 0,
-      right: 0,
-      bottom: 0,
-      width: '100%',
-      height: '100%'
-    });
-    if (!singleMode && nextEl) {
-      // Next image behind, ready for crossfade
-      // CRITICAL: Set next image's initial scale based on NEXT zoom direction
-      // This ensures smooth transition - next image starts at correct scale
-      const nextZoomDirection = !zoomInRef.current; // Next image will have opposite direction
-      const nextStartScale = nextZoomDirection ? maxScale : 1;
-      
-      gsap.set(nextEl, { 
-        zIndex: 5, 
-        autoAlpha: 0,
-        position: 'absolute',
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        width: '100%',
-        height: '100%',
-        scale: nextStartScale, // Set correct initial scale for next image
-        transformOrigin: 'center center',
-        force3D: true
-      }); 
+    /* ── Show the very first image ─────────────────────── */
+    const firstUrl = currentRecord.current.url;
+    const isFirstVideo = currentRecord.current.mediaType === 'VIDEO';
+
+    // Set source on front layer
+    if (!isFirstVideo && frontLayer instanceof HTMLImageElement) {
+      frontLayer.src = firstUrl;
+    } else if (isFirstVideo && frontLayer instanceof HTMLVideoElement) {
+      frontLayer.src = firstUrl;
     }
 
-    const tl = gsap.timeline({
-      onComplete: () => {
-        if (!singleMode && !nextReady) {
-          return;
-        }
-        cycleCount.current += 1;
-        if (cycleCount.current === 1) {
-          onFirstCycleComplete();
-        }
-        
-        // CRITICAL: Toggle zoom direction BEFORE switching images
-        // This ensures the next image uses the correct zoom pattern immediately
-        zoomInRef.current = !zoomInRef.current;
-        
-        if (!singleMode && nextImg) {
-          const nextLoopRecord = getRandomImage(images, nextImg.id);
-          setActiveLayer(prev => prev === 'A' ? 'B' : 'A');
-          setCurrentImg(nextImg); 
-          if (nextLoopRecord) setNextImg(nextLoopRecord); 
-        }
-      }
-    });
-    timelineRef.current = tl;
+    // Preload first image
+    if (!isFirstVideo) {
+      await preloadImage(firstUrl);
+    }
+    if (cancelled.current) return;
 
-    // Client requirement: Alternate motion style
-    // Image A: starts zoomed in (maxScale) → breathes out to full frame (1)
-    // Image B: starts full frame (1) → breathes in (maxScale)
-    // Pattern alternates: zoom out, zoom in, zoom out, zoom in...
-    const startScale = zoomInRef.current ? maxScale : 1;
-    const endScale = zoomInRef.current ? 1 : maxScale;
-    
-    // Current image's zoom duration = display duration (not extended)
-    // This ensures zoom completes before next image takes over
-    const zoomDuration = duration;
-    
-    // CRITICAL: Set correct initial scale directly - no abrupt resets
-    // This prevents screen changes and maintains smooth flow
-    // Don't reset scale first as it causes visual jumps
-    gsap.set(currentEl, { 
-      scale: startScale, 
-      autoAlpha: 1,
+    // Report URL
+    if (currentRecord.current.id !== lastReportedId.current) {
+      lastReportedId.current = currentRecord.current.id;
+      onImageChangeRef.current?.(currentRecord.current.id);
+    }
+
+    const dur = settingsRef.current.duration;
+    const maxScale = Math.max(1.25, 1 / Math.max(0.1, settingsRef.current.crop));
+    const startScale = zoomIn.current ? maxScale : 1;
+    const endScale = zoomIn.current ? 1 : maxScale;
+
+    // Initial state: front visible, back hidden
+    gsap.set(frontLayer, {
+      autoAlpha: 0,
+      scale: startScale,
+      zIndex: 10,
       transformOrigin: 'center center',
-      force3D: true // Force GPU acceleration
+      force3D: true,
+    });
+    gsap.set(backLayer, {
+      autoAlpha: 0,
+      zIndex: 5,
+      force3D: true,
     });
 
-    // Smooth continuous motion - alternating zoom pattern
-    // Use fromTo to ensure we start from exact startScale and end at exact endScale
-    // Zoom duration = display duration (not extended) to prevent overlap
-    tl.fromTo(currentEl, 
-      { 
-        scale: startScale,
-        force3D: true
-      }, 
-      { 
-        scale: endScale, 
-        duration: zoomDuration, 
-        ease: "power1.inOut", // Smooth continuous motion
-        force3D: true
-      },
-      0
-    );
+    // Fade in first image + zoom
+    await gsap.to(frontLayer, {
+      autoAlpha: 1,
+      scale: endScale,
+      duration: dur,
+      ease: 'power1.inOut',
+      force3D: true,
+    });
 
-    // First cycle: fade in the first image immediately
-    if (cycleCount.current === 0) {
-      // Ensure image is visible even if still loading
-      // Start with correct scale already set above
-      gsap.set(currentEl, { autoAlpha: 0 });
-      tl.to(currentEl, { 
-        autoAlpha: 1, 
-        duration: 0.6, 
-        ease: "power2.inOut" 
-      }, 0);
-    } else {
-      // For subsequent cycles, ensure scale is reset and set correctly
-      // This prevents any scale carryover from previous animations
-      gsap.set(currentEl, { 
-        scale: startScale,
-        force3D: true
-      });
+    if (cancelled.current) return;
+
+    // First cycle complete
+    cycleIndex.current = 1;
+    onFirstCycleRef.current();
+
+    // Toggle zoom direction for next
+    zoomIn.current = !zoomIn.current;
+
+    // If single mode, just hold — no loop
+    if (singleMode) {
+      running.current = false;
+      return;
     }
 
-    if (!singleMode && nextEl && nextReady) {
-      // Smooth crossfade - ensure next image is ready before starting
-      // Start crossfade slightly before duration ends for seamless transition
-      const crossfadeStart = Math.max(0, duration - 2.0);
-      
-      // Calculate next image's zoom pattern (opposite of current)
-      const nextZoomDirection = !zoomInRef.current;
-      const nextStartScale = nextZoomDirection ? maxScale : 1;
-      const nextEndScale = nextZoomDirection ? 1 : maxScale;
-      
-      // Ensure next image starts at correct scale before crossfade
-      tl.set(nextEl, { 
-        scale: nextStartScale,
-        force3D: true
-      }, crossfadeStart - 0.1); // Set slightly before crossfade
-      
-      // Bring next image to front before crossfade
-      tl.set(nextEl, { zIndex: 15 }, crossfadeStart);
-      
-      // Start next image's zoom animation AFTER crossfade completes
-      // This prevents double zoom - current image completes, then next starts
-      // Next image's zoom starts when it becomes visible (after crossfade)
-      const nextZoomStart = crossfadeStart + 2.0; // After crossfade completes
-      tl.fromTo(nextEl,
-        {
-          scale: nextStartScale,
-          force3D: true
-        },
-        {
-          scale: nextEndScale,
-          duration: duration, // Same duration as display time
-          ease: "power1.inOut",
-          force3D: true
-        },
-        nextZoomStart
-      );
-      
-      // Smooth crossfade with perfect overlap - no gaps, no flashes
-      tl.to(currentEl, {
+    /* ── Continuous loop ───────────────────────────────── */
+    while (!cancelled.current) {
+      // Pick next image
+      const next = nextRecordRef.current || pickRandom(imagesRef.current, currentRecord.current.id);
+
+      // Set source on back layer (hidden)
+      if (backLayer instanceof HTMLImageElement) {
+        backLayer.src = next.url;
+      }
+
+      // Preload next image while current is still showing
+      if (next.mediaType === 'IMAGE') {
+        await preloadImage(next.url);
+      }
+      if (cancelled.current) break;
+
+      // Read fresh settings for this cycle
+      const cycleDur = settingsRef.current.duration;
+      const cycleMaxScale = Math.max(1.25, 1 / Math.max(0.1, settingsRef.current.crop));
+      const cycleStartScale = zoomIn.current ? cycleMaxScale : 1;
+      const cycleEndScale = zoomIn.current ? 1 : cycleMaxScale;
+
+      // Prepare back layer at correct starting scale, invisible
+      gsap.set(backLayer, {
         autoAlpha: 0,
-        duration: 2.0,
-        ease: "power1.inOut",
+        scale: cycleStartScale,
+        zIndex: 15,
+        transformOrigin: 'center center',
         force3D: true,
-        immediateRender: false
-      }, crossfadeStart);
+      });
 
-      tl.to(nextEl, {
+      // Crossfade duration (2 seconds overlap)
+      const crossDur = Math.min(2.0, cycleDur * 0.4);
+
+      // Create a single timeline for the crossfade
+      const tl = gsap.timeline();
+
+      // Simultaneously: fade out front, fade in back
+      tl.to(frontLayer, {
+        autoAlpha: 0,
+        duration: crossDur,
+        ease: 'power1.inOut',
+        force3D: true,
+      }, 0);
+
+      tl.to(backLayer, {
         autoAlpha: 1,
-        duration: 2.0,
-        ease: "power1.inOut",
+        duration: crossDur,
+        ease: 'power1.inOut',
         force3D: true,
-        immediateRender: false
-      }, crossfadeStart);
-      
-      // After crossfade complete, swap z-index for next cycle
-      tl.set(currentEl, { zIndex: 5 }, crossfadeStart + 2.0);
-      tl.set(nextEl, { zIndex: 10 }, crossfadeStart + 2.0);
+      }, 0);
+
+      // Wait for crossfade to finish
+      await tl;
+      if (cancelled.current) break;
+
+      // Report new image URL
+      if (next.id !== lastReportedId.current) {
+        lastReportedId.current = next.id;
+        onImageChangeRef.current?.(next.id);
+      }
+
+      // Update records
+      currentRecord.current = next;
+      nextRecordRef.current = pickRandom(imagesRef.current, next.id);
+
+      // Now back layer is visible — zoom it for the full display duration
+      // Front layer is hidden, swap z-indices
+      gsap.set(frontLayer, { zIndex: 5 });
+      gsap.set(backLayer, { zIndex: 10 });
+
+      // Zoom the now-visible back layer
+      await gsap.to(backLayer, {
+        scale: cycleEndScale,
+        duration: cycleDur,
+        ease: 'power1.inOut',
+        force3D: true,
+      });
+
+      if (cancelled.current) break;
+
+      // Toggle zoom direction
+      zoomIn.current = !zoomIn.current;
+      cycleIndex.current += 1;
+
+      // Swap layer roles for next iteration
+      const temp = frontLayer;
+      frontLayer = backLayer;
+      backLayer = temp;
+      isFrontA = !isFrontA;
     }
 
-    // Initial Fade In for first cycle handled in timeline (no delay)
-    
+    running.current = false;
+  }, [singleMode]);
+
+  /* ── Start / stop the loop based on `active` ───────── */
+  useEffect(() => {
+    if (active && !running.current) {
+      cancelled.current = false;
+      runLoop();
+    }
     return () => {
-      tl.kill();
+      cancelled.current = true;
+      // Kill all GSAP tweens on both layers to prevent orphaned animations
+      if (layerARef.current) gsap.killTweensOf(layerARef.current);
+      if (layerBRef.current) gsap.killTweensOf(layerBRef.current);
     };
-  }, [active, activeLayer, currentImg, nextImg, settings, images, onFirstCycleComplete, singleMode, layerAReady, layerBReady]);
+  }, [active, runLoop]);
 
-  // Determine URLs for rendering
-  const urlA = activeLayer === 'A' ? currentImg?.url : nextImg?.url;
-  const urlB = activeLayer === 'B' ? currentImg?.url : nextImg?.url;
-  const typeA = activeLayer === 'A' ? currentImg?.mediaType : nextImg?.mediaType;
-  const typeB = activeLayer === 'B' ? currentImg?.mediaType : nextImg?.mediaType;
-
-  useEffect(() => {
-    setLayerAReady(false);
-  }, [urlA]);
-
-  useEffect(() => {
-    setLayerBReady(false);
-  }, [urlB]);
-
-  // Update URL only when image actually changes (not on every render)
-  // This prevents duplicate URL updates and image reloads
-  useEffect(() => {
-    if (currentImg?.id && currentImg.id !== lastImageIdRef.current) {
-      lastImageIdRef.current = currentImg.id;
-      onImageChange?.(currentImg.id);
-    }
-  }, [currentImg?.id, onImageChange]);
-
-  const baseMediaStyle: React.CSSProperties = {
+  /* ── Shared styles ─────────────────────────────────── */
+  const layerStyle: React.CSSProperties = {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    width: '100%',
+    height: '100%',
+    objectFit: 'cover',
+    objectPosition: 'center center',
+    opacity: 0,
+    visibility: 'hidden',
     border: 'none',
     outline: 'none',
-    boxShadow: 'none',
     margin: 0,
     padding: 0,
     display: 'block',
-    opacity: 0, // Controlled by GSAP
-    willChange: 'transform, opacity', // GPU acceleration hint
-    transform: 'translateZ(0)', // Force GPU layer
-    backfaceVisibility: 'hidden', // Prevent flicker
+    willChange: 'transform, opacity',
+    transform: 'translateZ(0)',
+    backfaceVisibility: 'hidden',
     WebkitBackfaceVisibility: 'hidden',
-    position: 'absolute', // Ensure no layout shifts
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    width: '100%',
-    height: '100%',
-    objectFit: 'cover', // Ensure full coverage
-    objectPosition: 'center center',
   };
 
   return (
-    <div 
-      ref={containerRef} 
-      className="fixed inset-0 w-full h-full overflow-hidden bg-black z-0"
+    <div
+      ref={containerRef}
       style={{
-        border: 'none !important',
-        outline: 'none !important',
-        boxShadow: 'none !important',
+        position: 'fixed',
+        inset: 0,
+        width: '100%',
+        height: '100%',
+        overflow: 'hidden',
         background: '#000',
+        zIndex: 0,
         userSelect: 'none',
         WebkitUserSelect: 'none',
-        display: active ? 'block' : 'none'
+        display: active ? 'block' : 'none',
       }}
     >
-      {/* Layer A - Only render if URL exists */}
-      {urlA && (
-        typeA === 'VIDEO' ? (
-          <video
-            ref={(el) => { layerRefA.current = el; }}
-            src={urlA}
-            style={baseMediaStyle}
-            muted
-            playsInline
-            loop
-            autoPlay
-            preload="metadata"
-            poster={typeA === 'VIDEO' ? `${urlA}#t=0.1` : undefined}
-            onLoadedMetadata={() => {
-              requestAnimationFrame(() => {
-                setLayerAReady(true);
-              });
-            }}
-          />
-        ) : (
+      {/* Layer A */}
+      {startRecord.mediaType === 'VIDEO' ? (
+        <video
+          ref={(el) => { layerARef.current = el; }}
+          style={layerStyle}
+          muted
+          playsInline
+          loop
+          autoPlay
+          preload="metadata"
+        />
+      ) : (
         <img
-            ref={(el) => { layerRefA.current = el; }}
-          src={urlA}
+          ref={(el) => { layerARef.current = el; }}
           alt=""
           draggable={false}
-            style={baseMediaStyle}
-            decoding="async"
-            loading="eager"
-            fetchPriority="high"
-            onLoad={(e) => {
-              const el = e.currentTarget;
-              // Ensure image is fully decoded before marking as ready
-              if ('decode' in el) {
-                el.decode()
-                  .then(() => {
-                    // Small delay to ensure rendering is complete
-                    requestAnimationFrame(() => {
-                      setLayerAReady(true);
-                    });
-                  })
-                  .catch(() => setLayerAReady(true));
-              } else {
-                requestAnimationFrame(() => {
-                  setLayerAReady(true);
-                });
-              }
-            }}
-          />
-        )
+          style={layerStyle}
+          decoding="async"
+          loading="eager"
+          fetchPriority="high"
+        />
       )}
-      
-      {/* Layer B - Only render if URL exists */}
-      {!singleMode && urlB && (
-        typeB === 'VIDEO' ? (
+
+      {/* Layer B */}
+      {!singleMode && (
+        nextRecord.mediaType === 'VIDEO' ? (
           <video
-            ref={(el) => { layerRefB.current = el; }}
-            src={urlB}
-            style={baseMediaStyle}
+            ref={(el) => { layerBRef.current = el; }}
+            style={layerStyle}
             muted
             playsInline
             loop
             autoPlay
             preload="metadata"
-            poster={typeB === 'VIDEO' ? `${urlB}#t=0.1` : undefined}
-            onLoadedMetadata={() => {
-              requestAnimationFrame(() => {
-                setLayerBReady(true);
-              });
-            }}
           />
         ) : (
-        <img
-            ref={(el) => { layerRefB.current = el; }}
-          src={urlB}
-          alt=""
-          draggable={false}
-            style={baseMediaStyle}
+          <img
+            ref={(el) => { layerBRef.current = el; }}
+            alt=""
+            draggable={false}
+            style={layerStyle}
             decoding="async"
             loading="eager"
-            fetchPriority="high"
-            onLoad={(e) => {
-              const el = e.currentTarget;
-              // Ensure image is fully decoded before marking as ready
-              if ('decode' in el) {
-                el.decode()
-                  .then(() => {
-                    // Small delay to ensure rendering is complete
-                    requestAnimationFrame(() => {
-                      setLayerBReady(true);
-                    });
-                  })
-                  .catch(() => setLayerBReady(true));
-              } else {
-                requestAnimationFrame(() => {
-                  setLayerBReady(true);
-                });
-              }
-            }}
           />
         )
       )}

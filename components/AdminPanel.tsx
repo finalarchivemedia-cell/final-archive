@@ -322,13 +322,15 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onUpdate }) => {
     background: 'rgba(0,0,0,0.55)',
     WebkitBackdropFilter: 'blur(10px)',
     backdropFilter: 'blur(10px)',
+    overflowY: 'auto',
+    WebkitOverflowScrolling: 'touch',
   };
 
   const wrapStyle: React.CSSProperties = {
     width: '100%',
     maxWidth: 980,
     margin: '0 auto',
-    padding: '48px 24px 72px',
+    padding: '32px 16px 72px',
   };
 
   const smallCapsStyle: React.CSSProperties = {

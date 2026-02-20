@@ -38,10 +38,12 @@ export const ContactModal: React.FC<Props> = ({ open, onClose, onSend }) => {
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        padding: 24,
+        padding: 16,
         backgroundColor: 'rgba(0,0,0,0.90)',
         WebkitBackdropFilter: 'blur(10px)',
         backdropFilter: 'blur(10px)',
+        overflowY: 'auto',
+        WebkitOverflowScrolling: 'touch',
       }}
     >
       <div

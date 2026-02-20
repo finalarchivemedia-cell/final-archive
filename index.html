@@ -47,9 +47,9 @@
         -webkit-user-select: none;
       }
       
-      /* Mobile-specific fixes */
+      /* Mobile-specific fixes — exclude logo images (they use clip-path + absolute positioning) */
       @media (max-width: 640px) {
-        img {
+        img:not([aria-hidden="true"]) {
           max-width: 100% !important;
           height: auto !important;
         }

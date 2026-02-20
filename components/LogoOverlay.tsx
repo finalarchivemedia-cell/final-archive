@@ -155,7 +155,10 @@ export const LogoOverlay: React.FC<LogoOverlayProps> = ({ onIntroComplete, hover
       <div
         style={{
           position: 'relative',
-          width: '85vw',
+          // Responsive: on mobile use nearly full width, on desktop cap at 700px
+          // The PNG is wide (2303×842 ≈ 2.7:1), so on narrow screens we need
+          // generous width to keep text readable
+          width: '92vw',
           maxWidth: '700px',
           // PNG aspect ratio: 2303 / 842 ≈ 2.735
           aspectRatio: '2303 / 842',

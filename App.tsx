@@ -226,7 +226,17 @@ export default function App() {
   const showAdminLink = new URLSearchParams(window.location.search).get('admin') === '1';
 
   return (
-    <main className="relative w-screen h-screen bg-black overflow-hidden selection:bg-white selection:text-black">
+    <main
+      className="relative bg-black overflow-hidden selection:bg-white selection:text-black"
+      style={{
+        position: 'relative',
+        width: '100%',
+        height: '100dvh',
+        minHeight: '100vh',
+        backgroundColor: '#000',
+        overflow: 'hidden',
+      }}
+    >
       {/* Optional background music file at /public/ambient.mp3 or admin-set URL */}
       <audio ref={audioRef} src={musicUrl || MUSIC_PATH} preload="metadata" loop />
 

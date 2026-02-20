@@ -21,6 +21,13 @@
         box-sizing: border-box;
       }
       
+      /* Full viewport on all devices including mobile */
+      html, body, #root {
+        width: 100%;
+        height: 100%;
+        height: 100dvh; /* dynamic viewport height — respects mobile address bar */
+      }
+
       /* Custom utilities for the specific 'etched' and 'cinematic' look */
       body {
         margin: 0;
@@ -47,13 +54,11 @@
         -webkit-user-select: none;
       }
       
-      /* Mobile-specific fixes — exclude logo images (they use clip-path + absolute positioning) */
-      @media (max-width: 640px) {
-        img:not([aria-hidden="true"]) {
-          max-width: 100% !important;
-          height: auto !important;
-        }
-      }
+      /* 
+       * NOTE: No mobile img { height: auto } override here!
+       * Gallery images use position:absolute + height:100% + object-fit:cover
+       * and that rule was breaking full-screen gallery on mobile.
+       */
       
       /* Logo image specific fixes */
       img[alt=""] {

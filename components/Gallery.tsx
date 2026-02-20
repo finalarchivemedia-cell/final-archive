@@ -97,7 +97,10 @@ export const Gallery: React.FC<GalleryProps> = ({
     let backLayer = layerBRef.current;
     let isFrontA = true;
     
-    if (!frontLayer || (!backLayer && !singleMode)) return;
+    if (!frontLayer || (!backLayer && !singleMode)) {
+      running.current = false;
+      return;
+    }
 
     /* ── Show the very first image ─────────────────────── */
     const firstUrl = currentRecord.current.url;
@@ -135,11 +138,13 @@ export const Gallery: React.FC<GalleryProps> = ({
       transformOrigin: 'center center',
       force3D: true,
     });
-    gsap.set(backLayer, {
-      autoAlpha: 0,
-      zIndex: 5,
-      force3D: true,
-    });
+    if (backLayer) {
+      gsap.set(backLayer, {
+        autoAlpha: 0,
+        zIndex: 5,
+        force3D: true,
+      });
+    }
 
     // Fade in first image + zoom
     await gsap.to(frontLayer, {

@@ -10,12 +10,18 @@ interface LogoOverlayProps {
 /**
  * LogoOverlay – Client's mandatory 6-step intro sequence
  *
+ * PNG layout (2303×842):
+ *   "Final Archive"    occupies roughly top 0–60%
+ *   gap                ~60–74%
+ *   "For All Eternity" occupies roughly 74–87%
+ *   Dividing line at ~67% → title clip shows top 67%, tagline clip shows bottom 33%
+ *
  * Steps (each must fully finish before the next begins):
  *   1. Black screen for 1 second
- *   2. Fade in "Final Archive Media" over 1 second, centered
- *   3. Hold "Final Archive Media" for 3 seconds
+ *   2. Fade in "Final Archive" over 1 second, centered
+ *   3. Hold "Final Archive" for 3 seconds
  *   4. Fade in "For All Eternity" underneath over 1 second, dimmed/etched
- *   5. Fade out "Final Archive Media" over 2 seconds
+ *   5. Fade out "Final Archive" over 2 seconds
  *   6. "For All Eternity" remains permanently visible, faint etched style
  *
  * CRITICAL: Steps 1-6 are BLACK-SCREEN phase with TEXT ONLY.
@@ -38,19 +44,19 @@ export const LogoOverlay: React.FC<LogoOverlayProps> = ({ onIntroComplete, hover
 
   const logoSrc = LOGO_PATH;
 
-  // Preload the SVG
+  // Preload the logo PNG
   useEffect(() => {
     const img = new Image();
     img.onload = () => {
       if ('decode' in img) {
         img.decode().then(() => setLogoLoaded(true)).catch(() => setLogoLoaded(true));
       } else {
-      setLogoLoaded(true);
+        setLogoLoaded(true);
       }
     };
     img.onerror = () => {
       console.warn('[LogoOverlay] Failed to load logo');
-        setLogoLoaded(true);
+      setLogoLoaded(true);
     };
     img.src = logoSrc;
   }, [logoSrc]);
@@ -86,28 +92,28 @@ export const LogoOverlay: React.FC<LogoOverlayProps> = ({ onIntroComplete, hover
 
     // Step 1: Black screen for 1 second
     tl.to({}, { duration: 1 });
-    
-    // Step 2: Fade in "Final Archive Media" over 1 second
+
+    // Step 2: Fade in "Final Archive" over 1 second
     tl.to(title, {
-      autoAlpha: 1, 
-      duration: 1, 
+      autoAlpha: 1,
+      duration: 1,
       ease: 'power2.inOut',
     });
 
-    // Step 3: Hold "Final Archive Media" for 3 seconds
+    // Step 3: Hold "Final Archive" for 3 seconds
     tl.to({}, { duration: 3 });
 
     // Step 4: Fade in "For All Eternity" underneath over 1 second (dimmed/etched)
     tl.to(tagline, {
       autoAlpha: 0.3,
-      duration: 1, 
+      duration: 1,
       ease: 'power2.inOut',
     });
 
-    // Step 5: Fade out "Final Archive Media" over 2 seconds
+    // Step 5: Fade out "Final Archive" over 2 seconds
     tl.to(title, {
-      autoAlpha: 0, 
-      duration: 2, 
+      autoAlpha: 0,
+      duration: 2,
       ease: 'power2.inOut',
     });
 
@@ -128,7 +134,7 @@ export const LogoOverlay: React.FC<LogoOverlayProps> = ({ onIntroComplete, hover
   };
 
   return (
-    <div 
+    <div
       ref={containerRef}
       style={{
         position: 'fixed',
@@ -146,12 +152,13 @@ export const LogoOverlay: React.FC<LogoOverlayProps> = ({ onIntroComplete, hover
         pointerEvents: hoverEnabled ? 'auto' : 'none',
       }}
     >
-      <div 
+      <div
         style={{
           position: 'relative',
           width: '85vw',
           maxWidth: '700px',
-          aspectRatio: '800 / 300',
+          // PNG aspect ratio: 2303 / 842 ≈ 2.735
+          aspectRatio: '2303 / 842',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
@@ -159,21 +166,21 @@ export const LogoOverlay: React.FC<LogoOverlayProps> = ({ onIntroComplete, hover
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
       >
-        {/* "Final Archive Media" — top 55% of SVG */}
-        <img 
+        {/* "Final Archive" — top 67% of PNG */}
+        <img
           ref={titleRef}
           src={logoSrc}
-          alt="Final Archive Media"
+          alt="Final Archive"
           draggable={false}
-          style={{ 
+          style={{
             position: 'absolute',
             inset: 0,
             width: '100%',
             height: '100%',
             objectFit: 'contain',
             objectPosition: 'center center',
-            clipPath: 'inset(0% 0% 45% 0%)',
-            WebkitClipPath: 'inset(0% 0% 45% 0%)',
+            clipPath: 'inset(0% 0% 33% 0%)',
+            WebkitClipPath: 'inset(0% 0% 33% 0%)',
             opacity: 0,
             visibility: 'hidden',
             border: 'none',
@@ -184,21 +191,21 @@ export const LogoOverlay: React.FC<LogoOverlayProps> = ({ onIntroComplete, hover
           aria-hidden="true"
         />
 
-        {/* "For All Eternity" — bottom 45% of SVG */}
-        <img 
+        {/* "For All Eternity" — bottom 33% of PNG */}
+        <img
           ref={taglineRef}
           src={logoSrc}
           alt="For All Eternity"
           draggable={false}
-          style={{ 
+          style={{
             position: 'absolute',
             inset: 0,
             width: '100%',
             height: '100%',
             objectFit: 'contain',
             objectPosition: 'center center',
-            clipPath: 'inset(55% 0% 0% 0%)',
-            WebkitClipPath: 'inset(55% 0% 0% 0%)',
+            clipPath: 'inset(67% 0% 0% 0%)',
+            WebkitClipPath: 'inset(67% 0% 0% 0%)',
             opacity: 0,
             visibility: 'hidden',
             border: 'none',

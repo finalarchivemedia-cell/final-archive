@@ -18,11 +18,11 @@ import { AppSettings, ImageRecord } from '../types';
 
 interface GalleryProps {
   settings: AppSettings;
-  images: ImageRecord[];
-  startRecord: ImageRecord;
-  nextRecord: ImageRecord;
+  images: ImageRecord[]; 
+  startRecord: ImageRecord; 
+  nextRecord: ImageRecord; 
   onFirstCycleComplete: () => void;
-  active: boolean;
+  active: boolean; 
   singleMode?: boolean;
   onImageChange?: (id: string) => void;
 }
@@ -52,9 +52,9 @@ const preloadImage = (url: string): Promise<void> =>
 
 /* ── component ───────────────────────────────────────────── */
 
-export const Gallery: React.FC<GalleryProps> = ({
-  settings,
-  images,
+export const Gallery: React.FC<GalleryProps> = ({ 
+  settings, 
+  images, 
   startRecord,
   nextRecord,
   onFirstCycleComplete,
@@ -96,7 +96,7 @@ export const Gallery: React.FC<GalleryProps> = ({
     let frontLayer = layerARef.current;
     let backLayer = layerBRef.current;
     let isFrontA = true;
-
+    
     if (!frontLayer || (!backLayer && !singleMode)) return;
 
     /* ── Show the very first image ─────────────────────── */
@@ -108,8 +108,8 @@ export const Gallery: React.FC<GalleryProps> = ({
       frontLayer.src = firstUrl;
     } else if (isFirstVideo && frontLayer instanceof HTMLVideoElement) {
       frontLayer.src = firstUrl;
-    }
-
+        }
+        
     // Preload first image
     if (!isFirstVideo) {
       await preloadImage(firstUrl);
@@ -120,7 +120,7 @@ export const Gallery: React.FC<GalleryProps> = ({
     if (currentRecord.current.id !== lastReportedId.current) {
       lastReportedId.current = currentRecord.current.id;
       onImageChangeRef.current?.(currentRecord.current.id);
-    }
+      }
 
     const dur = settingsRef.current.duration;
     const maxScale = Math.max(1.25, 1 / Math.max(0.1, settingsRef.current.crop));
@@ -297,8 +297,8 @@ export const Gallery: React.FC<GalleryProps> = ({
   };
 
   return (
-    <div
-      ref={containerRef}
+    <div 
+      ref={containerRef} 
       style={{
         position: 'fixed',
         inset: 0,
@@ -314,27 +314,27 @@ export const Gallery: React.FC<GalleryProps> = ({
     >
       {/* Layer A */}
       {startRecord.mediaType === 'VIDEO' ? (
-        <video
+          <video
           ref={(el) => { layerARef.current = el; }}
           style={layerStyle}
-          muted
-          playsInline
-          loop
-          autoPlay
-          preload="metadata"
-        />
-      ) : (
+            muted
+            playsInline
+            loop
+            autoPlay
+            preload="metadata"
+          />
+        ) : (
         <img
           ref={(el) => { layerARef.current = el; }}
           alt=""
           draggable={false}
           style={layerStyle}
-          decoding="async"
+            decoding="async"
           loading="eager"
           fetchPriority="high"
-        />
+          />
       )}
-
+      
       {/* Layer B */}
       {!singleMode && (
         nextRecord.mediaType === 'VIDEO' ? (
@@ -348,10 +348,10 @@ export const Gallery: React.FC<GalleryProps> = ({
             preload="metadata"
           />
         ) : (
-          <img
+        <img
             ref={(el) => { layerBRef.current = el; }}
-            alt=""
-            draggable={false}
+          alt=""
+          draggable={false}
             style={layerStyle}
             decoding="async"
             loading="eager"

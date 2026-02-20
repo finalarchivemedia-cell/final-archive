@@ -428,8 +428,8 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onUpdate }) => {
             </div>
             <button onClick={logout} type="button" className="fa-hoverlink" style={linkStyle}>
               LOGOUT
-            </button>
-          </div>
+          </button>
+        </div>
 
           <div style={{ marginTop: 18, ...lineStyle }} />
 
@@ -444,7 +444,7 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onUpdate }) => {
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                   <div style={smallCapsStyle}>DISPLAY DURATION</div>
                   <div style={valueStyle}>{settings.displayDurationSec}s</div>
-                </div>
+              </div>
               <input
                 type="range"
                 min="1"
@@ -462,7 +462,7 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onUpdate }) => {
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                   <div style={smallCapsStyle}>CROP / ZOOM</div>
                   <div style={valueStyle}>{settings.cropPercent}%</div>
-                </div>
+              </div>
               <input
                 type="range"
                 min="25"

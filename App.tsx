@@ -158,9 +158,9 @@ export default function App() {
       return fetchPublicSettings().then(s => {
         if (s) {
           setSettings({
-            duration: s.displayDurationSec,
-            crop: s.cropPercent / 100
-          });
+          duration: s.displayDurationSec,
+          crop: s.cropPercent / 100
+        });
           if (typeof s.musicUrl === 'string') {
             setMusicUrl(s.musicUrl);
           }
@@ -183,7 +183,7 @@ export default function App() {
     // Execute both in parallel for faster load
     Promise.all([settingsPromise, imagesPromise]).catch(err => {
       console.error('[App] Initialization error:', err);
-    });
+      });
   }, []);
 
   useEffect(() => {
@@ -263,18 +263,18 @@ export default function App() {
             <div className="w-full h-full relative bg-black overflow-hidden">
               {/* Blurred gallery background for "projection" feel */}
               <div className="absolute inset-0 pointer-events-none">
-                {images.length > 0 && (
+              {images.length > 0 && (
                   <div className="absolute inset-0 blur-2xl brightness-50 scale-110">
-                    <Gallery
-                      settings={settings}
-                      images={images}
-                      startRecord={images[0]}
-                      nextRecord={images[1] || images[0]}
-                      active={true}
-                      onFirstCycleComplete={() => { }}
-                    />
+                <Gallery
+                  settings={settings}
+                  images={images}
+                  startRecord={images[0]}
+                  nextRecord={images[1] || images[0]}
+                  active={true}
+                  onFirstCycleComplete={() => { }}
+                />
                   </div>
-                )}
+              )}
                 <div className="absolute inset-0 bg-black/50" />
               </div>
 

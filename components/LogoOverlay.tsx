@@ -45,12 +45,12 @@ export const LogoOverlay: React.FC<LogoOverlayProps> = ({ onIntroComplete, hover
       if ('decode' in img) {
         img.decode().then(() => setLogoLoaded(true)).catch(() => setLogoLoaded(true));
       } else {
-        setLogoLoaded(true);
+      setLogoLoaded(true);
       }
     };
     img.onerror = () => {
       console.warn('[LogoOverlay] Failed to load logo');
-      setLogoLoaded(true);
+        setLogoLoaded(true);
     };
     img.src = logoSrc;
   }, [logoSrc]);
@@ -86,11 +86,11 @@ export const LogoOverlay: React.FC<LogoOverlayProps> = ({ onIntroComplete, hover
 
     // Step 1: Black screen for 1 second
     tl.to({}, { duration: 1 });
-
+    
     // Step 2: Fade in "Final Archive Media" over 1 second
     tl.to(title, {
-      autoAlpha: 1,
-      duration: 1,
+      autoAlpha: 1, 
+      duration: 1, 
       ease: 'power2.inOut',
     });
 
@@ -100,14 +100,14 @@ export const LogoOverlay: React.FC<LogoOverlayProps> = ({ onIntroComplete, hover
     // Step 4: Fade in "For All Eternity" underneath over 1 second (dimmed/etched)
     tl.to(tagline, {
       autoAlpha: 0.3,
-      duration: 1,
+      duration: 1, 
       ease: 'power2.inOut',
     });
 
     // Step 5: Fade out "Final Archive Media" over 2 seconds
     tl.to(title, {
-      autoAlpha: 0,
-      duration: 2,
+      autoAlpha: 0, 
+      duration: 2, 
       ease: 'power2.inOut',
     });
 
@@ -128,7 +128,7 @@ export const LogoOverlay: React.FC<LogoOverlayProps> = ({ onIntroComplete, hover
   };
 
   return (
-    <div
+    <div 
       ref={containerRef}
       style={{
         position: 'fixed',
@@ -146,7 +146,7 @@ export const LogoOverlay: React.FC<LogoOverlayProps> = ({ onIntroComplete, hover
         pointerEvents: hoverEnabled ? 'auto' : 'none',
       }}
     >
-      <div
+      <div 
         style={{
           position: 'relative',
           width: '85vw',
@@ -160,12 +160,12 @@ export const LogoOverlay: React.FC<LogoOverlayProps> = ({ onIntroComplete, hover
         onMouseLeave={handleMouseLeave}
       >
         {/* "Final Archive Media" — top 55% of SVG */}
-        <img
+        <img 
           ref={titleRef}
           src={logoSrc}
           alt="Final Archive Media"
           draggable={false}
-          style={{
+          style={{ 
             position: 'absolute',
             inset: 0,
             width: '100%',
@@ -185,12 +185,12 @@ export const LogoOverlay: React.FC<LogoOverlayProps> = ({ onIntroComplete, hover
         />
 
         {/* "For All Eternity" — bottom 45% of SVG */}
-        <img
+        <img 
           ref={taglineRef}
           src={logoSrc}
           alt="For All Eternity"
           draggable={false}
-          style={{
+          style={{ 
             position: 'absolute',
             inset: 0,
             width: '100%',

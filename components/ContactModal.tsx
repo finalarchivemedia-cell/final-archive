@@ -110,7 +110,7 @@ export const ContactModal: React.FC<Props> = ({ open, onClose, onSend }) => {
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="Your email"
+              placeholder="Email"
               className="bg-black border border-white/10 p-3 text-[12px] tracking-widest outline-none focus:border-white/40 placeholder:text-white/20"
               style={{
                 width: '100%',
@@ -128,7 +128,7 @@ export const ContactModal: React.FC<Props> = ({ open, onClose, onSend }) => {
               required
               value={message}
               onChange={(e) => setMessage(e.target.value)}
-              placeholder="Short message"
+              placeholder="Message"
               rows={5}
               className="bg-black border border-white/10 p-3 text-[12px] tracking-widest outline-none focus:border-white/40 placeholder:text-white/20 resize-none"
               style={{

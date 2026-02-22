@@ -125,17 +125,20 @@ export const LogoOverlay: React.FC<LogoOverlayProps> = ({ onIntroComplete, hover
 
   // Hover: reveal tagline fully (gated by hoverEnabled = Step 8)
   const handleMouseEnter = () => {
-    if (!hoverEnabled) return;
+    if (!hoverEnabled || !taglineRef.current) return;
     gsap.to(taglineRef.current, { autoAlpha: 1, duration: 0.5, ease: 'power2.out' });
   };
 
   const handleMouseLeave = () => {
+    if (!taglineRef.current) return;
     gsap.to(taglineRef.current, { autoAlpha: 0.3, duration: 0.5, ease: 'power2.in' });
   };
 
   return (
     <div
       ref={containerRef}
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
       style={{
         position: 'fixed',
         inset: 0,
@@ -149,22 +152,22 @@ export const LogoOverlay: React.FC<LogoOverlayProps> = ({ onIntroComplete, hover
         padding: 0,
         // Solid black during Steps 1-6, then GSAP fades to transparent
         backgroundColor: introFinished ? 'transparent' : '#000',
-        pointerEvents: hoverEnabled ? 'auto' : 'none',
+        // During intro: block everything. After intro: allow clicks through
+        // but still capture hover events via the outer container
+        pointerEvents: introFinished ? 'none' : 'auto',
       }}
     >
       <div
         style={{
           position: 'relative',
-          // Responsive: on mobile use nearly full width, on desktop cap at 700px
-          // The PNG is wide (2303×842 ≈ 2.7:1), so on narrow screens we need
-          // generous width to keep text readable
           width: '92vw',
           maxWidth: '700px',
-          // PNG aspect ratio: 2303 / 842 ≈ 2.735
           aspectRatio: '2303 / 842',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
+          // Allow hover on the tagline area even when container is pointer-events:none
+          pointerEvents: hoverEnabled ? 'auto' : 'none',
         }}
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}

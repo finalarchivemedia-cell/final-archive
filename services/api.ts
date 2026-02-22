@@ -236,8 +236,13 @@ export const sendContact = async (data: { email: string; message: string }): Pro
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data),
     });
+    if (!res.ok) {
+      const body = await res.json().catch(() => ({}));
+      console.error('[Contact] Send failed:', res.status, body?.error || '');
+    }
     return res.ok;
-  } catch {
+  } catch (err) {
+    console.error('[Contact] Network error:', err);
     return false;
   }
 };

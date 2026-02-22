@@ -8,7 +8,7 @@ interface LogoOverlayProps {
 }
 
 /**
- * LogoOverlay – Client's mandatory 6-step intro sequence
+ * LogoOverlay – Client's mandatory 6-step intro sequence + full tagline reveal
  *
  * PNG layout (2303×842):
  *   "Final Archive"    occupies roughly top 0–60%
@@ -24,16 +24,26 @@ interface LogoOverlayProps {
  *   5. Fade out "Final Archive" over 2 seconds
  *   6. "For All Eternity" remains permanently visible, faint etched style
  *
- * CRITICAL: Steps 1-6 are BLACK-SCREEN phase with TEXT ONLY.
- *   After Step 6 → black fades to transparent → onIntroComplete() → Gallery starts
+ * After Step 8 (first photo cycle complete):
+ *   Hovering over the etched "For All Eternity" reveals the full tagline:
+ *   "Final Archive Media captures our story as if it's the last record left
+ *    behind—to stand through time, For All Eternity."
+ *   in an elegant Cormorant Garamond italic font.
  */
+
+const FULL_TAGLINE =
+  '\u201CFinal Archive Media captures our story as if it\u2019s the last record left behind\u2014to stand through time, For All Eternity.\u201D';
 
 export const LogoOverlay: React.FC<LogoOverlayProps> = ({ onIntroComplete, hoverEnabled }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const titleRef = useRef<HTMLImageElement>(null);
   const taglineRef = useRef<HTMLImageElement>(null);
+  const fullTaglineRef = useRef<HTMLDivElement>(null);
   const [logoLoaded, setLogoLoaded] = useState(false);
   const [introFinished, setIntroFinished] = useState(false);
+
+  // Mobile tap toggle
+  const [tapped, setTapped] = useState(false);
 
   // Store callback in ref so it never triggers useEffect re-runs
   const onIntroCompleteRef = useRef(onIntroComplete);
@@ -69,11 +79,13 @@ export const LogoOverlay: React.FC<LogoOverlayProps> = ({ onIntroComplete, hover
     const container = containerRef.current;
     const title = titleRef.current;
     const tagline = taglineRef.current;
+    const fullTagline = fullTaglineRef.current;
     if (!container || !title || !tagline) return;
 
-    // Initial state: both text elements hidden
+    // Initial state: both text elements hidden, full tagline hidden
     gsap.set(title, { autoAlpha: 0 });
     gsap.set(tagline, { autoAlpha: 0 });
+    if (fullTagline) gsap.set(fullTagline, { autoAlpha: 0 });
 
     const tl = gsap.timeline({
       onComplete: () => {
@@ -123,22 +135,58 @@ export const LogoOverlay: React.FC<LogoOverlayProps> = ({ onIntroComplete, hover
     // No cleanup — timeline runs once and must not be killed
   }, [logoLoaded]);
 
-  // Hover: reveal tagline fully (gated by hoverEnabled = Step 8)
-  const handleMouseEnter = () => {
-    if (!hoverEnabled || !taglineRef.current) return;
-    gsap.to(taglineRef.current, { autoAlpha: 1, duration: 0.5, ease: 'power2.out' });
+  // ── Hover / Tap: reveal full tagline ──────────────────────────
+  const showFullTagline = () => {
+    if (!hoverEnabled) return;
+    if (taglineRef.current) {
+      gsap.to(taglineRef.current, { autoAlpha: 1, duration: 0.5, ease: 'power2.out' });
+    }
+    if (fullTaglineRef.current) {
+      gsap.to(fullTaglineRef.current, { autoAlpha: 1, y: 0, duration: 0.7, ease: 'power2.out' });
+    }
   };
 
-  const handleMouseLeave = () => {
-    if (!taglineRef.current) return;
-    gsap.to(taglineRef.current, { autoAlpha: 0.3, duration: 0.5, ease: 'power2.in' });
+  const hideFullTagline = () => {
+    if (taglineRef.current) {
+      gsap.to(taglineRef.current, { autoAlpha: 0.3, duration: 0.5, ease: 'power2.in' });
+    }
+    if (fullTaglineRef.current) {
+      gsap.to(fullTaglineRef.current, { autoAlpha: 0, y: 6, duration: 0.5, ease: 'power2.in' });
+    }
   };
+
+  const handleMouseEnter = () => showFullTagline();
+  const handleMouseLeave = () => hideFullTagline();
+
+  // Mobile: tap to toggle
+  const handleTap = () => {
+    if (!hoverEnabled) return;
+    if (tapped) {
+      hideFullTagline();
+      setTapped(false);
+    } else {
+      showFullTagline();
+      setTapped(true);
+    }
+  };
+
+  // Close on tap outside (mobile)
+  useEffect(() => {
+    if (!tapped) return;
+    const handleOutside = (e: PointerEvent) => {
+      const inner = containerRef.current?.querySelector('[data-tagline-area]');
+      if (inner && !inner.contains(e.target as Node)) {
+        hideFullTagline();
+        setTapped(false);
+      }
+    };
+    window.addEventListener('pointerdown', handleOutside);
+    return () => window.removeEventListener('pointerdown', handleOutside);
+  }, [tapped]);
 
   return (
     <div
       ref={containerRef}
-      onMouseEnter={handleMouseEnter}
-      onMouseLeave={handleMouseLeave}
       style={{
         position: 'fixed',
         inset: 0,
@@ -153,11 +201,12 @@ export const LogoOverlay: React.FC<LogoOverlayProps> = ({ onIntroComplete, hover
         // Solid black during Steps 1-6, then GSAP fades to transparent
         backgroundColor: introFinished ? 'transparent' : '#000',
         // During intro: block everything. After intro: allow clicks through
-        // but still capture hover events via the outer container
         pointerEvents: introFinished ? 'none' : 'auto',
       }}
     >
+      {/* Inner wrapper: logo + tagline hover area */}
       <div
+        data-tagline-area
         style={{
           position: 'relative',
           width: '92vw',
@@ -166,11 +215,13 @@ export const LogoOverlay: React.FC<LogoOverlayProps> = ({ onIntroComplete, hover
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          // Allow hover on the tagline area even when container is pointer-events:none
+          // Allow hover/tap on the tagline area after Step 8
           pointerEvents: hoverEnabled ? 'auto' : 'none',
+          cursor: hoverEnabled ? 'default' : 'auto',
         }}
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
+        onClick={handleTap}
       >
         {/* "Final Archive" — top 67% of PNG */}
         <img
@@ -221,6 +272,37 @@ export const LogoOverlay: React.FC<LogoOverlayProps> = ({ onIntroComplete, hover
           }}
           aria-hidden="true"
         />
+
+        {/* Full tagline — revealed on hover/tap over the etched "For All Eternity" */}
+        <div
+          ref={fullTaglineRef}
+          style={{
+            position: 'absolute',
+            // Position below the "For All Eternity" text
+            bottom: '-12%',
+            left: '5%',
+            right: '5%',
+            textAlign: 'center',
+            // Elegant serif italic font
+            fontFamily: "'Cormorant Garamond', 'Georgia', 'Times New Roman', serif",
+            fontStyle: 'italic',
+            fontWeight: 300,
+            fontSize: 'clamp(11px, 1.6vw, 18px)',
+            lineHeight: 1.7,
+            letterSpacing: '0.04em',
+            color: 'rgba(255, 255, 255, 0.55)',
+            // Start hidden and slightly below
+            opacity: 0,
+            visibility: 'hidden',
+            transform: 'translateY(6px)',
+            willChange: 'opacity, transform',
+            pointerEvents: 'none',
+            // Subtle text shadow for readability over photos
+            textShadow: '0 1px 8px rgba(0,0,0,0.8)',
+          }}
+        >
+          {FULL_TAGLINE}
+        </div>
       </div>
     </div>
   );

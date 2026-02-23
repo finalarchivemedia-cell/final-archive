@@ -147,8 +147,6 @@ export const LogoOverlay: React.FC<LogoOverlayProps> = ({ onIntroComplete, hover
     if (fullTaglineRef.current) {
       gsap.to(fullTaglineRef.current, {
         autoAlpha: 1,
-        // Keep translateX(-50%) for centering, animate translateY to 0
-        x: '-50%',
         y: 0,
         duration: 0.7,
         ease: 'power2.out',
@@ -163,7 +161,6 @@ export const LogoOverlay: React.FC<LogoOverlayProps> = ({ onIntroComplete, hover
     if (fullTaglineRef.current) {
       gsap.to(fullTaglineRef.current, {
         autoAlpha: 0,
-        x: '-50%',
         y: -6,
         duration: 0.5,
         ease: 'power2.in',
@@ -311,50 +308,47 @@ export const LogoOverlay: React.FC<LogoOverlayProps> = ({ onIntroComplete, hover
           aria-hidden="true"
         />
 
-        {/* Extended tagline — positioned ABOVE "For All Eternity" so the
-            PNG text naturally completes the sentence.
-            Desktop/landscape: single line.
-            Portrait mobile: two lines matching the mockup. */}
-        <div
-          ref={fullTaglineRef}
-          className="tagline-wrap"
-          style={{
-            position: 'absolute',
-            /* Sit just above the "For All Eternity" region (which starts at ~67%) */
-            bottom: '33%',
-            /* Center horizontally: break free from the narrow parent container */
-            left: '50%',
-            transform: 'translateX(-50%) translateY(-6px)',
-            /* Wide enough for the full single-line text */
-            width: '100vw',
-            maxWidth: '100vw',
-            textAlign: 'center',
-            /* Elegant serif — same font */
-            fontFamily: "'Cormorant Garamond', 'Georgia', 'Times New Roman', serif",
-            fontStyle: 'normal',
-            fontWeight: 700,
-            fontSize: 'clamp(13px, 2vw, 22px)',
-            lineHeight: 1.5,
-            letterSpacing: '0.06em',
-            color: '#ffffff',
-            /* Start hidden */
-            opacity: 0,
-            visibility: 'hidden',
-            willChange: 'opacity, transform',
-            pointerEvents: 'none',
-            /* Strong dark shadow so white text is readable on ANY background photo */
-            textShadow: '0 1px 4px rgba(0,0,0,0.9), 0 0 12px rgba(0,0,0,0.7)',
-          }}
-        >
-          {/* Desktop / landscape: single line (nowrap) */}
-          <span className="tagline-desktop" style={{ display: 'inline', whiteSpace: 'nowrap' }}>
-            {TAGLINE_LINE_1} {TAGLINE_LINE_2}
-          </span>
-          {/* Portrait mobile: two lines matching the mockup (normal wrap) */}
-          <span className="tagline-mobile" style={{ display: 'none', whiteSpace: 'normal' }}>
-            {TAGLINE_LINE_1}<br />{TAGLINE_LINE_2}
-          </span>
-        </div>
+      </div>
+
+      {/* Extended tagline — positioned ABOVE "For All Eternity".
+          Placed in the outer fixed container so left:0/right:0 = full viewport width.
+          Perfectly centered on screen. */}
+      <div
+        ref={fullTaglineRef}
+        className="tagline-wrap"
+        style={{
+          position: 'absolute',
+          /* Vertically: just above center where "For All Eternity" sits */
+          top: '46%',
+          left: 0,
+          right: 0,
+          textAlign: 'center',
+          /* Elegant serif — same font */
+          fontFamily: "'Cormorant Garamond', 'Georgia', 'Times New Roman', serif",
+          fontStyle: 'normal',
+          fontWeight: 700,
+          fontSize: 'clamp(13px, 2vw, 22px)',
+          lineHeight: 1.5,
+          letterSpacing: '0.06em',
+          color: '#ffffff',
+          /* Start hidden */
+          opacity: 0,
+          visibility: 'hidden',
+          willChange: 'opacity, transform',
+          pointerEvents: 'none',
+          /* Strong dark shadow so white text is readable on ANY background photo */
+          textShadow: '0 1px 4px rgba(0,0,0,0.9), 0 0 12px rgba(0,0,0,0.7)',
+          padding: '0 16px',
+        }}
+      >
+        {/* Desktop / landscape: single line (nowrap) */}
+        <span className="tagline-desktop" style={{ display: 'inline', whiteSpace: 'nowrap' }}>
+          {TAGLINE_LINE_1} {TAGLINE_LINE_2}
+        </span>
+        {/* Portrait mobile: two lines matching the mockup (normal wrap) */}
+        <span className="tagline-mobile" style={{ display: 'none', whiteSpace: 'normal' }}>
+          {TAGLINE_LINE_1}<br />{TAGLINE_LINE_2}
+        </span>
       </div>
     </div>
   );

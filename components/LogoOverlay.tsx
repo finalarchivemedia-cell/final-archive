@@ -31,8 +31,11 @@ interface LogoOverlayProps {
  *   in an elegant Cormorant Garamond italic font.
  */
 
-const FULL_TAGLINE =
-  '\u201CFinal Archive Media captures our story as if it\u2019s the last record left behind\u2014to stand through time, For All Eternity.\u201D';
+// Extended tagline — displayed ABOVE the PNG "For All Eternity" so the
+// already-visible etched text naturally completes the sentence.
+// No quotes. On portrait mobile it wraps to two lines matching the mockup.
+const TAGLINE_LINE_1 = 'Final Archive Media captures our story as if it\u2019s the last record left behind';
+const TAGLINE_LINE_2 = '\u2014to stand through time,';
 
 export const LogoOverlay: React.FC<LogoOverlayProps> = ({ onIntroComplete, hoverEnabled }) => {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -151,7 +154,7 @@ export const LogoOverlay: React.FC<LogoOverlayProps> = ({ onIntroComplete, hover
       gsap.to(taglineRef.current, { autoAlpha: 0.3, duration: 0.5, ease: 'power2.in' });
     }
     if (fullTaglineRef.current) {
-      gsap.to(fullTaglineRef.current, { autoAlpha: 0, y: 6, duration: 0.5, ease: 'power2.in' });
+      gsap.to(fullTaglineRef.current, { autoAlpha: 0, y: -6, duration: 0.5, ease: 'power2.in' });
     }
   };
 
@@ -184,6 +187,19 @@ export const LogoOverlay: React.FC<LogoOverlayProps> = ({ onIntroComplete, hover
     return () => window.removeEventListener('pointerdown', handleOutside);
   }, [tapped]);
 
+  // Responsive CSS for tagline line-break behavior
+  const taglineCSS = `
+    /* Default (desktop / landscape): show single-line, hide mobile */
+    .tagline-desktop { display: inline !important; }
+    .tagline-mobile  { display: none !important; }
+
+    /* Portrait mobile: show two-line version, hide single-line */
+    @media (max-width: 768px) and (orientation: portrait) {
+      .tagline-desktop { display: none !important; }
+      .tagline-mobile  { display: inline !important; }
+    }
+  `;
+
   return (
     <div
       ref={containerRef}
@@ -204,6 +220,9 @@ export const LogoOverlay: React.FC<LogoOverlayProps> = ({ onIntroComplete, hover
         pointerEvents: introFinished ? 'none' : 'auto',
       }}
     >
+      {/* Responsive tagline CSS */}
+      <style dangerouslySetInnerHTML={{ __html: taglineCSS }} />
+
       {/* Inner wrapper: logo + tagline hover area */}
       <div
         data-tagline-area
@@ -273,35 +292,44 @@ export const LogoOverlay: React.FC<LogoOverlayProps> = ({ onIntroComplete, hover
           aria-hidden="true"
         />
 
-        {/* Full tagline — revealed on hover/tap over the etched "For All Eternity" */}
+        {/* Extended tagline — positioned ABOVE "For All Eternity" so the
+            PNG text naturally completes the sentence.
+            Desktop/landscape: single line.
+            Portrait mobile: two lines matching the mockup. */}
         <div
           ref={fullTaglineRef}
           style={{
             position: 'absolute',
-            // Position below the "For All Eternity" text
-            bottom: '-12%',
-            left: '5%',
-            right: '5%',
+            /* Sit just above the "For All Eternity" region (which starts at ~67%) */
+            bottom: '33%',
+            left: '0%',
+            right: '0%',
             textAlign: 'center',
-            // Elegant serif italic font
+            /* Elegant serif italic — same font as before */
             fontFamily: "'Cormorant Garamond', 'Georgia', 'Times New Roman', serif",
             fontStyle: 'italic',
             fontWeight: 300,
             fontSize: 'clamp(11px, 1.6vw, 18px)',
-            lineHeight: 1.7,
+            lineHeight: 1.5,
             letterSpacing: '0.04em',
             color: 'rgba(255, 255, 255, 0.55)',
-            // Start hidden and slightly below
+            /* Start hidden and slightly above */
             opacity: 0,
             visibility: 'hidden',
-            transform: 'translateY(6px)',
+            transform: 'translateY(-6px)',
             willChange: 'opacity, transform',
             pointerEvents: 'none',
-            // Subtle text shadow for readability over photos
             textShadow: '0 1px 8px rgba(0,0,0,0.8)',
           }}
         >
-          {FULL_TAGLINE}
+          {/* Desktop / landscape: single line (nowrap) */}
+          <span className="tagline-desktop" style={{ display: 'inline', whiteSpace: 'nowrap' }}>
+            {TAGLINE_LINE_1} {TAGLINE_LINE_2}
+          </span>
+          {/* Portrait mobile: two lines matching the mockup (normal wrap) */}
+          <span className="tagline-mobile" style={{ display: 'none', whiteSpace: 'normal' }}>
+            {TAGLINE_LINE_1}<br />{TAGLINE_LINE_2}
+          </span>
         </div>
       </div>
     </div>

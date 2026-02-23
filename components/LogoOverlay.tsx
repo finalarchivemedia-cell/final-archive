@@ -145,7 +145,14 @@ export const LogoOverlay: React.FC<LogoOverlayProps> = ({ onIntroComplete, hover
       gsap.to(taglineRef.current, { autoAlpha: 1, duration: 0.5, ease: 'power2.out' });
     }
     if (fullTaglineRef.current) {
-      gsap.to(fullTaglineRef.current, { autoAlpha: 1, y: 0, duration: 0.7, ease: 'power2.out' });
+      gsap.to(fullTaglineRef.current, {
+        autoAlpha: 1,
+        // Keep translateX(-50%) for centering, animate translateY to 0
+        x: '-50%',
+        y: 0,
+        duration: 0.7,
+        ease: 'power2.out',
+      });
     }
   };
 
@@ -154,7 +161,13 @@ export const LogoOverlay: React.FC<LogoOverlayProps> = ({ onIntroComplete, hover
       gsap.to(taglineRef.current, { autoAlpha: 0.3, duration: 0.5, ease: 'power2.in' });
     }
     if (fullTaglineRef.current) {
-      gsap.to(fullTaglineRef.current, { autoAlpha: 0, y: -6, duration: 0.5, ease: 'power2.in' });
+      gsap.to(fullTaglineRef.current, {
+        autoAlpha: 0,
+        x: '-50%',
+        y: -6,
+        duration: 0.5,
+        ease: 'power2.in',
+      });
     }
   };
 
@@ -302,10 +315,14 @@ export const LogoOverlay: React.FC<LogoOverlayProps> = ({ onIntroComplete, hover
             position: 'absolute',
             /* Sit just above the "For All Eternity" region (which starts at ~67%) */
             bottom: '33%',
-            left: '0%',
-            right: '0%',
+            /* Center horizontally: break free from the narrow parent container */
+            left: '50%',
+            transform: 'translateX(-50%) translateY(-6px)',
+            /* Wide enough for the full single-line text */
+            width: '100vw',
+            maxWidth: '100vw',
             textAlign: 'center',
-            /* Elegant serif italic — same font as before */
+            /* Elegant serif — same font */
             fontFamily: "'Cormorant Garamond', 'Georgia', 'Times New Roman', serif",
             fontStyle: 'normal',
             fontWeight: 700,
@@ -313,10 +330,9 @@ export const LogoOverlay: React.FC<LogoOverlayProps> = ({ onIntroComplete, hover
             lineHeight: 1.5,
             letterSpacing: '0.06em',
             color: '#ffffff',
-            /* Start hidden and slightly above */
+            /* Start hidden */
             opacity: 0,
             visibility: 'hidden',
-            transform: 'translateY(-6px)',
             willChange: 'opacity, transform',
             pointerEvents: 'none',
             /* Strong dark shadow so white text is readable on ANY background photo */

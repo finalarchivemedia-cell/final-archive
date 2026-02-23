@@ -200,7 +200,7 @@ export const LogoOverlay: React.FC<LogoOverlayProps> = ({ onIntroComplete, hover
     return () => window.removeEventListener('pointerdown', handleOutside);
   }, [tapped]);
 
-  // Responsive CSS for tagline line-break behavior
+  // Responsive CSS for tagline line-break behavior + mobile font sizing
   const taglineCSS = `
     /* Default (desktop / landscape): show single-line, hide mobile */
     .tagline-desktop { display: inline !important; }
@@ -210,6 +210,12 @@ export const LogoOverlay: React.FC<LogoOverlayProps> = ({ onIntroComplete, hover
     @media (max-width: 768px) and (orientation: portrait) {
       .tagline-desktop { display: none !important; }
       .tagline-mobile  { display: inline !important; }
+      /* Scale font so line 1 fits on a single line on narrow screens */
+      .tagline-wrap { font-size: 3.6vw !important; }
+    }
+    /* Very small phones */
+    @media (max-width: 380px) and (orientation: portrait) {
+      .tagline-wrap { font-size: 3.2vw !important; }
     }
   `;
 
@@ -311,6 +317,7 @@ export const LogoOverlay: React.FC<LogoOverlayProps> = ({ onIntroComplete, hover
             Portrait mobile: two lines matching the mockup. */}
         <div
           ref={fullTaglineRef}
+          className="tagline-wrap"
           style={{
             position: 'absolute',
             /* Sit just above the "For All Eternity" region (which starts at ~67%) */

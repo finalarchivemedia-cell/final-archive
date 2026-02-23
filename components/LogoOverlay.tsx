@@ -312,7 +312,7 @@ export const LogoOverlay: React.FC<LogoOverlayProps> = ({ onIntroComplete, hover
             fontSize: 'clamp(11px, 1.6vw, 18px)',
             lineHeight: 1.5,
             letterSpacing: '0.04em',
-            color: 'rgba(255, 255, 255, 0.55)',
+            color: '#ffffff',
             /* Start hidden and slightly above */
             opacity: 0,
             visibility: 'hidden',

@@ -33,8 +33,10 @@ interface LogoOverlayProps {
 
 // Extended tagline — displayed ABOVE the PNG "For All Eternity" so the
 // already-visible etched text naturally completes the sentence.
-// Single line on ALL screen sizes (desktop + mobile).
-const TAGLINE_TEXT = 'Final Archive Media captures our story as if it\u2019s the last record left behind\u2014to stand through time,';
+// Desktop + landscape: single line. Portrait mobile: two lines.
+const TAGLINE_LINE_1 = 'Capturing our story as if it\u2019s the last record left behind';
+const TAGLINE_LINE_2 = '\u2014to stand through time,';
+const TAGLINE_SINGLE = TAGLINE_LINE_1 + ' ' + TAGLINE_LINE_2;
 
 export const LogoOverlay: React.FC<LogoOverlayProps> = ({ onIntroComplete, hoverEnabled }) => {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -196,14 +198,16 @@ export const LogoOverlay: React.FC<LogoOverlayProps> = ({ onIntroComplete, hover
     return () => window.removeEventListener('pointerdown', handleOutside);
   }, [tapped]);
 
-  // Responsive CSS — scale font on small screens so single line fits
+  // Responsive CSS for tagline layout
   const taglineCSS = `
-    /* Portrait mobile: shrink font so the full tagline fits on one line */
+    /* Default (desktop / landscape): single line */
+    .tagline-desktop { display: inline !important; }
+    .tagline-mobile  { display: none !important; }
+
+    /* Portrait mobile: two-line layout matching the mockup */
     @media (max-width: 768px) and (orientation: portrait) {
-      .tagline-wrap { font-size: 2.6vw !important; }
-    }
-    @media (max-width: 380px) and (orientation: portrait) {
-      .tagline-wrap { font-size: 2.3vw !important; }
+      .tagline-desktop { display: none !important; }
+      .tagline-mobile  { display: inline !important; }
     }
   `;
 
@@ -332,9 +336,13 @@ export const LogoOverlay: React.FC<LogoOverlayProps> = ({ onIntroComplete, hover
           padding: '0 16px',
         }}
       >
-        {/* Single line on all screen sizes */}
-        <span style={{ whiteSpace: 'nowrap' }}>
-          {TAGLINE_TEXT}
+        {/* Desktop / landscape: single line */}
+        <span className="tagline-desktop" style={{ whiteSpace: 'nowrap' }}>
+          {TAGLINE_SINGLE}
+        </span>
+        {/* Portrait mobile: two lines matching the mockup */}
+        <span className="tagline-mobile" style={{ whiteSpace: 'normal', textAlign: 'center' }}>
+          {TAGLINE_LINE_1}<br />{TAGLINE_LINE_2}
         </span>
       </div>
     </div>

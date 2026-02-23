@@ -33,9 +33,8 @@ interface LogoOverlayProps {
 
 // Extended tagline — displayed ABOVE the PNG "For All Eternity" so the
 // already-visible etched text naturally completes the sentence.
-// No quotes. On portrait mobile it wraps to two lines matching the mockup.
-const TAGLINE_LINE_1 = 'Final Archive Media captures our story as if it\u2019s the last record left behind';
-const TAGLINE_LINE_2 = '\u2014to stand through time,';
+// Single line on ALL screen sizes (desktop + mobile).
+const TAGLINE_TEXT = 'Final Archive Media captures our story as if it\u2019s the last record left behind\u2014to stand through time,';
 
 export const LogoOverlay: React.FC<LogoOverlayProps> = ({ onIntroComplete, hoverEnabled }) => {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -197,22 +196,14 @@ export const LogoOverlay: React.FC<LogoOverlayProps> = ({ onIntroComplete, hover
     return () => window.removeEventListener('pointerdown', handleOutside);
   }, [tapped]);
 
-  // Responsive CSS for tagline line-break behavior + mobile font sizing
+  // Responsive CSS — scale font on small screens so single line fits
   const taglineCSS = `
-    /* Default (desktop / landscape): show single-line, hide mobile */
-    .tagline-desktop { display: inline !important; }
-    .tagline-mobile  { display: none !important; }
-
-    /* Portrait mobile: show two-line version, hide single-line */
+    /* Portrait mobile: shrink font so the full tagline fits on one line */
     @media (max-width: 768px) and (orientation: portrait) {
-      .tagline-desktop { display: none !important; }
-      .tagline-mobile  { display: inline !important; }
-      /* Scale font so line 1 fits on a single line on narrow screens */
-      .tagline-wrap { font-size: 3.6vw !important; }
+      .tagline-wrap { font-size: 2.6vw !important; }
     }
-    /* Very small phones */
     @media (max-width: 380px) and (orientation: portrait) {
-      .tagline-wrap { font-size: 3.2vw !important; }
+      .tagline-wrap { font-size: 2.3vw !important; }
     }
   `;
 
@@ -341,13 +332,9 @@ export const LogoOverlay: React.FC<LogoOverlayProps> = ({ onIntroComplete, hover
           padding: '0 16px',
         }}
       >
-        {/* Desktop / landscape: single line (nowrap) */}
-        <span className="tagline-desktop" style={{ display: 'inline', whiteSpace: 'nowrap' }}>
-          {TAGLINE_LINE_1} {TAGLINE_LINE_2}
-        </span>
-        {/* Portrait mobile: two lines matching the mockup (normal wrap) */}
-        <span className="tagline-mobile" style={{ display: 'none', whiteSpace: 'normal' }}>
-          {TAGLINE_LINE_1}<br />{TAGLINE_LINE_2}
+        {/* Single line on all screen sizes */}
+        <span style={{ whiteSpace: 'nowrap' }}>
+          {TAGLINE_TEXT}
         </span>
       </div>
     </div>

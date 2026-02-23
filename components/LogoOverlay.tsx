@@ -308,8 +308,8 @@ export const LogoOverlay: React.FC<LogoOverlayProps> = ({ onIntroComplete, hover
             /* Elegant serif italic — same font as before */
             fontFamily: "'Cormorant Garamond', 'Georgia', 'Times New Roman', serif",
             fontStyle: 'normal',
-            fontWeight: 500,
-            fontSize: 'clamp(12px, 1.8vw, 20px)',
+            fontWeight: 700,
+            fontSize: 'clamp(13px, 2vw, 22px)',
             lineHeight: 1.5,
             letterSpacing: '0.06em',
             color: '#ffffff',
@@ -319,7 +319,8 @@ export const LogoOverlay: React.FC<LogoOverlayProps> = ({ onIntroComplete, hover
             transform: 'translateY(-6px)',
             willChange: 'opacity, transform',
             pointerEvents: 'none',
-            textShadow: 'none',
+            /* Strong dark shadow so white text is readable on ANY background photo */
+            textShadow: '0 1px 4px rgba(0,0,0,0.9), 0 0 12px rgba(0,0,0,0.7)',
           }}
         >
           {/* Desktop / landscape: single line (nowrap) */}

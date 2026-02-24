@@ -2,6 +2,7 @@
 ## Do NOT rewrite static assets (otherwise CSS/JS return text/html and break with MIME errors)
 /assets/* /assets/:splat 200
 /Final-Archive.png* /Final-Archive.png 200
+/file.svg* /file.svg 200
 /final-archive-media.svg* /final-archive-media.svg 200
 
 ## Fallback for client-side routes like /12345

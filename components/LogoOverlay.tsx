@@ -58,7 +58,7 @@ export const LogoOverlay: React.FC<LogoOverlayProps> = ({ onIntroComplete, hover
 
   const logoSrc = LOGO_PATH;
 
-  // Preload the logo PNG
+  // Preload the logo
   useEffect(() => {
     const img = new Image();
     img.onload = () => {

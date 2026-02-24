@@ -36,7 +36,7 @@ interface LogoOverlayProps {
 // Desktop + landscape: single line. Portrait mobile: two lines.
 const TAGLINE_LINE_1 = 'Capturing our story as if it\u2019s the last record left behind';
 const TAGLINE_LINE_2 = '\u2014to stand through time,';
-const TAGLINE_SINGLE = TAGLINE_LINE_1 + ' ' + TAGLINE_LINE_2;
+const TAGLINE_SINGLE = TAGLINE_LINE_1 + TAGLINE_LINE_2;
 
 export const LogoOverlay: React.FC<LogoOverlayProps> = ({ onIntroComplete, hoverEnabled }) => {
   const containerRef = useRef<HTMLDivElement>(null);

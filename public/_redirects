@@ -3,6 +3,7 @@
 /assets/* /assets/:splat 200
 /Final-Archive.png* /Final-Archive.png 200
 /final-archive-media.svg* /final-archive-media.svg 200
+/final-archive.ai* /final-archive.ai 200
 
 ## Fallback for client-side routes like /12345
 /* /index.html 200

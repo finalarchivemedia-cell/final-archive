@@ -3,13 +3,14 @@ import React, { useMemo, useState } from 'react';
 type Props = {
   open: boolean;
   onClose: () => void;
-  onSend: (data: { email: string; message: string }) => Promise<boolean>;
+  onSend: (data: { email: string; message: string }) => Promise<{ ok: boolean; error?: string }>;
 };
 
 export const ContactModal: React.FC<Props> = ({ open, onClose, onSend }) => {
   const [email, setEmail] = useState('');
   const [message, setMessage] = useState('');
   const [status, setStatus] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle');
+  const [errorText, setErrorText] = useState<string>('');
 
   const canSend = useMemo(() => {
     return email.trim().length > 3 && message.trim().length > 1 && status !== 'sending';
@@ -21,8 +22,14 @@ export const ContactModal: React.FC<Props> = ({ open, onClose, onSend }) => {
     e.preventDefault();
     if (!canSend) return;
     setStatus('sending');
-    const ok = await onSend({ email: email.trim(), message: message.trim() });
-    setStatus(ok ? 'sent' : 'error');
+    setErrorText('');
+    const res = await onSend({ email: email.trim(), message: message.trim() });
+    if (res.ok) {
+      setStatus('sent');
+    } else {
+      setErrorText(res.error || 'Failed to send. Please try again.');
+      setStatus('error');
+    }
   };
 
   return (
@@ -149,7 +156,7 @@ export const ContactModal: React.FC<Props> = ({ open, onClose, onSend }) => {
                 className="text-[11px] tracking-widest text-red-500/80"
                 style={{ fontSize: 11, letterSpacing: '0.16em', color: 'rgba(248,113,113,0.9)' }}
               >
-                Failed to send. Please try again.
+                {errorText || 'Failed to send. Please try again.'}
               </div>
             )}
 

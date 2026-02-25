@@ -175,9 +175,22 @@ export const contactRoutes: FastifyPluginAsyncZod = async (app) => {
         if (!res.ok) {
             const errText = await res.text().catch(() => '');
             req.log.error({ status: res.status, errText }, 'Contact email failed');
+            // Bubble up a safe, helpful error message for debugging (no secrets included)
+            let providerMsg = errText;
+            try {
+                const parsed = JSON.parse(errText || '{}');
+                if (typeof parsed?.message === 'string') providerMsg = parsed.message;
+                else if (typeof parsed?.error === 'string') providerMsg = parsed.error;
+            } catch {
+                // keep raw text
+            }
+            const cleaned = String(providerMsg || '')
+                .replace(/\s+/g, ' ')
+                .trim()
+                .slice(0, 240);
             return reply.code(503).send({
                 ok: false as const,
-                error: 'Failed to send message. Please try again later.',
+                error: cleaned ? `Email provider error: ${cleaned}` : 'Failed to send message. Please try again later.',
             });
         }
 

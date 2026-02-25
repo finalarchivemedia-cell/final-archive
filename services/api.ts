@@ -229,20 +229,24 @@ export const deleteAdminImage = async (id: string): Promise<{ ok: boolean; messa
 };
 
 // --- Contact ---
-export const sendContact = async (data: { email: string; message: string }): Promise<boolean> => {
+export const sendContact = async (data: { email: string; message: string }): Promise<{ ok: boolean; error?: string }> => {
   try {
     const res = await fetch(`${API_BASE}/contact`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data),
     });
+    const body = await res.json().catch(() => ({} as any));
     if (!res.ok) {
-      const body = await res.json().catch(() => ({}));
-      console.error('[Contact] Send failed:', res.status, body?.error || '');
+      const errorMsg = typeof body?.error === 'string' && body.error.trim().length
+        ? body.error.trim()
+        : `Failed to send (HTTP ${res.status}).`;
+      console.error('[Contact] Send failed:', res.status, errorMsg);
+      return { ok: false, error: errorMsg };
     }
-    return res.ok;
+    return { ok: true };
   } catch (err) {
     console.error('[Contact] Network error:', err);
-    return false;
+    return { ok: false, error: 'Network error. Please try again.' };
   }
 };

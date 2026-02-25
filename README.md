@@ -42,7 +42,7 @@ Production-ready backend for "Final Archive", handling 5-digit image IDs, R2 sto
    - `WEBHOOK_SECRET`: Shared secret for protecting the webhook endpoint.
    - `CORS_ORIGINS`: Comma-separated list of allowed frontend origins (ex: `https://finalarchivemedia.com,https://www.finalarchivemedia.com`)
    - `RESEND_API_KEY`: API key for sending contact emails (recommended provider: Resend).
-   - `CONTACT_TO`: Destination email for contact form (default: `Contact@FinalArchiveMedia.com`).
+  - `CONTACT_TO`: Destination email for contact form (default: `contact@finalarchivemedia.com`).
    - `CONTACT_FROM`: Sender for Resend (must be verified in Resend).
 
 3. **Database Migration**

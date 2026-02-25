@@ -159,7 +159,7 @@ CDN_BASE_URL="https://pub-6221f575405c4ced9ac6e1e6cfb0c650.r2.dev"
 # EMAIL CONFIGURATION (Contact Form ke liye)
 # ============================================
 RESEND_API_KEY="your-resend-api-key-here"
-CONTACT_TO="Contact@FinalArchiveMedia.com"
+CONTACT_TO="contact@finalarchivemedia.com"
 CONTACT_FROM="noreply@yourdomain.com"
 
 # ============================================

@@ -149,7 +149,7 @@ export const contactRoutes: FastifyPluginAsyncZod = async (app) => {
             });
         }
 
-        const to = env.CONTACT_TO || 'Contact@FinalArchiveMedia.com';
+        const to = env.CONTACT_TO || 'contact@finalarchivemedia.com';
         const from = env.CONTACT_FROM || 'Final Archive <onboarding@resend.dev>';
 
         const subject = `Final Archive Contact — ${email}`;

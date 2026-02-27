@@ -88,7 +88,11 @@ export const LogoOverlay: React.FC<LogoOverlayProps> = ({ onIntroComplete, hover
 
     // Initial state: both text elements hidden, full tagline hidden
     gsap.set(title, { autoAlpha: 0 });
-    gsap.set(tagline, { autoAlpha: 0, display: 'none' });
+    gsap.set(tagline, { 
+      autoAlpha: 0, 
+      display: 'none',
+      transform: 'scaleY(0)'
+    });
     if (fullTagline) gsap.set(fullTagline, { autoAlpha: 0 });
 
     const tl = gsap.timeline({
@@ -122,6 +126,7 @@ export const LogoOverlay: React.FC<LogoOverlayProps> = ({ onIntroComplete, hover
     // Step 4: Fade in "For All Eternity" underneath over 1 second (dimmed/etched)
     tl.to(tagline, {
       display: 'block',
+      transform: 'scaleY(1)',
       autoAlpha: 0.3,
       duration: 1,
       ease: 'power2.inOut',
@@ -295,16 +300,18 @@ export const LogoOverlay: React.FC<LogoOverlayProps> = ({ onIntroComplete, hover
             objectFit: 'contain',
             objectPosition: 'center center',
             // Original clip-path (67% - shows bottom 33% of logo)
-            clipPath: 'inset(66% 0% 0% 0%)',
+            clipPath: 'inset(67% 0% 0% 0%)',
             WebkitClipPath: 'inset(67% 0% 0% 0%)',
-            // Ensure completely hidden until Step 4
+            // Ensure completely hidden until Step 4 - use transform to collapse
             display: 'none',
             opacity: 0,
             visibility: 'hidden',
+            transform: 'scaleY(0)',
+            transformOrigin: 'bottom center',
             border: 'none',
             outline: 'none',
             pointerEvents: 'none',
-            willChange: 'opacity',
+            willChange: 'opacity, transform',
           }}
           aria-hidden="true"
         />

@@ -88,7 +88,12 @@ export const LogoOverlay: React.FC<LogoOverlayProps> = ({ onIntroComplete, hover
 
     // Initial state: both text elements hidden, full tagline hidden
     gsap.set(title, { autoAlpha: 0 });
-    gsap.set(tagline, { autoAlpha: 0 });
+    // Ensure tagline is completely hidden - use opacity 0 AND visibility hidden
+    gsap.set(tagline, { 
+      autoAlpha: 0,
+      opacity: 0,
+      visibility: 'hidden'
+    });
     if (fullTagline) gsap.set(fullTagline, { autoAlpha: 0 });
 
     const tl = gsap.timeline({
@@ -122,6 +127,8 @@ export const LogoOverlay: React.FC<LogoOverlayProps> = ({ onIntroComplete, hover
     // Step 4: Fade in "For All Eternity" underneath over 1 second (dimmed/etched)
     tl.to(tagline, {
       autoAlpha: 0.3,
+      opacity: 0.3,
+      visibility: 'visible',
       duration: 1,
       ease: 'power2.inOut',
     });
@@ -248,6 +255,8 @@ export const LogoOverlay: React.FC<LogoOverlayProps> = ({ onIntroComplete, hover
           // Allow hover/tap on the tagline area after Step 8
           pointerEvents: hoverEnabled ? 'auto' : 'none',
           cursor: hoverEnabled ? 'default' : 'auto',
+          // Ensure no overflow from clipped images
+          overflow: 'hidden',
         }}
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
@@ -291,14 +300,18 @@ export const LogoOverlay: React.FC<LogoOverlayProps> = ({ onIntroComplete, hover
             height: '100%',
             objectFit: 'contain',
             objectPosition: 'center center',
-            clipPath: 'inset(67% 0% 0% 0%)',
-            WebkitClipPath: 'inset(67% 0% 0% 0%)',
+            // More aggressive clip to ensure top of letters don't show (70% instead of 67%)
+            clipPath: 'inset(70% 0% 0% 0%)',
+            WebkitClipPath: 'inset(70% 0% 0% 0%)',
+            // Ensure completely hidden until Step 4
             opacity: 0,
             visibility: 'hidden',
             border: 'none',
             outline: 'none',
             pointerEvents: 'none',
             willChange: 'opacity',
+            // Additional safety: ensure no overflow
+            overflow: 'hidden',
           }}
           aria-hidden="true"
         />

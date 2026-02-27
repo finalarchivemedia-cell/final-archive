@@ -269,7 +269,7 @@ export const LogoOverlay: React.FC<LogoOverlayProps> = ({ onIntroComplete, hover
             height: '100%',
             objectFit: 'contain',
             objectPosition: 'center center',
-            clipPath: 'inset(0% 0% 33% 0%)',
+            clipPath: 'inset(0% 0% 34% 0%)',
             WebkitClipPath: 'inset(0% 0% 33% 0%)',
             opacity: 0,
             visibility: 'hidden',
@@ -295,7 +295,7 @@ export const LogoOverlay: React.FC<LogoOverlayProps> = ({ onIntroComplete, hover
             objectFit: 'contain',
             objectPosition: 'center center',
             // Original clip-path (67% - shows bottom 33% of logo)
-            clipPath: 'inset(67% 0% 0% 0%)',
+            clipPath: 'inset(66% 0% 0% 0%)',
             WebkitClipPath: 'inset(67% 0% 0% 0%)',
             // Ensure completely hidden until Step 4
             display: 'none',

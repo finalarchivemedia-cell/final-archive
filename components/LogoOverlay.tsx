@@ -256,7 +256,7 @@ export const LogoOverlay: React.FC<LogoOverlayProps> = ({ onIntroComplete, hover
         onMouseLeave={handleMouseLeave}
         onClick={handleTap}
       >
-        {/* "Final Archive" — top 67% of PNG */}
+        {/* "Final Archive" — top portion of logo */}
         <img
           ref={titleRef}
           src={logoSrc}
@@ -269,8 +269,8 @@ export const LogoOverlay: React.FC<LogoOverlayProps> = ({ onIntroComplete, hover
             height: '100%',
             objectFit: 'contain',
             objectPosition: 'center center',
-            clipPath: 'inset(0% 0% 33% 0%)',
-            WebkitClipPath: 'inset(0% 0% 33% 0%)',
+            clipPath: 'inset(0% 0% 26% 0%)',
+            WebkitClipPath: 'inset(0% 0% 26% 0%)',
             opacity: 0,
             visibility: 'hidden',
             border: 'none',
@@ -294,9 +294,9 @@ export const LogoOverlay: React.FC<LogoOverlayProps> = ({ onIntroComplete, hover
             height: '100%',
             objectFit: 'contain',
             objectPosition: 'center center',
-            // Original clip-path (67% - shows bottom 33% of logo)
-            clipPath: 'inset(67% 0% 0% 0%)',
-            WebkitClipPath: 'inset(67% 0% 0% 0%)',
+            // Adjusted clip-path for SVG logo (74% - ensures no extra content above tagline shows)
+            clipPath: 'inset(74% 0% 0% 0%)',
+            WebkitClipPath: 'inset(74% 0% 0% 0%)',
             // Ensure completely hidden until Step 4
             display: 'none',
             opacity: 0,

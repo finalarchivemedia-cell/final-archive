@@ -128,6 +128,8 @@ export const LogoOverlay: React.FC<LogoOverlayProps> = ({ onIntroComplete, hover
     // Step 4: Fade in "For All Eternity" underneath over 1 second (dimmed/etched)
     tl.to(tagline, {
       display: 'block',
+      maxHeight: '100%',
+      height: '100%',
       autoAlpha: 0.3,
       opacity: 0.3,
       visibility: 'visible',
@@ -299,16 +301,17 @@ export const LogoOverlay: React.FC<LogoOverlayProps> = ({ onIntroComplete, hover
             position: 'absolute',
             inset: 0,
             width: '100%',
-            height: '100%',
             objectFit: 'contain',
             objectPosition: 'center center',
-            // Original clip-path (67% - shows bottom 33% of logo)
-            clipPath: 'inset(67% 0% 0% 0%)',
-            WebkitClipPath: 'inset(67% 0% 0% 0%)',
-            // Ensure completely hidden until Step 4 - use display none to prevent any rendering
+            // More aggressive clip-path (72% - ensures no top edges of letters show)
+            clipPath: 'inset(72% 0% 0% 0%)',
+            WebkitClipPath: 'inset(72% 0% 0% 0%)',
+            // Ensure completely hidden until Step 4 - multiple methods to prevent any rendering
             display: 'none',
             opacity: 0,
             visibility: 'hidden',
+            maxHeight: 0,
+            height: 0,
             border: 'none',
             outline: 'none',
             pointerEvents: 'none',

@@ -88,11 +88,12 @@ export const LogoOverlay: React.FC<LogoOverlayProps> = ({ onIntroComplete, hover
 
     // Initial state: both text elements hidden, full tagline hidden
     gsap.set(title, { autoAlpha: 0 });
-    // Ensure tagline is completely hidden - use opacity 0 AND visibility hidden
+    // Ensure tagline is completely hidden - use display none to prevent any rendering
     gsap.set(tagline, { 
       autoAlpha: 0,
       opacity: 0,
-      visibility: 'hidden'
+      visibility: 'hidden',
+      display: 'none'
     });
     if (fullTagline) gsap.set(fullTagline, { autoAlpha: 0 });
 
@@ -126,6 +127,7 @@ export const LogoOverlay: React.FC<LogoOverlayProps> = ({ onIntroComplete, hover
 
     // Step 4: Fade in "For All Eternity" underneath over 1 second (dimmed/etched)
     tl.to(tagline, {
+      display: 'block',
       autoAlpha: 0.3,
       opacity: 0.3,
       visibility: 'visible',
@@ -300,10 +302,11 @@ export const LogoOverlay: React.FC<LogoOverlayProps> = ({ onIntroComplete, hover
             height: '100%',
             objectFit: 'contain',
             objectPosition: 'center center',
-            // More aggressive clip to ensure top of letters don't show (70% instead of 67%)
-            clipPath: 'inset(70% 0% 0% 0%)',
-            WebkitClipPath: 'inset(70% 0% 0% 0%)',
-            // Ensure completely hidden until Step 4
+            // Original clip-path (67% - shows bottom 33% of logo)
+            clipPath: 'inset(67% 0% 0% 0%)',
+            WebkitClipPath: 'inset(67% 0% 0% 0%)',
+            // Ensure completely hidden until Step 4 - use display none to prevent any rendering
+            display: 'none',
             opacity: 0,
             visibility: 'hidden',
             border: 'none',

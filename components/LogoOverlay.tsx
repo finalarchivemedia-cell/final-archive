@@ -120,10 +120,10 @@ export const LogoOverlay: React.FC<LogoOverlayProps> = ({ onIntroComplete, hover
     // Step 3: Hold "Final Archive" for 3 seconds
     tl.to({}, { duration: 3 });
 
-    // Step 4: Fade in "For All Eternity" underneath over 1 second (full brightness)
+    // Step 4: Fade in "For All Eternity" underneath over 1 second (dimmed/etched)
     tl.to(tagline, {
       display: 'block',
-      autoAlpha: 1,
+      autoAlpha: 0.3,
       duration: 1,
       ease: 'power2.inOut',
     });
@@ -136,7 +136,7 @@ export const LogoOverlay: React.FC<LogoOverlayProps> = ({ onIntroComplete, hover
       ease: 'power2.inOut',
     });
 
-    // Step 6: "For All Eternity" stays at full brightness
+    // Step 6: "For All Eternity" stays at 0.3 (faint etched)
     // Timeline completes → onComplete fires → background fades → Gallery starts
 
     // No cleanup — timeline runs once and must not be killed
@@ -160,7 +160,7 @@ export const LogoOverlay: React.FC<LogoOverlayProps> = ({ onIntroComplete, hover
 
   const hideFullTagline = () => {
     if (taglineRef.current) {
-      gsap.to(taglineRef.current, { autoAlpha: 1, duration: 0.5, ease: 'power2.in' });
+      gsap.to(taglineRef.current, { autoAlpha: 0.3, duration: 0.5, ease: 'power2.in' });
     }
     if (fullTaglineRef.current) {
       gsap.to(fullTaglineRef.current, {

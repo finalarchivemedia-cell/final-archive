@@ -87,7 +87,7 @@ export const LogoOverlay: React.FC<LogoOverlayProps> = ({ onIntroComplete, hover
     if (!container || !title || !tagline) return;
 
     // Initial state: both text elements hidden, full tagline hidden
-    gsap.set(title, { autoAlpha: 0 });
+    gsap.set(title, { opacity: 0, visibility: 'hidden' });
     gsap.set(tagline, { autoAlpha: 0, display: 'none' });
     if (fullTagline) gsap.set(fullTagline, { autoAlpha: 0 });
 
@@ -111,7 +111,8 @@ export const LogoOverlay: React.FC<LogoOverlayProps> = ({ onIntroComplete, hover
 
     // Step 2: Fade in "Final Archive" over 1 second
     tl.to(title, {
-      autoAlpha: 1,
+      opacity: 1,
+      visibility: 'visible',
       duration: 1,
       ease: 'power2.inOut',
     });
@@ -119,17 +120,18 @@ export const LogoOverlay: React.FC<LogoOverlayProps> = ({ onIntroComplete, hover
     // Step 3: Hold "Final Archive" for 3 seconds
     tl.to({}, { duration: 3 });
 
-    // Step 4: Fade in "For All Eternity" underneath over 1 second (dimmed/etched)
+    // Step 4: Fade in "For All Eternity" underneath over 1 second (full brightness)
     tl.to(tagline, {
       display: 'block',
-      autoAlpha: 0.3,
+      autoAlpha: 1,
       duration: 1,
       ease: 'power2.inOut',
     });
 
     // Step 5: Fade out "Final Archive" over 2 seconds
     tl.to(title, {
-      autoAlpha: 0,
+      opacity: 0,
+      visibility: 'hidden',
       duration: 2,
       ease: 'power2.inOut',
     });
@@ -158,7 +160,7 @@ export const LogoOverlay: React.FC<LogoOverlayProps> = ({ onIntroComplete, hover
 
   const hideFullTagline = () => {
     if (taglineRef.current) {
-      gsap.to(taglineRef.current, { autoAlpha: 0.3, duration: 0.5, ease: 'power2.in' });
+      gsap.to(taglineRef.current, { autoAlpha: 1, duration: 0.5, ease: 'power2.in' });
     }
     if (fullTaglineRef.current) {
       gsap.to(fullTaglineRef.current, {

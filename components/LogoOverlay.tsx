@@ -136,7 +136,7 @@ export const LogoOverlay: React.FC<LogoOverlayProps> = ({ onIntroComplete, hover
       ease: 'power2.inOut',
     });
 
-    // Step 6: "For All Eternity" stays at 0.3 (faint etched)
+    // Step 6: "For All Eternity" stays at full brightness
     // Timeline completes → onComplete fires → background fades → Gallery starts
 
     // No cleanup — timeline runs once and must not be killed
@@ -273,6 +273,8 @@ export const LogoOverlay: React.FC<LogoOverlayProps> = ({ onIntroComplete, hover
             objectPosition: 'center center',
             clipPath: 'inset(0% 0% 35% 0%)',
             WebkitClipPath: 'inset(0% 0% 35% 0%)',
+            filter: 'brightness(0) invert(1)',
+            WebkitFilter: 'brightness(0) invert(1)',
             opacity: 0,
             visibility: 'hidden',
             border: 'none',
@@ -299,6 +301,8 @@ export const LogoOverlay: React.FC<LogoOverlayProps> = ({ onIntroComplete, hover
             // Original clip-path (67% - shows bottom 33% of logo)
             clipPath: 'inset(66% 0% 0% 0%)',
             WebkitClipPath: 'inset(66% 0% 0% 0%)',
+            filter: 'brightness(0) invert(1)',
+            WebkitFilter: 'brightness(0) invert(1)',
             // Ensure completely hidden until Step 4
             display: 'none',
             opacity: 0,

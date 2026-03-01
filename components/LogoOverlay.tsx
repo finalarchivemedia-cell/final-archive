@@ -128,10 +128,9 @@ export const LogoOverlay: React.FC<LogoOverlayProps> = ({ onIntroComplete, hover
       ease: 'power2.inOut',
     });
 
-    // Step 5: Fade out "Final Archive" over 2 seconds
+    // Step 5: Fade out "Final Archive" over 2 seconds (smooth fade)
     tl.to(title, {
-      opacity: 0,
-      visibility: 'hidden',
+      autoAlpha: 0,
       duration: 2,
       ease: 'power2.inOut',
     });

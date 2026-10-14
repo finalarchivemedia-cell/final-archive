@@ -38,7 +38,10 @@ echo "Syncing iCloud folder → R2"
 echo "  From: ${ICLOUD_DIR}"
 echo "  To:   ${DEST}"
 
+# Exclude admin/ first: files uploaded from the admin panel live there and are
+# not in iCloud, so "rclone sync" would otherwise delete them from R2.
 rclone sync "${ICLOUD_DIR}" "${DEST}" \
+  --exclude "/admin/**" \
   --include "*.jpg" --include "*.jpeg" --include "*.png" --include "*.webp" --include "*.gif" --include "*.avif" \
   --include "*.mp4" --include "*.webm" --include "*.mov" \
   --exclude "*" \

@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import gsap from 'gsap';
-import { LOGO_PATH } from '../constants';
+import { LOGO_VIEWBOX, LOGO_TITLE_PATHS, LOGO_TAGLINE_PATHS } from './logoPaths';
 
 interface LogoOverlayProps {
   onIntroComplete: () => void;
@@ -10,11 +10,9 @@ interface LogoOverlayProps {
 /**
  * LogoOverlay – Client's mandatory 6-step intro sequence + full tagline reveal
  *
- * PNG layout (2303×842):
- *   "Final Archive"    occupies roughly top 0–60%
- *   gap                ~60–74%
- *   "For All Eternity" occupies roughly 74–87%
- *   Dividing line at ~67% → title clip shows top 67%, tagline clip shows bottom 33%
+ * Logo is rendered as inline SVG (paths from public/final-archive.svg) so it
+ * stays vector-sharp. "Final Archive" and "For All Eternity" are two stacked
+ * <svg> layers sharing the same viewBox, so they line up exactly.
  *
  * Steps (each must fully finish before the next begins):
  *   1. Black screen for 1 second
@@ -31,7 +29,7 @@ interface LogoOverlayProps {
  *   in an elegant Cormorant Garamond italic font.
  */
 
-// Extended tagline — displayed ABOVE the PNG "For All Eternity" so the
+// Extended tagline — displayed ABOVE the logo's "For All Eternity" so the
 // already-visible etched text naturally completes the sentence.
 // Desktop + landscape: single line. Portrait mobile: two lines.
 const TAGLINE_LINE_1 = 'Capturing our story as if it\u2019s the last record left behind';
@@ -40,10 +38,9 @@ const TAGLINE_SINGLE = TAGLINE_LINE_1 + TAGLINE_LINE_2;
 
 export const LogoOverlay: React.FC<LogoOverlayProps> = ({ onIntroComplete, hoverEnabled }) => {
   const containerRef = useRef<HTMLDivElement>(null);
-  const titleRef = useRef<HTMLImageElement>(null);
-  const taglineRef = useRef<HTMLImageElement>(null);
+  const titleRef = useRef<SVGSVGElement>(null);
+  const taglineRef = useRef<SVGSVGElement>(null);
   const fullTaglineRef = useRef<HTMLDivElement>(null);
-  const [logoLoaded, setLogoLoaded] = useState(false);
   const [introFinished, setIntroFinished] = useState(false);
 
   // Mobile tap toggle
@@ -56,28 +53,9 @@ export const LogoOverlay: React.FC<LogoOverlayProps> = ({ onIntroComplete, hover
   // Guard: only run the intro timeline ONCE
   const hasRun = useRef(false);
 
-  const logoSrc = LOGO_PATH;
-
-  // Preload the logo PNG
+  // Run the 6-step intro timeline — ONCE only (logo is inline, nothing to preload)
   useEffect(() => {
-    const img = new Image();
-    img.onload = () => {
-      if ('decode' in img) {
-        img.decode().then(() => setLogoLoaded(true)).catch(() => setLogoLoaded(true));
-      } else {
-        setLogoLoaded(true);
-      }
-    };
-    img.onerror = () => {
-      console.warn('[LogoOverlay] Failed to load logo');
-      setLogoLoaded(true);
-    };
-    img.src = logoSrc;
-  }, [logoSrc]);
-
-  // Run the 6-step intro timeline — ONCE only
-  useEffect(() => {
-    if (!logoLoaded || hasRun.current) return;
+    if (hasRun.current) return;
     hasRun.current = true;
 
     const container = containerRef.current;
@@ -139,7 +117,7 @@ export const LogoOverlay: React.FC<LogoOverlayProps> = ({ onIntroComplete, hover
     // Timeline completes → onComplete fires → background fades → Gallery starts
 
     // No cleanup — timeline runs once and must not be killed
-  }, [logoLoaded]);
+  }, []);
 
   // ── Hover / Tap: reveal full tagline ──────────────────────────
   const showFullTagline = () => {
@@ -250,69 +228,57 @@ export const LogoOverlay: React.FC<LogoOverlayProps> = ({ onIntroComplete, hover
           // Allow hover/tap on the tagline area after Step 8
           pointerEvents: hoverEnabled ? 'auto' : 'none',
           cursor: hoverEnabled ? 'default' : 'auto',
-          // Ensure no overflow from clipped images
           overflow: 'hidden',
         }}
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
         onClick={handleTap}
       >
-        {/* "Final Archive" — top 67% of PNG */}
-        <img
+        {/* "Final Archive" — inline vector */}
+        <svg
           ref={titleRef}
-          src={logoSrc}
-          alt="Final Archive"
-          draggable={false}
+          viewBox={LOGO_VIEWBOX}
+          preserveAspectRatio="xMidYMid meet"
+          shapeRendering="geometricPrecision"
+          role="img"
+          aria-label="Final Archive"
           style={{
             position: 'absolute',
             inset: 0,
             width: '100%',
             height: '100%',
-            objectFit: 'contain',
-            objectPosition: 'center center',
-            clipPath: 'inset(0% 0% 35% 0%)',
-            WebkitClipPath: 'inset(0% 0% 35% 0%)',
-            filter: 'brightness(0) invert(1)',
-            WebkitFilter: 'brightness(0) invert(1)',
+            fill: '#ffffff',
             opacity: 0,
             visibility: 'hidden',
-            border: 'none',
-            outline: 'none',
             pointerEvents: 'none',
-            willChange: 'opacity',
           }}
-          aria-hidden="true"
-        />
+        >
+          {LOGO_TITLE_PATHS.map((d, i) => <path key={i} d={d} />)}
+        </svg>
 
-        {/* "For All Eternity" — bottom 33% of PNG */}
-        <img
+        {/* "For All Eternity" — inline vector, same viewBox so it lines up exactly */}
+        <svg
           ref={taglineRef}
-          src={logoSrc}
-          alt="For All Eternity"
-          draggable={false}
+          viewBox={LOGO_VIEWBOX}
+          preserveAspectRatio="xMidYMid meet"
+          shapeRendering="geometricPrecision"
+          role="img"
+          aria-label="For All Eternity"
           style={{
             position: 'absolute',
             inset: 0,
             width: '100%',
             height: '100%',
-            objectFit: 'contain',
-            objectPosition: 'center center',
-            // Original clip-path (67% - shows bottom 33% of logo)
-            clipPath: 'inset(66% 0% 0% 0%)',
-            WebkitClipPath: 'inset(66% 0% 0% 0%)',
-            filter: 'brightness(0) invert(1)',
-            WebkitFilter: 'brightness(0) invert(1)',
+            fill: '#ffffff',
             // Ensure completely hidden until Step 4
             display: 'none',
             opacity: 0,
             visibility: 'hidden',
-            border: 'none',
-            outline: 'none',
             pointerEvents: 'none',
-            willChange: 'opacity',
           }}
-          aria-hidden="true"
-        />
+        >
+          {LOGO_TAGLINE_PATHS.map((d, i) => <path key={i} d={d} />)}
+        </svg>
 
       </div>
 

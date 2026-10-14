@@ -4,14 +4,8 @@ import { prisma } from '../utils/prisma';
 import { env } from '../config/env';
 import bcrypt from 'bcryptjs';
 
-import { runSync } from '../jobs/syncR2';
 import { R2Service } from '../services/r2';
 import { IdGenerator } from '../services/idGenerator';
-
-// Manual sync function logic (reused for job)
-export const syncR2Logic = async () => {
-    return await runSync();
-};
 
 export const adminRoutes: FastifyPluginAsyncZod = async (app) => {
 
@@ -120,15 +114,6 @@ export const adminRoutes: FastifyPluginAsyncZod = async (app) => {
         return { ok: true };
     });
 
-    // POST /api/admin/refresh
-    app.post('/refresh', async (req, reply) => {
-        const result = await syncR2Logic();
-        if (result.skipped) {
-            return reply.code(400).send(result);
-        }
-        return result;
-    });
-
     // POST /api/admin/music
     app.post('/music', async (req, reply) => {
         if (!env.ENABLE_R2_SYNC) {
@@ -235,50 +220,6 @@ export const adminRoutes: FastifyPluginAsyncZod = async (app) => {
                 message: 'Upload failed',
             });
         }
-    });
-
-    // POST /api/admin/images/:id/deactivate
-    app.post('/images/:id/deactivate', {
-        schema: {
-            params: z.object({
-                id: z.string()
-            })
-        }
-    }, async (req, reply) => {
-        const { id } = req.params;
-
-        const result = await prisma.image.updateMany({
-                where: { id },
-                data: { isActive: false }
-            });
-
-        if (result.count === 0) {
-            return reply.code(404).send({ ok: false, message: 'Image not found' } as any);
-        }
-
-        return { ok: true };
-    });
-
-    // POST /api/admin/images/:id/activate
-    app.post('/images/:id/activate', {
-        schema: {
-            params: z.object({
-                id: z.string()
-            })
-        }
-    }, async (req, reply) => {
-        const { id } = req.params;
-
-        const result = await prisma.image.updateMany({
-            where: { id },
-            data: { isActive: true }
-        });
-
-        if (result.count === 0) {
-            return reply.code(404).send({ ok: false, message: 'Image not found' } as any);
-        }
-
-        return { ok: true };
     });
 
     // DELETE /api/admin/images/:id

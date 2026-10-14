@@ -130,51 +130,6 @@ export const updateAdminSettings = async (settings: { displayDurationSec: number
   }
 };
 
-export const refreshAdminSync = async (): Promise<{ ok: boolean; newCount?: number; deactivatedCount?: number; reactivatedCount?: number; reason?: string; skipped?: boolean }> => {
-  try {
-    const res = await fetch(`${API_BASE}/admin/refresh`, {
-      method: 'POST',
-      headers: getAuthHeaders()
-    });
-    if (res.status === 401) throw new Error('Unauthorized');
-    const data = await res.json().catch(() => ({}));
-    return res.ok ? { ok: true, ...data } : { ok: false, ...data };
-  } catch (e: any) {
-    if (e.message === 'Unauthorized') throw e;
-    return { ok: false, reason: 'Sync failed' };
-  }
-};
-
-export const deactivateAdminImage = async (id: string): Promise<{ ok: boolean; message?: string }> => {
-  try {
-    const res = await fetch(`${API_BASE}/admin/images/${id}/deactivate`, {
-      method: 'POST',
-      headers: getAuthHeaders(false)
-    });
-    if (res.status === 401) throw new Error('Unauthorized');
-    const data = await res.json().catch(() => ({}));
-    return res.ok ? { ok: true } : { ok: false, message: data?.message };
-  } catch (e: any) {
-    if (e.message === 'Unauthorized') throw e;
-    return { ok: false, message: 'Request failed' };
-  }
-};
-
-export const activateAdminImage = async (id: string): Promise<{ ok: boolean; message?: string }> => {
-  try {
-    const res = await fetch(`${API_BASE}/admin/images/${id}/activate`, {
-      method: 'POST',
-      headers: getAuthHeaders(false)
-    });
-    if (res.status === 401) throw new Error('Unauthorized');
-    const data = await res.json().catch(() => ({}));
-    return res.ok ? { ok: true } : { ok: false, message: data?.message };
-  } catch (e: any) {
-    if (e.message === 'Unauthorized') throw e;
-    return { ok: false, message: 'Request failed' };
-  }
-};
-
 export const uploadAdminFiles = async (files: File[]): Promise<{ ok: boolean; uploaded?: number; skipped?: number; message?: string }> => {
   try {
     const form = new FormData();

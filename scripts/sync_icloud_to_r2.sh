@@ -48,7 +48,10 @@ if [[ -n "$R2_PREFIX" ]]; then
 fi
 
 # Sync images and videos only
+# Exclude admin/ first: files uploaded from the admin panel live there and are
+# not in iCloud, so "rclone sync" would otherwise delete them from R2.
 rclone sync "$ICLOUD_DIR" "$DEST" \
+    --exclude "/admin/**" \
     --include "*.jpg" \
     --include "*.jpeg" \
     --include "*.png" \
@@ -68,4 +71,3 @@ echo ""
 echo "📝 Next steps:"
 echo "   - Images will appear in R2 bucket within 60 seconds"
 echo "   - Check: https://final-archive-production.up.railway.app/api/images"
-echo "   - Or trigger manual sync via admin panel"

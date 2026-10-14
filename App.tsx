@@ -1,4 +1,4 @@
-import React, { useState, useEffect, Suspense, useCallback } from 'react';
+import React, { useState, useEffect, Suspense, useCallback, useRef } from 'react';
 import { Routes, Route, useLocation, useParams } from 'react-router-dom';
 import { LogoOverlay } from './components/LogoOverlay';
 import { Gallery } from './components/Gallery';
@@ -6,7 +6,7 @@ import { ContactModal } from './components/ContactModal';
 import { AppSettings, DEFAULT_SETTINGS, ImageRecord } from './types';
 import { fetchImageList, fetchImageById } from './services/api';
 import { preloadMedia } from './services/preload';
-import { ID_REGEX, MUSIC_PATH } from './constants';
+import { ID_REGEX, MUSIC_PATH, IMAGE_REFRESH_MS } from './constants';
 
 // Lazy load admin to avoid bundle bloat
 const AdminPanel = React.lazy(() => import('./components/AdminPanel'));
@@ -17,6 +17,9 @@ const pickRandom = (list: ImageRecord[], excludeId?: string) => {
   if (!pool.length) return list[0];
   return pool[Math.floor(Math.random() * pool.length)];
 };
+
+const sameIds = (a: ImageRecord[], b: ImageRecord[]) =>
+  a.length === b.length && a.every((img, i) => img.id === b[i].id);
 
 const GalleryRouteHandler: React.FC<{
   settings: AppSettings;
@@ -45,9 +48,15 @@ const GalleryRouteHandler: React.FC<{
 
   const [notFound, setNotFound] = useState(false);
 
+  // Start/next are resolved once per route. Later image-list refreshes only
+  // feed the running Gallery loop; they must not reset what is on screen.
+  const preparedFor = useRef<string | null>(null);
+
   // Preloading Logic: Runs immediately when component mounts (during Intro)
   useEffect(() => {
     if (images.length === 0) return;
+    const routeKey = id ?? '';
+    if (preparedFor.current === routeKey) return;
 
     let isCancelled = false;
 
@@ -68,7 +77,10 @@ const GalleryRouteHandler: React.FC<{
       if (id && ID_REGEX.test(id)) {
         startRecord = await fetchImageById(id);
         if (!startRecord) {
-          if (!isCancelled) setNotFound(true);
+          if (!isCancelled) {
+            preparedFor.current = routeKey;
+            setNotFound(true);
+          }
           return;
         }
       } else {
@@ -85,6 +97,7 @@ const GalleryRouteHandler: React.FC<{
       }
 
       if (!isCancelled) {
+        preparedFor.current = routeKey;
         setReadyData({ start: startRecord, next: nextRecord });
       }
 
@@ -184,6 +197,25 @@ export default function App() {
     Promise.all([settingsPromise, imagesPromise]).catch(err => {
       console.error('[App] Initialization error:', err);
       });
+  }, []);
+
+  // Keep the image list fresh so new uploads join the loop without a reload
+  useEffect(() => {
+    const refresh = () => {
+      if (document.visibilityState !== 'visible') return;
+      fetchImageList().then(data => {
+        // fetchImageList returns [] on network errors — keep the current list then
+        if (data.length === 0) return;
+        setImages(prev => (sameIds(prev, data) ? prev : data));
+      });
+    };
+
+    const timer = window.setInterval(refresh, IMAGE_REFRESH_MS);
+    document.addEventListener('visibilitychange', refresh);
+    return () => {
+      window.clearInterval(timer);
+      document.removeEventListener('visibilitychange', refresh);
+    };
   }, []);
 
   useEffect(() => {

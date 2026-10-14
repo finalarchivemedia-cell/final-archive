@@ -12,7 +12,7 @@ Production-ready backend for "Final Archive", handling 5-digit image IDs, R2 sto
   - `/api/images/:id` cached for 60s (SWR).
   - Public settings cached for 5m.
 - **CDN Integrated**: Returns full CDN URLs (when R2 sync enabled).
-- **Admin API**: Secured with JWT, allows setting crop/duration values and manual sync.
+- **Admin API**: Secured with JWT, allows setting crop/duration values, uploading media/music and deleting images.
 
 ## Prerequisites
 
@@ -81,7 +81,7 @@ This ensures that even if webhooks fail, images eventually appear.
 
 ### Public
 - `GET /api/images` - List all active images.
-- `GET /api/images/:id` - Get single image. Returns 410 if deactivated.
+- `GET /api/images/:id` - Get single image. Returns 410 if its file was removed from storage.
 - `GET /api/images/random` - Get a random active image.
 - `GET /api/settings` - Get display configuration.
 - `POST /api/contact` - Send contact message `{ email, message }` (requires `RESEND_API_KEY`).
@@ -89,8 +89,10 @@ This ensures that even if webhooks fail, images eventually appear.
 ### Admin (Header: `Authorization: Bearer <token>`)
 - `POST /api/admin/login` - Body: `{ password: "..." }` -> Returns `{ token }`.
 - `PUT /api/admin/settings` - Update crop/duration.
-- `POST /api/admin/refresh` - Trigger manual R2 sync.
-- `POST /api/admin/images/:id/deactivate` - Soft delete an image.
+- `DELETE /api/admin/images/:id` - Permanently delete an image (R2 + DB).
+
+Every uploaded photo/video is live automatically; there is no manual activate/deactivate.
+Files removed from R2 are hidden automatically by the sync job / webhook.
 
 ## License
 Private.

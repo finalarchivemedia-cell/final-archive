@@ -1,7 +1,7 @@
 generator client {
   provider = "prisma-client-js"
-  // Force OpenSSL 3 engine in deploy environments (Railway).
-  binaryTargets = ["debian-openssl-3.0.x"]
+  // "native" for local dev (e.g. macOS); OpenSSL 3 engine for deploy environments (Railway).
+  binaryTargets = ["native", "debian-openssl-3.0.x"]
 }
 
 datasource db {

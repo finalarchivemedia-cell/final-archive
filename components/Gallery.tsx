@@ -29,8 +29,18 @@ interface GalleryProps {
 
 /* ── helpers ─────────────────────────────────────────────── */
 
-const pickRandom = (images: ImageRecord[], excludeId?: string): ImageRecord => {
-  const pool = images.filter(img => img.id !== excludeId);
+/**
+ * Shuffle-bag pick: every item is shown once (in random order) before any
+ * item repeats. When the round is exhausted a new round starts, but never
+ * with the item currently on screen (no back-to-back repeat).
+ * `seen` holds the ids already shown in the current round and is mutated.
+ */
+const pickUnseen = (images: ImageRecord[], seen: Set<string>, currentId: string): ImageRecord => {
+  let pool = images.filter(img => !seen.has(img.id));
+  if (pool.length === 0) {
+    seen.clear();
+    pool = images.filter(img => img.id !== currentId);
+  }
   if (pool.length === 0) return images[0];
   return pool[Math.floor(Math.random() * pool.length)];
 };
@@ -68,8 +78,9 @@ export const Gallery: React.FC<GalleryProps> = ({
   const containerRef = useRef<HTMLDivElement>(null);
 
   /* Mutable state that must NOT trigger re-renders */
-  const running = useRef(false);
-  const cancelled = useRef(false);
+  // Bumped to stop the active loop. Each loop checks its own generation, so a
+  // StrictMode/dev remount can never leave the gallery stuck (old loop just exits).
+  const loopGen = useRef(0);
   const cycleIndex = useRef(0);        // 0 = first image ever shown
   const zoomIn = useRef(true);         // true → start zoomed-in, breathe out
   const currentRecord = useRef<ImageRecord>(startRecord);
@@ -79,6 +90,7 @@ export const Gallery: React.FC<GalleryProps> = ({
   const onFirstCycleRef = useRef(onFirstCycleComplete);
   const onImageChangeRef = useRef(onImageChange);
   const lastReportedId = useRef<string | null>(null);
+  const seenIds = useRef<Set<string>>(new Set()); // ids shown in the current shuffle round
 
   /* Keep refs in sync with props (no re-renders) */
   useEffect(() => { settingsRef.current = settings; }, [settings]);
@@ -88,19 +100,15 @@ export const Gallery: React.FC<GalleryProps> = ({
 
   /* ── The imperative animation loop ─────────────────────── */
   const runLoop = useCallback(async () => {
-    if (running.current) return;
-    running.current = true;
-    cancelled.current = false;
+    const gen = ++loopGen.current;
+    const isStale = () => gen !== loopGen.current;
 
     // Determine which layer is "front" and which is "back"
     let frontLayer = layerARef.current;
     let backLayer = layerBRef.current;
     let isFrontA = true;
     
-    if (!frontLayer || (!backLayer && !singleMode)) {
-      running.current = false;
-      return;
-    }
+    if (!frontLayer || (!backLayer && !singleMode)) return;
 
     /* ── Show the very first image ─────────────────────── */
     const firstUrl = currentRecord.current.url;
@@ -117,7 +125,9 @@ export const Gallery: React.FC<GalleryProps> = ({
     if (!isFirstVideo) {
       await preloadImage(firstUrl);
     }
-    if (cancelled.current) return;
+    if (isStale()) return;
+
+    seenIds.current.add(currentRecord.current.id);
 
     // Report URL
     if (currentRecord.current.id !== lastReportedId.current) {
@@ -155,7 +165,7 @@ export const Gallery: React.FC<GalleryProps> = ({
       force3D: true,
     });
 
-    if (cancelled.current) return;
+    if (isStale()) return;
 
     // First cycle complete
     cycleIndex.current = 1;
@@ -165,15 +175,16 @@ export const Gallery: React.FC<GalleryProps> = ({
     zoomIn.current = !zoomIn.current;
 
     // If single mode, just hold — no loop
-    if (singleMode) {
-      running.current = false;
-      return;
-    }
+    if (singleMode) return;
 
     /* ── Continuous loop ───────────────────────────────── */
-    while (!cancelled.current) {
+    while (!isStale()) {
       // Pick next image
-      const next = nextRecordRef.current || pickRandom(imagesRef.current, currentRecord.current.id);
+      // Re-pick if the queued item was removed by a list refresh
+      const queued = nextRecordRef.current;
+      const next = queued && imagesRef.current.some(img => img.id === queued.id)
+        ? queued
+        : pickUnseen(imagesRef.current, seenIds.current, currentRecord.current.id);
 
       // Set source on back layer (hidden)
       if (backLayer instanceof HTMLImageElement) {
@@ -184,7 +195,7 @@ export const Gallery: React.FC<GalleryProps> = ({
       if (next.mediaType === 'IMAGE') {
         await preloadImage(next.url);
       }
-      if (cancelled.current) break;
+      if (isStale()) break;
 
       // Read fresh settings for this cycle
       const cycleDur = settingsRef.current.duration;
@@ -224,7 +235,7 @@ export const Gallery: React.FC<GalleryProps> = ({
 
       // Wait for crossfade to finish
       await tl;
-      if (cancelled.current) break;
+      if (isStale()) break;
 
       // Report new image URL
       if (next.id !== lastReportedId.current) {
@@ -234,7 +245,8 @@ export const Gallery: React.FC<GalleryProps> = ({
 
       // Update records
       currentRecord.current = next;
-      nextRecordRef.current = pickRandom(imagesRef.current, next.id);
+      seenIds.current.add(next.id);
+      nextRecordRef.current = pickUnseen(imagesRef.current, seenIds.current, next.id);
 
       // Now back layer is visible — zoom it for the full display duration
       // Front layer is hidden, swap z-indices
@@ -249,7 +261,7 @@ export const Gallery: React.FC<GalleryProps> = ({
         force3D: true,
       });
 
-      if (cancelled.current) break;
+      if (isStale()) break;
 
       // Toggle zoom direction
       zoomIn.current = !zoomIn.current;
@@ -261,18 +273,13 @@ export const Gallery: React.FC<GalleryProps> = ({
       backLayer = temp;
       isFrontA = !isFrontA;
     }
-
-    running.current = false;
   }, [singleMode]);
 
   /* ── Start / stop the loop based on `active` ───────── */
   useEffect(() => {
-    if (active && !running.current) {
-      cancelled.current = false;
-      runLoop();
-    }
+    if (active) runLoop();
     return () => {
-      cancelled.current = true;
+      loopGen.current += 1; // stops the active loop at its next checkpoint
       // Kill all GSAP tweens on both layers to prevent orphaned animations
       if (layerARef.current) gsap.killTweensOf(layerARef.current);
       if (layerBRef.current) gsap.killTweensOf(layerBRef.current);

@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { loginAdmin, fetchAdminSettings, updateAdminSettings, refreshAdminSync, deactivateAdminImage, fetchAdminImages, activateAdminImage, uploadAdminFiles, deleteAdminImage, uploadAdminMusic } from '../services/api';
+import { loginAdmin, fetchAdminSettings, updateAdminSettings, fetchAdminImages, uploadAdminFiles, deleteAdminImage, uploadAdminMusic } from '../services/api';
 import { AppSettings, AdminImageRecord } from '../types';
+
+const AUTOSAVE_DELAY_MS = 500;
 
 interface AdminPanelProps {
   onUpdate: (settings: AppSettings) => void;
@@ -19,8 +21,6 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onUpdate }) => {
   });
 
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
-  const [syncStatus, setSyncStatus] = useState<'idle' | 'syncing' | 'done' | 'error'>('idle');
-  const [syncMessage, setSyncMessage] = useState('');
   const [uploadStatus, setUploadStatus] = useState<'idle' | 'uploading' | 'done' | 'error'>('idle');
   const [uploadMessage, setUploadMessage] = useState('');
   const [musicStatus, setMusicStatus] = useState<'idle' | 'uploading' | 'done' | 'error'>('idle');
@@ -31,6 +31,9 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onUpdate }) => {
   const [imagesError, setImagesError] = useState('');
   const uploadInputRef = useRef<HTMLInputElement>(null);
   const musicInputRef = useRef<HTMLInputElement>(null);
+  const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const pendingSave = useRef<typeof settings | null>(null);
+  const saveSeq = useRef(0);
 
   // Check auth and fetch settings
   useEffect(() => {
@@ -98,17 +101,18 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onUpdate }) => {
     setPassword('');
   };
 
-  const handleSave = async () => {
+  const saveSettings = async (next: typeof settings) => {
+    const seq = ++saveSeq.current;
     setSaveStatus('saving');
     try {
-      const success = await updateAdminSettings(settings);
+      const success = await updateAdminSettings(next);
+      if (seq !== saveSeq.current) return; // a newer save superseded this one
       if (success) {
         setSaveStatus('saved');
-        setTimeout(() => setSaveStatus('idle'), 2000);
         // Propagate updates to live app immediately
         onUpdate({
-          duration: settings.displayDurationSec,
-          crop: settings.cropPercent / 100 // Convert 60 -> 0.6 for app type
+          duration: next.displayDurationSec,
+          crop: next.cropPercent / 100 // Convert 60 -> 0.6 for app type
         });
       } else {
         setSaveStatus('error');
@@ -118,47 +122,25 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onUpdate }) => {
     }
   };
 
-  const handleSyncNow = async () => {
-    setSyncStatus('syncing');
-    setSyncMessage('');
-    try {
-      const result = await refreshAdminSync();
-      if (result.ok) {
-        setSyncStatus('done');
-        setSyncMessage(`Sync complete: +${result.newCount ?? 0} new, -${result.deactivatedCount ?? 0} deactivated, +${result.reactivatedCount ?? 0} reactivated`);
-        setTimeout(() => setSyncStatus('idle'), 2500);
-        setTimeout(() => loadImages(), 1500);
-      } else {
-        setSyncStatus('error');
-        setSyncMessage(result.reason || 'Sync failed');
-      }
-    } catch (e: any) {
-      if (e.message === 'Unauthorized') {
-        logout();
-        return;
-      }
-      setSyncStatus('error');
-      setSyncMessage('Sync failed');
-    }
+  // Auto-save: wait until the slider settles, then save once
+  const changeSetting = (patch: Partial<typeof settings>) => {
+    const next = { ...settings, ...patch };
+    setSettings(next);
+    setSaveStatus('saving');
+    pendingSave.current = next;
+    if (saveTimer.current) clearTimeout(saveTimer.current);
+    saveTimer.current = setTimeout(() => {
+      saveTimer.current = null;
+      pendingSave.current = null;
+      void saveSettings(next);
+    }, AUTOSAVE_DELAY_MS);
   };
 
-  const handleToggleActive = async (image: AdminImageRecord) => {
-    const actionLabel = image.isActive ? 'Deactivate' : 'Activate';
-    const confirmed = window.confirm(`${actionLabel} image ${image.id}?`);
-    if (!confirmed) return;
-    try {
-      const result = image.isActive
-        ? await deactivateAdminImage(image.id)
-        : await activateAdminImage(image.id);
-      if (result.ok) {
-        setImages(prev => prev.map(img => img.id === image.id ? { ...img, isActive: !img.isActive } : img));
-      } else {
-        alert(result.message || `Failed to ${actionLabel.toLowerCase()} image.`);
-      }
-    } catch {
-      logout();
-    }
-  };
+  // Flush a pending save if the panel unmounts mid-debounce
+  useEffect(() => () => {
+    if (saveTimer.current) clearTimeout(saveTimer.current);
+    if (pendingSave.current) void updateAdminSettings(pendingSave.current).catch(() => {});
+  }, []);
 
   const handleDelete = async (image: AdminImageRecord) => {
     const confirmed = window.confirm(`Permanently delete image ${image.id}? This will remove it from R2 and the database.`);
@@ -420,6 +402,36 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onUpdate }) => {
         .fa-hoverlink:hover { color: rgba(255,255,255,0.85) !important; }
         .fa-btn:hover { border-color: rgba(255,255,255,0.48) !important; color: rgba(255,255,255,0.96) !important; }
         .fa-danger:hover { border-color: rgba(239,68,68,0.65) !important; color: rgba(254,202,202,1) !important; }
+
+        /* Image list rows: wrap actions below the info on narrow screens */
+        .fa-row {
+          display: flex;
+          flex-wrap: wrap;
+          align-items: center;
+          justify-content: space-between;
+          gap: 12px 16px;
+          padding: 14px;
+          border-top: 1px solid rgba(255,255,255,0.10);
+        }
+        .fa-row-info {
+          display: flex;
+          align-items: center;
+          gap: 14px;
+          flex: 1 1 220px;
+          min-width: 0;
+        }
+        .fa-row-actions {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          flex-shrink: 0;
+        }
+        @media (max-width: 640px) {
+          .fa-row-actions {
+            width: 100%;
+            justify-content: flex-end;
+          }
+        }
       `}</style>
 
       <div style={{ position: 'relative', width: '100%', height: '100%', overflowY: 'auto' }}>
@@ -453,7 +465,7 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onUpdate }) => {
                 max="10"
                 step="1"
                 value={settings.displayDurationSec}
-                onChange={e => setSettings({ ...settings, displayDurationSec: Number(e.target.value) })}
+                onChange={e => changeSetting({ displayDurationSec: Number(e.target.value) })}
                   className="fa-range"
                   style={{ marginTop: 12 }}
               />
@@ -471,55 +483,35 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onUpdate }) => {
                 max="100"
                 step="1"
                 value={settings.cropPercent}
-                onChange={e => setSettings({ ...settings, cropPercent: Number(e.target.value) })}
+                onChange={e => changeSetting({ cropPercent: Number(e.target.value) })}
                   className="fa-range"
                   style={{ marginTop: 12 }}
               />
             </div>
 
-              {/* Save */}
-              <div style={{ paddingTop: 8 }}>
-              <button
-                onClick={handleSave}
-                  type="button"
-                  style={{
-                    width: '100%',
-                    background: '#fff',
-                    color: '#000',
-                    padding: '18px 16px',
-                    fontSize: 12,
-                    fontWeight: 600,
-                    letterSpacing: '0.35em',
-                    textTransform: 'uppercase',
-                    border: '1px solid rgba(255,255,255,0.25)',
-                    cursor: 'pointer',
-                  }}
-                >
-                  {saveStatus === 'saving' ? 'SAVING...' : 'SAVE CHANGES'}
-                </button>
+              {/* Auto-save status */}
+              <div
+                aria-live="polite"
+                style={{
+                  minHeight: 14,
+                  fontSize: 10,
+                  letterSpacing: '0.25em',
+                  textTransform: 'uppercase',
+                  color: saveStatus === 'error' ? 'rgba(252,165,165,0.95)' : 'rgba(255,255,255,0.45)',
+                }}
+              >
+                {saveStatus === 'saving' && 'SAVING...'}
+                {saveStatus === 'saved' && 'SAVED'}
+                {saveStatus === 'error' && "COULDN'T SAVE. MOVE THE SLIDER TO TRY AGAIN."}
               </div>
 
               <div style={{ paddingTop: 10, ...lineStyle }} />
 
               {/* Content controls */}
               <div style={{ paddingTop: 22 }}>
-                <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 24 }}>
-                  <div style={smallCapsStyle}>CONTENT CONTROLS</div>
-                  <button onClick={loadImages} type="button" className="fa-hoverlink" style={linkStyle}>
-                    REFRESH LIST
-                  </button>
-                </div>
+                <div style={smallCapsStyle}>CONTENT CONTROLS</div>
 
                 <div style={{ marginTop: 16, display: 'flex', flexDirection: 'column', gap: 10, width: '100%', maxWidth: 340 }}>
-                  <button
-                    onClick={handleSyncNow}
-                    type="button"
-                    className="fa-btn"
-                    style={buttonStyle}
-                  >
-                    {syncStatus === 'syncing' ? 'SYNCING...' : 'SYNC NOW'}
-                  </button>
-
                   <input
                     ref={uploadInputRef}
                     type="file"
@@ -554,11 +546,6 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onUpdate }) => {
                   </button>
 
                   {/* Status lines */}
-                  {syncMessage && (
-                    <div style={{ fontSize: 10, letterSpacing: '0.25em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.45)' }}>
-                      {syncMessage}
-                    </div>
-                  )}
                   {uploadMessage && (
                     <div style={{ fontSize: 10, letterSpacing: '0.25em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.45)' }}>
                       {uploadMessage}
@@ -576,7 +563,7 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onUpdate }) => {
               {/* Images */}
               <div style={{ paddingTop: 22 }}>
                 <div style={{ ...smallCapsStyle, marginBottom: 12 }}>
-                  IMAGES ({images.filter(i => i.isActive).length} ACTIVE / {images.length} TOTAL)
+                  IMAGES ({images.length})
                 </div>
 
                 {imagesLoading && (
@@ -599,18 +586,8 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onUpdate }) => {
                     ) : (
                       <div>
                         {images.map((img) => (
-                          <div
-                            key={img.id}
-                            style={{
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'space-between',
-                              gap: 16,
-                              padding: 14,
-                              borderTop: '1px solid rgba(255,255,255,0.10)',
-                            }}
-                          >
-                            <div style={{ display: 'flex', alignItems: 'center', gap: 14, minWidth: 0 }}>
+                          <div key={img.id} className="fa-row">
+                            <div className="fa-row-info">
                               <div
                                 style={{
                                   width: 64,
@@ -634,29 +611,24 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onUpdate }) => {
                                 <div style={{ fontSize: 12, letterSpacing: '0.25em', color: 'rgba(255,255,255,0.86)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                                   {img.id}
                                 </div>
-                                <div style={{ marginTop: 6, display: 'flex', alignItems: 'center', gap: 12 }}>
+                                <div style={{ marginTop: 6, display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '4px 12px' }}>
                                   <span style={{ fontSize: 10, letterSpacing: '0.25em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.40)' }}>
                                     {img.mediaType}
                                   </span>
-                                  <span style={{ fontSize: 10, letterSpacing: '0.25em', textTransform: 'uppercase', color: img.isActive ? 'rgba(134,239,172,0.95)' : 'rgba(252,165,165,0.95)' }}>
-                                    {img.isActive ? 'ACTIVE' : 'INACTIVE'}
-                                  </span>
+                                  {/* Only set automatically when the file was removed from storage */}
+                                  {!img.isActive && (
+                                    <span style={{ fontSize: 10, letterSpacing: '0.25em', textTransform: 'uppercase', color: 'rgba(252,165,165,0.95)' }}>
+                                      MISSING FROM STORAGE
+                                    </span>
+                                  )}
                                 </div>
                               </div>
                             </div>
 
-                            <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexShrink: 0 }}>
+                            <div className="fa-row-actions">
                               <a href={img.url} target="_blank" rel="noreferrer" className="fa-hoverlink" style={{ ...linkStyle, fontSize: 10 }}>
                                 OPEN
                               </a>
-                              <button
-                                onClick={() => handleToggleActive(img)}
-                                type="button"
-                                className={img.isActive ? 'fa-danger' : 'fa-btn'}
-                                style={img.isActive ? dangerButtonStyle : { ...buttonStyle, width: 'auto', maxWidth: 'unset', padding: '7px 10px', fontSize: 10 }}
-                              >
-                                {img.isActive ? 'DEACTIVATE' : 'ACTIVATE'}
-                              </button>
                               <button onClick={() => handleDelete(img)} className="fa-danger" style={dangerButtonStyle} type="button">
                                 DELETE
               </button>

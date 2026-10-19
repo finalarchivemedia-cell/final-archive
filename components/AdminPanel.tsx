@@ -112,7 +112,7 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onUpdate }) => {
         // Propagate updates to live app immediately
         onUpdate({
           duration: next.displayDurationSec,
-          crop: next.cropPercent / 100 // Convert 60 -> 0.6 for app type
+          zoom: next.cropPercent / 100 // 0–100% → 0–1 (1 = zoom to 2x)
         });
       } else {
         setSaveStatus('error');
@@ -471,7 +471,7 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onUpdate }) => {
               />
             </div>
 
-              {/* Crop */}
+              {/* Crop / Zoom: 0% = no zoom, 100% = zooms to 2x */}
               <div>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                   <div style={smallCapsStyle}>CROP / ZOOM</div>
@@ -479,7 +479,7 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onUpdate }) => {
               </div>
               <input
                 type="range"
-                min="25"
+                min="0"
                 max="100"
                 step="1"
                 value={settings.cropPercent}

@@ -63,7 +63,7 @@ export const adminRoutes: FastifyPluginAsyncZod = async (app) => {
 
         return {
             displayDurationSec: (durationSetting?.value as number) || 6,
-            cropPercent: (cropSetting?.value as number) || 60,
+            cropPercent: (cropSetting?.value as number) ?? 60, // `??` so 0% (no zoom) is kept
             musicUrl: (musicSetting?.value as string) || null
         };
     });
@@ -93,7 +93,8 @@ export const adminRoutes: FastifyPluginAsyncZod = async (app) => {
         schema: {
             body: z.object({
                 displayDurationSec: z.number().min(1).max(10),
-                cropPercent: z.number().min(25).max(100)
+                // Zoom amount: 0 = no zoom, 100 = zooms to 2x
+                cropPercent: z.number().min(0).max(100)
             })
         }
     }, async (req, reply) => {

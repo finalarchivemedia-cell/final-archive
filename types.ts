@@ -1,6 +1,6 @@
 export interface AppSettings {
   duration: number; // Seconds per image
-  crop: number; // 0.25 (tight) to 1.0 (full)
+  zoom: number; // 0 (no zoom) to 1.0 (zooms to 2x)
 }
 
 export interface ImageRecord {
@@ -17,5 +17,5 @@ export interface AdminImageRecord extends ImageRecord {
 
 export const DEFAULT_SETTINGS: AppSettings = {
   duration: 4,
-  crop: 0.6,
+  zoom: 0.6,
 };

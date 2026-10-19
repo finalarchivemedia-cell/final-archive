@@ -172,7 +172,7 @@ export default function App() {
         if (s) {
           setSettings({
           duration: s.displayDurationSec,
-          crop: s.cropPercent / 100
+          zoom: s.cropPercent / 100
         });
           if (typeof s.musicUrl === 'string') {
             setMusicUrl(s.musicUrl);

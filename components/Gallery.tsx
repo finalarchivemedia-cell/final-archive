@@ -45,6 +45,9 @@ const pickUnseen = (images: ImageRecord[], seen: Set<string>, currentId: string)
   return pool[Math.floor(Math.random() * pool.length)];
 };
 
+/** Peak scale of the zoom animation: 0 → 1x (no zoom), 1 → 2x */
+const zoomScale = (zoom: number): number => 1 + Math.min(1, Math.max(0, zoom));
+
 /** Preload an image and resolve when fully decoded */
 const preloadImage = (url: string): Promise<void> =>
   new Promise((resolve) => {
@@ -136,7 +139,7 @@ export const Gallery: React.FC<GalleryProps> = ({
       }
 
     const dur = settingsRef.current.duration;
-    const maxScale = Math.max(1.25, 1 / Math.max(0.1, settingsRef.current.crop));
+    const maxScale = zoomScale(settingsRef.current.zoom);
     const startScale = zoomIn.current ? maxScale : 1;
     const endScale = zoomIn.current ? 1 : maxScale;
 
@@ -199,7 +202,7 @@ export const Gallery: React.FC<GalleryProps> = ({
 
       // Read fresh settings for this cycle
       const cycleDur = settingsRef.current.duration;
-      const cycleMaxScale = Math.max(1.25, 1 / Math.max(0.1, settingsRef.current.crop));
+      const cycleMaxScale = zoomScale(settingsRef.current.zoom);
       const cycleStartScale = zoomIn.current ? cycleMaxScale : 1;
       const cycleEndScale = zoomIn.current ? 1 : cycleMaxScale;
 
